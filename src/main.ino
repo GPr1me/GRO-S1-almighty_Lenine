@@ -1,0 +1,67 @@
+/*
+Projet: Le nom du script
+Equipe: Votre numero d'equipe
+Auteurs: Les membres auteurs du script
+Description: Breve description du script
+Date: Derniere date de modification
+*/
+
+/* ****************************************************************************
+Inclure les librairies de functions que vous voulez utiliser
+**************************************************************************** */
+
+#include <LibRobus.h> // Essentielle pour utiliser RobUS
+
+
+
+/* ****************************************************************************
+Variables globales et defines
+**************************************************************************** */
+// -> defines...
+// L'ensemble des fonctions y ont acces
+
+const float KP = 0.0001;
+const float KI = 0.00002;
+// DISTANCE_PAR_CLIC
+//const int TEMPS_PAUSE
+const int MOTOR_MASTER = 0;
+const int MOTOR_SLAVE = 1;
+
+
+/* ****************************************************************************
+Vos propres fonctions sont creees ici
+**************************************************************************** */
+void maFonction(){
+  // code
+}
+
+void correctSpeed(int cycleNb,
+                  int clicNbGoal, 
+                  int actualTotalClicNb,
+                  float speedRatio)
+{
+  float MotorMaster_actualClicNb = ENCODER_Read(MOTOR_MASTER);
+  
+}
+
+/* ****************************************************************************
+Fonctions d'initialisation (setup)
+**************************************************************************** */
+// -> Se fait appeler au debut du programme
+// -> Se fait appeler seulement un fois
+// -> Generalement on y initilise les varibbles globales
+
+void setup(){
+  BoardInit();
+}
+
+
+/* ****************************************************************************
+Fonctions de boucle infini (loop())
+**************************************************************************** */
+// -> Se fait appeler perpetuellement suite au "setup"
+
+void loop() {
+  // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
+  delay(10);// Delais pour décharger le CPU
+}
