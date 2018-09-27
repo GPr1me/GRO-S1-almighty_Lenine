@@ -41,7 +41,6 @@ void correctSpeed(int cycleNb,
                   float speedRatio)
 {
   float MotorMaster_actualClicNb = ENCODER_Read(MOTOR_MASTER);
-  
 }
 
 /* ****************************************************************************
