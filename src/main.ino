@@ -1,8 +1,8 @@
 /*
-Projet: Le nom du script
-Equipe: Votre numero d'equipe
-Auteurs: Les membres auteurs du script
-Description: Breve description du script
+Projet: Déplacement du robot
+Equipe: 21
+Auteurs: Marc-Olivier Thibault, Vincent Pelletier, Émile Rousseau-Pinard, Charles Maheu
+Description: Fonction main pour faire avancer et tourner le robot
 Date: Derniere date de modification
 */
 
@@ -45,7 +45,7 @@ void Avancer(float speed, float distance)
   int clicNb_cycle_MASTER = 0;
   int clicNb_cycle_SLAVE = 0;
   int cycleNb = 0;
-  float ErrorSpeedTotal=0;
+  float ErrorPowerTotal=0;
 
   while(ENCODER_Read(MOTOR_MASTER) < clicTotal)
   {
@@ -75,18 +75,16 @@ int ErrorClicCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
   return clicNb_cycle_MASTER-clicNb_cycle_SLAVE;
 }
 
-
 float ErrorPowerCycle(int errorClic_SLAVE)
 {
   int errorSpeed_SLAVE = errorClic_SLAVE/CYCLEDELAY;
   return errorSpeed_SLAVE * KP;
 }
 
-// INCOMPLET
-float CorrectSpeed(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE, float speed)
+void CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal,float InitialMotorSpeed) //EMILE'S STUFF
 {
-  float errorPower = ErrorPowerCycle + ErrorPowerTotal;
-  MOTOR_SetSpeed(MOTOR_SLAVE, (speed+errorPower))
+  int errorPower = ErrorPowerCycle(ErrorClicCycle(clicNb_cycle_MASTER,clicNb_cycle_SLAVE)) + ErrorIncrement(clicNb_cycle_MASTER,clicNb_cycle_SLAVE,ErrorPowerTotal);
+  MOTOR_SetSpeed(MOTOR_SLAVE, (InitialMotorSpeed+=errorPower));
 }
 
 //Retourne le nombre de clique nécessaire pour la distance voulue
