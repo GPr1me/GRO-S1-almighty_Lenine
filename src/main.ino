@@ -111,6 +111,24 @@ void SwitchMotorsHierarchy() // Power to the people!
   MOTOR_SLAVE = temp;
 }
 
+// Prend pour acquis qu'un angle 0 ne tourne pas.
+// Un angle négatif tourne à gauche et positif à droite.
+void Tourner(float angle)
+{
+  // ne tourne pas à 0
+  if(angle != 0)
+  {
+    if(angle < 0)
+    {
+      SwitchMotorsHierarchy();
+    }
+
+    // Execution code virage
+
+
+  }
+}
+
 /* ****************************************************************************
 Fonctions d'initialisation (setup)
 **************************************************************************** */
