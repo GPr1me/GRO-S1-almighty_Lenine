@@ -44,6 +44,7 @@ void Avancer(int speed, float distance)
   int clicNb_master = 0;
   int clicNb_slave = 0;
   int cycleNb = 0;
+  float ErrorSpeedTotal=0;
 
   while(travelDistance < distance)
   {
@@ -80,6 +81,12 @@ int DistanceToClics(int distance)
 {
   // incomplete
   //return distance * ratio;
+}
+
+float ErrorIncrement(float errorSpeedCycle,float ErrorSpeedTotal)
+{
+  ErrorSpeedTotal+=errorSpeedCycle;
+  return (ErrorSpeedTotal);
 }
 
 void SwitchMotorsHierarchy() // Power to the people!
