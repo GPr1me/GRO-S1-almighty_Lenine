@@ -69,21 +69,26 @@ void Avancer(float speed, float distance)
   ENCODER_Reset(MOTOR_MASTER);
   ENCODER_Reset(MOTOR_SLAVE);
 }
-
+/*Cette fonction détermine la différence de cliques que le moteur slave assume*/
 int ErrorClicCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
 {
   return clicNb_cycle_MASTER-clicNb_cycle_SLAVE;
 }
 
+/*Cette fonction prend pour entrée la différence de cliques, la divise par la différence de temps
+choisie et multiplie finalement le tout par KP. */
 float ErrorPowerCycle(int errorClic_SLAVE)
 {
   int errorSpeed_SLAVE = errorClic_SLAVE/CYCLEDELAY;
   return errorSpeed_SLAVE * KP;
 }
 
+/*Cette fonction prend comme entrée le nombre de clique des deux moteurs ainsi que l'erreur cumulée
+depuis le début du trajet */
 float ErrorIncrement(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal)
 {
-  return ErrorPowerTotal + (KI * ErrorClicCycle(clicNb_cycle_MASTER, clicNb_cycle_SLAVE));
+  /*Code contient erreur de logique: ErrorPowerTotal += ErrorClicCycle(clicNb_cycle_MASTER, clicNb_cycle_SLAVE));
+  return (ErrorPowerTotal);*/
 }
 
 void CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal,float InitialMotorSpeed) //Cette partie réalise l'addition des deux paramètres contenant KI et KP
