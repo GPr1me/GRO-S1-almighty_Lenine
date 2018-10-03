@@ -89,7 +89,7 @@ void SwitchMotorsHierarchy() // Power to the people!
 
 float IncrementKI(float ErrorSpeedTotal, float )
 {
-  ErrorSpeedTotal+=1
+  ErrorSpeedTotal+=
   return (ErrorSpeedTotal);
 }
 
