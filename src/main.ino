@@ -32,9 +32,6 @@ int MOTOR_SLAVE = 1;
 /* ****************************************************************************
 Vos propres fonctions sont creees ici
 **************************************************************************** */
-void maFonction(){
-  // code
-}
 
 void Avancer(int speed, int distance)
 {// start motors
@@ -71,7 +68,6 @@ void CorrectSpeed(int cycleNb,
                   float speedRatio)
 {
   float MotorMaster_actualClicNb = ENCODER_Read(MOTOR_MASTER);
-<<<<<<< HEAD
   // incomplete
 }
 
@@ -84,6 +80,7 @@ int DistanceToClics(int distance)
 {
   // incomplete
   //return distance * ratio;
+  return distance;
 }
 
 void SwitchMotorsHierarchy() // Power to the people!
@@ -91,8 +88,6 @@ void SwitchMotorsHierarchy() // Power to the people!
   int temp = MOTOR_MASTER;
   MOTOR_MASTER = MOTOR_SLAVE;
   MOTOR_SLAVE = temp;
-=======
->>>>>>> ecccf3ef106898f387b8771c11c8052b5ca99a58
 }
 
 /* ****************************************************************************
