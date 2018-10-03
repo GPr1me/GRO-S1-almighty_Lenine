@@ -43,7 +43,7 @@ void Avancer(int speed, int distance)
   int clicNb_cycle_MASTER = 0;
   int clicNb_cycle_SLAVE = 0;
   int cycleNb = 0;
-  float ErrorSpeedTotal=0;
+  float ErrorPowerTotal=0;
 
   while(travelDistance < distance)
   {
@@ -52,8 +52,6 @@ void Avancer(int speed, int distance)
     delay(CYCLEDELAY);
     clicNb_cycle_MASTER = ENCODER_Read(MOTOR_MASTER)-clicNb_start_MASTER;
     clicNb_cycle_SLAVE = ENCODER_Read(MOTOR_SLAVE)-clicNb_start_SLAVE;
-    //CorrectDistance(/* incomplete */);
-    CorrectSpeed(/*incomplet*/);
     
 
     cycleNb++;
@@ -69,8 +67,6 @@ void Avancer(int speed, int distance)
 int ErrorClicCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
 {
   return clicNb_cycle_MASTER-clicNb_cycle_SLAVE;
-  float MotorMaster_actualClicNb = ENCODER_Read(MOTOR_MASTER);
-  // incomplete
 }
 
 
@@ -99,10 +95,11 @@ int DistanceToClics(float distance)
   return (total_clics); //Retourne le nombre de clique nécessaire pour la distance voulue
 }
 
-float ErrorIncrement(float errorSpeedCycle,float ErrorSpeedTotal)
+float ErrorIncrement(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal)
 {
-  ErrorSpeedTotal+=errorSpeedCycle;
-  return (ErrorSpeedTotal);
+  ErrorPowerTotal+= ErrorClicCycle(clicNb_cycle_MASTER, clicNb_cycle_SLAVE);
+  ErrorPowerTotal*KI;
+  return (ErrorPowerTotal);
 }
 
 void SwitchMotorsHierarchy() // Power to the people!
