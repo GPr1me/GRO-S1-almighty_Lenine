@@ -83,12 +83,6 @@ void CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowe
   MOTOR_SetSpeed(MOTOR_SLAVE, (InitialMotorSpeed+=errorPower));
 }
 
-void CorrectDistance(int clicNb)
-{
-
-  
-}
-
 int DistanceToClics(float distance)
 {
   float clics_turn=3200,total_clics=0, circonference=0,w_radius=3.5;
