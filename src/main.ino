@@ -28,14 +28,6 @@ const int CYCLEDELAY = 250;
 int MOTOR_MASTER = 0;
 int MOTOR_SLAVE = 1;
 
-
-/* ****************************************************************************
-Vos propres fonctions sont creees ici
-**************************************************************************** */
-void maFonction(){
-  // code
-}
-
 void Avancer(int speed, int distance)
 {// start motors
   ENCODER_Reset(MOTOR_MASTER);
@@ -75,12 +67,18 @@ void Avancer(int speed, int distance)
 
 int ErrorClicCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
 {
+<<<<<<< HEAD
   return clicNb_cycle_MASTER-clicNb_cycle_SLAVE;
+=======
+  float MotorMaster_actualClicNb = ENCODER_Read(MOTOR_MASTER);
+  // incomplete
+>>>>>>> db4c8c6e33aaf04a9f80ba1922dcc74411e86192
 }
 
 
 float errorSpeedCycle(int errorClic_SLAVE)
 {
+<<<<<<< HEAD
   int errorSpeed_SLAVE = errorClic_SLAVE/CYCLEDELAY;
   return errorSpeed_SLAVE * KP;
 }
@@ -93,12 +91,17 @@ float CorrectSpeed()
 void CorrectDistance(int clicNb)
 {
 
+=======
+  
+>>>>>>> db4c8c6e33aaf04a9f80ba1922dcc74411e86192
 }
 
-int DistanceToClics(int distance)
+int DistanceToClics(float distance)
 {
-  // incomplete
-  //return distance * ratio;
+  float clics_turn=3200,total_clics=0, circonference=0,w_radius=3.5;
+    circonference=2*PI*w_radius;
+    total_clics=(clics_turn*distance)/circonference;
+  return (total_clics); //Retourne le nombre de clique nécessaire pour la distance voulue
 }
 
 void SwitchMotorsHierarchy() // Power to the people!
