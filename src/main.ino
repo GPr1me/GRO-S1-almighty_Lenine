@@ -22,10 +22,10 @@ Variables globales et defines
 
 const float KP = 0.0001;
 const float KI = 0.00002;
+
 const int CYCLEDELAY = 250;
 const int CLIC_PER_ROTATION = 3200;
-// DISTANCE_PAR_CLIC
-//const int TEMPS_PAUSE
+
 int MOTOR_MASTER = 0;
 int MOTOR_SLAVE = 1;
 
