@@ -1,8 +1,8 @@
 /*
-Projet: Le nom du script
-Equipe: Votre numero d'equipe
-Auteurs: Les membres auteurs du script
-Description: Breve description du script
+Projet: Déplacement du robot
+Equipe: 21
+Auteurs: Marc-Olivier Thibault, Vincent Pelletier, Émile Rousseau-Pinard, Charles Maheu
+Description: Fonction main pour faire avancer et tourner le robot
 Date: Derniere date de modification
 */
 
@@ -28,6 +28,10 @@ const int CYCLEDELAY = 250;
 int MOTOR_MASTER = 0;
 int MOTOR_SLAVE = 1;
 
+
+/* ****************************************************************************
+Vos propres fonctions sont creees ici
+**************************************************************************** */
 void Avancer(int speed, int distance)
 {// start motors
   ENCODER_Reset(MOTOR_MASTER);
