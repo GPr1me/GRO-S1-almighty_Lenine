@@ -4,5 +4,6 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 build/*
+<<<<<<< HEAD
 .vscode/settings.json
 /.vscode/settings.json
