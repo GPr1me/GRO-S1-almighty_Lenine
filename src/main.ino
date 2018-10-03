@@ -123,12 +123,11 @@ void Tourner(float angle)
     if(angle < 0)
     {
       SwitchMotorsHierarchy();
-      angle *= -1;
     }
 
     // Execution code virage
 
-    
+
   }
 }
 
