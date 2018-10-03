@@ -22,10 +22,11 @@ Variables globales et defines
 
 const float KP = 0.0001;
 const float KI = 0.00002;
+const int CYCLEDELAY = 250;
 // DISTANCE_PAR_CLIC
 //const int TEMPS_PAUSE
-const int MOTOR_MASTER = 0;
-const int MOTOR_SLAVE = 1;
+int MOTOR_MASTER = 0;
+int MOTOR_SLAVE = 1;
 
 
 /* ****************************************************************************
@@ -35,12 +36,60 @@ void maFonction(){
   // code
 }
 
-void correctSpeed(int cycleNb,
+void Avancer(int speed, int distance)
+{// start motors
+  ENCODER_Reset(MOTOR_MASTER);
+  ENCODER_Reset(MOTOR_SLAVE);
+  MOTOR_SetSpeed(MOTOR_MASTER, speed);
+  MOTOR_SetSpeed(MOTOR_SLAVE, speed);
+
+  int travelDistance = 0;
+  int clicNb_master = 0;
+  int clicNb_slave = 0;
+  int cycleNb = 0;
+
+  while(travelDistance < distance)
+  {
+    delay(CYCLEDELAY);
+
+    CorrectDistance(/* incomplete */);
+    CorrectSpeed(cycleNb, DistanceToClics(distance), clicNb_master, 1.);
+
+    cycleNb++;
+  }
+
+  // Stop motors
+  MOTOR_SetSpeed(MOTOR_MASTER, 0);
+  MOTOR_SetSpeed(MOTOR_SLAVE, 0);
+  ENCODER_Reset(MOTOR_MASTER);
+  ENCODER_Reset(MOTOR_SLAVE);
+}
+
+void CorrectSpeed(int cycleNb,
                   int clicNbGoal, 
                   int actualTotalClicNb,
                   float speedRatio)
 {
   float MotorMaster_actualClicNb = ENCODER_Read(MOTOR_MASTER);
+  // incomplete
+}
+
+void CorrectDistance()
+{
+  // incomplete
+}
+
+int DistanceToClics(int distance)
+{
+  // incomplete
+  //return distance * ratio;
+}
+
+void SwitchMotorsHierarchy() // Power to the people!
+{
+  int temp = MOTOR_MASTER;
+  MOTOR_MASTER = MOTOR_SLAVE;
+  MOTOR_SLAVE = temp;
 }
 
 /* ****************************************************************************
