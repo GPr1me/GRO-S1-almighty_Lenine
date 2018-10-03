@@ -28,31 +28,36 @@ const int CYCLEDELAY = 250;
 int MOTOR_MASTER = 0;
 int MOTOR_SLAVE = 1;
 
-void Avancer(int speed, int distance)
+
+/* ****************************************************************************
+Vos propres fonctions sont creees ici
+**************************************************************************** */
+
+void Avancer(int speed, float distance)
 {// start motors
   ENCODER_Reset(MOTOR_MASTER);
   ENCODER_Reset(MOTOR_SLAVE);
   MOTOR_SetSpeed(MOTOR_MASTER, speed);
   MOTOR_SetSpeed(MOTOR_SLAVE, speed);
 
-  int travelDistance = 0;
+  float travelDistance = 0;
   int clicNb_master = 0;
   int clicNb_slave = 0;
-  int clicNb_start_MASTER = 0;
-  int clicNb_start_SLAVE = 0;
-  int clicNb_cycle_MASTER = 0;
-  int clicNb_cycle_SLAVE = 0;
   int cycleNb = 0;
   float ErrorPowerTotal=0;
 
   while(travelDistance < distance)
   {
-    clicNb_start_MASTER = ENCODER_Read(MOTOR_MASTER);
-    clicNb_start_SLAVE = ENCODER_Read(MOTOR_SLAVE);
     delay(CYCLEDELAY);
+<<<<<<< HEAD
     clicNb_cycle_MASTER = ENCODER_Read(MOTOR_MASTER)-clicNb_start_MASTER;
     clicNb_cycle_SLAVE = ENCODER_Read(MOTOR_SLAVE)-clicNb_start_SLAVE;
     
+=======
+
+    CorrectDistance(/* incomplete */);
+    CorrectSpeed(cycleNb, DistanceToClics(distance), clicNb_master, 1.);
+>>>>>>> 2a35bfd75e94f6c194d0463f5572724299bc3f8d
 
     cycleNb++;
   }
@@ -64,35 +69,28 @@ void Avancer(int speed, int distance)
   ENCODER_Reset(MOTOR_SLAVE);
 }
 
-int ErrorClicCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
+void CorrectSpeed(int cycleNb,
+                  int clicNbGoal, 
+                  int actualTotalClicNb,
+                  float speedRatio)
 {
+<<<<<<< HEAD
   return clicNb_cycle_MASTER-clicNb_cycle_SLAVE;
+=======
+  float MotorMaster_actualClicNb = ENCODER_Read(MOTOR_MASTER);
+  // incomplete
+>>>>>>> 2a35bfd75e94f6c194d0463f5572724299bc3f8d
 }
 
-
-float errorSpeedCycle(int errorClic_SLAVE)
+void CorrectDistance()
 {
-  int errorSpeed_SLAVE = errorClic_SLAVE/CYCLEDELAY;
-  return errorSpeed_SLAVE * KP;
+  // incomplete
 }
 
-float CorrectSpeed()
+int DistanceToClics(int distance)
 {
- 
-}
-
-void CorrectDistance(int clicNb)
-{
-
-  
-}
-
-int DistanceToClics(float distance)
-{
-  float clics_turn=3200,total_clics=0, circonference=0,w_radius=3.5;
-    circonference=2*PI*w_radius;
-    total_clics=(clics_turn*distance)/circonference;
-  return (total_clics); //Retourne le nombre de clique nécessaire pour la distance voulue
+  // incomplete
+  //return distance * ratio;
 }
 
 float ErrorIncrement(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal)
@@ -107,6 +105,28 @@ void SwitchMotorsHierarchy() // Power to the people!
   int temp = MOTOR_MASTER;
   MOTOR_MASTER = MOTOR_SLAVE;
   MOTOR_SLAVE = temp;
+}
+
+// Prend pour acquis que l'angle 0 est directement tout droit.
+// Les angles négatifs sont vers la gauche et positif vers la droite.
+void Tourner(float angle)
+{
+  if(angle == 0)
+  {
+    //Si angle == 0, On ne fait rien
+  }
+  else
+  {
+    if(angle < 0)
+    {
+      SwitchMotorsHierarchy();
+      angle *= -1;
+    }
+
+    // exécution du virage
+    // code goes here
+
+  }
 }
 
 /* ****************************************************************************
