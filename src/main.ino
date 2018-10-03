@@ -68,18 +68,12 @@ void Avancer(int speed, int distance)
 
 int ErrorClicCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
 {
-<<<<<<< HEAD
   return clicNb_cycle_MASTER-clicNb_cycle_SLAVE;
-=======
-  float MotorMaster_actualClicNb = ENCODER_Read(MOTOR_MASTER);
-  // incomplete
->>>>>>> db4c8c6e33aaf04a9f80ba1922dcc74411e86192
 }
 
 
 float errorSpeedCycle(int errorClic_SLAVE)
 {
-<<<<<<< HEAD
   int errorSpeed_SLAVE = errorClic_SLAVE/CYCLEDELAY;
   return errorSpeed_SLAVE * KP;
 }
@@ -92,9 +86,6 @@ float CorrectSpeed()
 void CorrectDistance(int clicNb)
 {
 
-=======
-  
->>>>>>> db4c8c6e33aaf04a9f80ba1922dcc74411e86192
 }
 
 int DistanceToClics(float distance)
@@ -112,9 +103,9 @@ void SwitchMotorsHierarchy() // Power to the people!
   MOTOR_SLAVE = temp;
 }
 
-float IncrementKI(float ErrorSpeedTotal, float )
+float IncrementKI(float ErrorSpeedTotal, float errorSpeedCycle)
 {
-  ErrorSpeedTotal+=
+  ErrorSpeedTotal+=errorSpeedCycle;
   return (ErrorSpeedTotal);
 }
 
