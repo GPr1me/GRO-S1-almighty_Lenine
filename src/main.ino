@@ -81,6 +81,11 @@ float ErrorPowerCycle(int errorClic_SLAVE)
   return errorSpeed_SLAVE * KP;
 }
 
+float ErrorIncrement(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal)
+{
+  return ErrorPowerTotal + (KI * ErrorClicCycle(clicNb_cycle_MASTER, clicNb_cycle_SLAVE));
+}
+
 void CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal,float InitialMotorSpeed) //Cette partie réalise l'addition des deux paramètres contenant KI et KP
 {
   int errorPower = ErrorPowerCycle(ErrorClicCycle(clicNb_cycle_MASTER,clicNb_cycle_SLAVE)) + ErrorIncrement(clicNb_cycle_MASTER,clicNb_cycle_SLAVE,ErrorPowerTotal);
@@ -94,11 +99,6 @@ int DistanceToClics(float distance)
   float circonference = 2 * PI * w_radius;
 
   return (CLIC_PER_ROTATION * distance)/circonference;
-}
-
-float ErrorIncrement(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal)
-{
-  return ErrorPowerTotal + (KI * ErrorClicCycle(clicNb_cycle_MASTER, clicNb_cycle_SLAVE));
 }
 
 void SwitchMotorsHierarchy() // Power to the people!
