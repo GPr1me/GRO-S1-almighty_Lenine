@@ -43,6 +43,7 @@ void Avancer(int speed, int distance)
   int clicNb_cycle_MASTER = 0;
   int clicNb_cycle_SLAVE = 0;
   int cycleNb = 0;
+  float ErrorSpeedTotal=0;
 
   while(travelDistance < distance)
   {
@@ -96,6 +97,12 @@ int DistanceToClics(float distance)
     circonference=2*PI*w_radius;
     total_clics=(clics_turn*distance)/circonference;
   return (total_clics); //Retourne le nombre de clique nécessaire pour la distance voulue
+}
+
+float ErrorIncrement(float errorSpeedCycle,float ErrorSpeedTotal)
+{
+  ErrorSpeedTotal+=errorSpeedCycle;
+  return (ErrorSpeedTotal);
 }
 
 void SwitchMotorsHierarchy() // Power to the people!
