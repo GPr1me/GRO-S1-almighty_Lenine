@@ -69,20 +69,20 @@ void Avancer(int speed, int distance)
 int ErrorClicCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
 {
   return clicNb_cycle_MASTER-clicNb_cycle_SLAVE;
-  float MotorMaster_actualClicNb = ENCODER_Read(MOTOR_MASTER);
-  // incomplete
 }
 
 
-float errorSpeedCycle(int errorClic_SLAVE)
+float ErrorPowerCycle(int errorClic_SLAVE)
 {
   int errorSpeed_SLAVE = errorClic_SLAVE/CYCLEDELAY;
   return errorSpeed_SLAVE * KP;
 }
 
-float CorrectSpeed()
+float CorrectSpeed(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE, speed)
 {
- 
+  errorPower = ErrorPowerCycle + ErrorPowerTotal;
+  MOTOR_SetSpeed(MOTOR_SLAVE, (speed+errorPower))
+
 }
 
 void CorrectDistance(int clicNb)
