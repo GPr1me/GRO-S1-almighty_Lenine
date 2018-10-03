@@ -43,7 +43,7 @@ void Avancer(int speed, int distance)
   int clicNb_cycle_MASTER = 0;
   int clicNb_cycle_SLAVE = 0;
   int cycleNb = 0;
-  float ErrorSpeedTotal=0;
+  float ErrorPowerTotal=0;
 
   while(travelDistance < distance)
   {
@@ -71,18 +71,16 @@ int ErrorClicCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
   return clicNb_cycle_MASTER-clicNb_cycle_SLAVE;
 }
 
-
 float ErrorPowerCycle(int errorClic_SLAVE)
 {
   int errorSpeed_SLAVE = errorClic_SLAVE/CYCLEDELAY;
   return errorSpeed_SLAVE * KP;
 }
 
-float CorrectSpeed(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE, speed)
+void CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal,float InitialMotorSpeed) //EMILE'S STUFF
 {
-  errorPower = ErrorPowerCycle + ErrorPowerTotal;
-  MOTOR_SetSpeed(MOTOR_SLAVE, (speed+errorPower))
-
+  int errorPower = ErrorPowerCycle(ErrorClicCycle(clicNb_cycle_MASTER,clicNb_cycle_SLAVE)) + ErrorIncrement(clicNb_cycle_MASTER,clicNb_cycle_SLAVE,ErrorPowerTotal);
+  MOTOR_SetSpeed(MOTOR_SLAVE, (InitialMotorSpeed+=errorPower));
 }
 
 void CorrectDistance(int clicNb)
