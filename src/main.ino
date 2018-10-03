@@ -99,10 +99,11 @@ int DistanceToClics(float distance)
   return (total_clics); //Retourne le nombre de clique nécessaire pour la distance voulue
 }
 
-float ErrorIncrement(float errorSpeedCycle,float ErrorSpeedTotal)
+float ErrorIncrement(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal)
 {
-  ErrorSpeedTotal+=errorSpeedCycle;
-  return (ErrorSpeedTotal);
+  ErrorPowerTotal+= ErrorClicCycle(clicNb_cycle_MASTER, clicNb_cycle_SLAVE);
+  ErrorPowerTotal*KI;
+  return (ErrorPowerTotal);
 }
 
 void SwitchMotorsHierarchy() // Power to the people!
