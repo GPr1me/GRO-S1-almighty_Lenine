@@ -52,7 +52,6 @@ void Avancer(int speed, int distance)
     delay(CYCLEDELAY);
     clicNb_cycle_MASTER = ENCODER_Read(MOTOR_MASTER)-clicNb_start_MASTER;
     clicNb_cycle_SLAVE = ENCODER_Read(MOTOR_SLAVE)-clicNb_start_SLAVE;
-    //CorrectDistance(/* incomplete */);
     CorrectSpeed(/*incomplet*/);
     
 
@@ -66,6 +65,8 @@ void Avancer(int speed, int distance)
   ENCODER_Reset(MOTOR_SLAVE);
 }
 
+void MoscowRules()//FONCTION QUI GÈRE L'ERREUR DU MOTEUR SLAVE
+
 int ErrorClicCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
 {
   return clicNb_cycle_MASTER-clicNb_cycle_SLAVE;
@@ -77,7 +78,7 @@ float ErrorPowerCycle(int errorClic_SLAVE)
   return errorSpeed_SLAVE * KP;
 }
 
-void CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal,float InitialMotorSpeed) //EMILE'S STUFF
+void CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal,float InitialMotorSpeed) //Cette partie réalise l'addition des deux paramètres contenant KI et KP
 {
   int errorPower = ErrorPowerCycle(ErrorClicCycle(clicNb_cycle_MASTER,clicNb_cycle_SLAVE)) + ErrorIncrement(clicNb_cycle_MASTER,clicNb_cycle_SLAVE,ErrorPowerTotal);
   MOTOR_SetSpeed(MOTOR_SLAVE, (InitialMotorSpeed+=errorPower));
