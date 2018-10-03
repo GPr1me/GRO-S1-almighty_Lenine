@@ -23,19 +23,21 @@ Variables globales et defines
 const float KP = 0.0001;
 const float KI = 0.00002;
 const int CYCLEDELAY = 250;
+const int CLIC_PER_ROTATION = 3200;
 // DISTANCE_PAR_CLIC
 //const int TEMPS_PAUSE
 int MOTOR_MASTER = 0;
 int MOTOR_SLAVE = 1;
 
-void Avancer(int speed, int distance)
+void Avancer(float speed, float distance)
 {// start motors
   ENCODER_Reset(MOTOR_MASTER);
   ENCODER_Reset(MOTOR_SLAVE);
   MOTOR_SetSpeed(MOTOR_MASTER, speed);
   MOTOR_SetSpeed(MOTOR_SLAVE, speed);
 
-  int travelDistance = 0;
+  int clicTotal = DistanceToClics(distance);
+
   int clicNb_master = 0;
   int clicNb_slave = 0;
   int clicNb_start_MASTER = 0;
@@ -45,17 +47,19 @@ void Avancer(int speed, int distance)
   int cycleNb = 0;
   float ErrorSpeedTotal=0;
 
-  while(travelDistance < distance)
+  while(ENCODER_Read(MOTOR_MASTER) < clicTotal)
   {
     clicNb_start_MASTER = ENCODER_Read(MOTOR_MASTER);
     clicNb_start_SLAVE = ENCODER_Read(MOTOR_SLAVE);
+
     delay(CYCLEDELAY);
+
     clicNb_cycle_MASTER = ENCODER_Read(MOTOR_MASTER)-clicNb_start_MASTER;
     clicNb_cycle_SLAVE = ENCODER_Read(MOTOR_SLAVE)-clicNb_start_SLAVE;
-    //CorrectDistance(/* incomplete */);
-    CorrectSpeed(/*incomplet*/);
-    
 
+
+    //CorrectSpeed
+    
     cycleNb++;
   }
 
@@ -78,32 +82,25 @@ float ErrorPowerCycle(int errorClic_SLAVE)
   return errorSpeed_SLAVE * KP;
 }
 
-float CorrectSpeed(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE, speed)
+// INCOMPLET
+float CorrectSpeed(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE, float speed)
 {
-  errorPower = ErrorPowerCycle + ErrorPowerTotal;
+  float errorPower = ErrorPowerCycle + ErrorPowerTotal;
   MOTOR_SetSpeed(MOTOR_SLAVE, (speed+errorPower))
-
 }
 
-void CorrectDistance(int clicNb)
-{
-
-  
-}
-
+//Retourne le nombre de clique nécessaire pour la distance voulue
 int DistanceToClics(float distance)
 {
-  float clics_turn=3200,total_clics=0, circonference=0,w_radius=3.5;
-    circonference=2*PI*w_radius;
-    total_clics=(clics_turn*distance)/circonference;
-  return (total_clics); //Retourne le nombre de clique nécessaire pour la distance voulue
+  float w_radius = 3.5;
+  float circonference = 2 * PI * w_radius;
+
+  return (CLIC_PER_ROTATION * distance)/circonference;
 }
 
 float ErrorIncrement(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal)
 {
-  ErrorPowerTotal+= ErrorClicCycle(clicNb_cycle_MASTER, clicNb_cycle_SLAVE);
-  ErrorPowerTotal*KI;
-  return (ErrorPowerTotal);
+  return ErrorPowerTotal + (KI * ErrorClicCycle(clicNb_cycle_MASTER, clicNb_cycle_SLAVE));
 }
 
 void SwitchMotorsHierarchy() // Power to the people!
