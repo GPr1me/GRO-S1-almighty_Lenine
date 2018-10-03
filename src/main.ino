@@ -71,6 +71,7 @@ void CorrectSpeed(int cycleNb,
                   float speedRatio)
 {
   float MotorMaster_actualClicNb = ENCODER_Read(MOTOR_MASTER);
+<<<<<<< HEAD
   // incomplete
 }
 
@@ -90,6 +91,8 @@ void SwitchMotorsHierarchy() // Power to the people!
   int temp = MOTOR_MASTER;
   MOTOR_MASTER = MOTOR_SLAVE;
   MOTOR_SLAVE = temp;
+=======
+>>>>>>> ecccf3ef106898f387b8771c11c8052b5ca99a58
 }
 
 /* ****************************************************************************
