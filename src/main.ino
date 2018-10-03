@@ -96,7 +96,7 @@ void SwitchMotorsHierarchy() // Power to the people!
   MOTOR_SLAVE = temp;
 }
 
-// Prend pour acquis que l'angle 0degrée est directement tout droit.
+// Prend pour acquis que l'angle 0 est directement tout droit.
 // Les angles négatifs sont vers la gauche et positif vers la droite.
 void Tourner(float angle)
 {
@@ -109,9 +109,12 @@ void Tourner(float angle)
     if(angle < 0)
     {
       SwitchMotorsHierarchy();
+      angle *= -1;
     }
 
     // exécution du virage
+    // code goes here
+
   }
 }
 
