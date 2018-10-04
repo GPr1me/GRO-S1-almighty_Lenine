@@ -56,8 +56,8 @@ void Avancer(int speed, int distance)
     delay(CYCLEDELAY);
     clicNb_cycle_MASTER = ENCODER_Read(MOTOR_MASTER)-clicNb_start_MASTER;
     clicNb_cycle_SLAVE = ENCODER_Read(MOTOR_SLAVE)-clicNb_start_SLAVE;
-    //CorrectDistance(/* incomplete */);
-    CorrectSpeed(/*incomplet*/);
+    //CorrectDistance(/* incomplete */); //fonction avec KI
+    CorrectSpeed(/*incomplete*/); // fonction avec KP
     
 
     cycleNb++;
@@ -69,6 +69,8 @@ void Avancer(int speed, int distance)
   ENCODER_Reset(MOTOR_MASTER);
   ENCODER_Reset(MOTOR_SLAVE);
 }
+
+//---------------------------
 
 int ErrorClicCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
 {
