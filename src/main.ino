@@ -94,7 +94,7 @@ float ErrorPowerCycle(int errorClic_SLAVE)
 depuis le début du trajet */
 float ErrorIncrement(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal)
 {
-  ErrorPowerTotal += ErrorClicCycle(clicNb_cycle_MASTER, clicNb_cycle_SLAVE));
+  ErrorPowerTotal += ErrorClicCycle(clicNb_cycle_MASTER, clicNb_cycle_SLAVE);
   return (ErrorPowerTotal);
 }
 
@@ -114,6 +114,13 @@ int DistanceToClics(float distance)
 }
 
 void SwitchMotorsHierarchy() // Power to the people!
+{
+  int temp = MOTOR_MASTER;
+  MOTOR_MASTER = MOTOR_SLAVE;
+  MOTOR_SLAVE = temp;
+}
+
+void SetMaster(int ID) // Power to the people!
 {
   int temp = MOTOR_MASTER;
   MOTOR_MASTER = MOTOR_SLAVE;
