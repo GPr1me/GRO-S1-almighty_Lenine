@@ -22,44 +22,54 @@ Variables globales et defines
 
 const float KP = 0.0001;
 const float KI = 0.00002;
+
 const int CYCLEDELAY = 250;
-// DISTANCE_PAR_CLIC
-//const int TEMPS_PAUSE
+const int CLIC_PER_ROTATION = 3200;
+
+// Simule le type de base Booléen
+// Sera en réalité un entier égale à 0 ou 1
+typedef enum { MOTOR_LEFT, MOTOR_RIGHT } Motors;
+
 int MOTOR_MASTER = 0;
 int MOTOR_SLAVE = 1;
 
-
-/* ****************************************************************************
-Vos propres fonctions sont creees ici
-**************************************************************************** */
-void Avancer(int speed, int distance)
+void Avancer(float speed, float distance)
 {// start motors
   ENCODER_Reset(MOTOR_MASTER);
   ENCODER_Reset(MOTOR_SLAVE);
   MOTOR_SetSpeed(MOTOR_MASTER, speed);
   MOTOR_SetSpeed(MOTOR_SLAVE, speed);
 
-  int travelDistance = 0;
+  int clicTotal = DistanceToClics(distance);
+
   int clicNb_master = 0;
   int clicNb_slave = 0;
+
   int clicNb_start_MASTER = 0;
   int clicNb_start_SLAVE = 0;
+
   int clicNb_cycle_MASTER = 0;
   int clicNb_cycle_SLAVE = 0;
+
   int cycleNb = 0;
   float ErrorPowerTotal=0;
 
-  while(travelDistance < distance)
+  while(ENCODER_Read(MOTOR_MASTER) < clicTotal)
   {
     clicNb_start_MASTER = ENCODER_Read(MOTOR_MASTER);
     clicNb_start_SLAVE = ENCODER_Read(MOTOR_SLAVE);
+
     delay(CYCLEDELAY);
+
     clicNb_cycle_MASTER = ENCODER_Read(MOTOR_MASTER)-clicNb_start_MASTER;
     clicNb_cycle_SLAVE = ENCODER_Read(MOTOR_SLAVE)-clicNb_start_SLAVE;
     //CorrectDistance(/* incomplete */); //fonction avec KI
     CorrectSpeed(/*incomplete*/); // fonction avec KP
     
 
+
+    //CorrectSpeed
+    
     cycleNb++;
   }
 
@@ -77,35 +87,51 @@ int ErrorClicCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
   return clicNb_cycle_MASTER-clicNb_cycle_SLAVE;
 }
 
+/*Cette fonction prend pour entrée la différence de cliques, la divise par la différence de temps
+choisie et multiplie finalement le tout par KP. */
 float ErrorPowerCycle(int errorClic_SLAVE)
 {
   int errorSpeed_SLAVE = errorClic_SLAVE/CYCLEDELAY;
   return errorSpeed_SLAVE * KP;
 }
 
-void CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal,float InitialMotorSpeed) //EMILE'S STUFF
+/*Cette fonction prend comme entrée le nombre de clique des deux moteurs ainsi que l'erreur cumulée
+depuis le début du trajet */
+float ErrorIncrement(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal)
+{
+  ErrorPowerTotal += ErrorClicCycle(clicNb_cycle_MASTER, clicNb_cycle_SLAVE);
+  return (ErrorPowerTotal);
+}
+
+void CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal,float InitialMotorSpeed) //Cette partie réalise l'addition des deux paramètres contenant KI et KP
 {
   int errorPower = ErrorPowerCycle(ErrorClicCycle(clicNb_cycle_MASTER,clicNb_cycle_SLAVE)) + ErrorIncrement(clicNb_cycle_MASTER,clicNb_cycle_SLAVE,ErrorPowerTotal);
   MOTOR_SetSpeed(MOTOR_SLAVE, (InitialMotorSpeed+=errorPower));
 }
 
+//Retourne le nombre de clique nécessaire pour la distance voulue
 int DistanceToClics(float distance)
 {
-  float clics_turn=3200,total_clics=0, circonference=0,w_radius=3.5;
-    circonference=2*PI*w_radius;
-    total_clics=(clics_turn*distance)/circonference;
-  return (total_clics); //Retourne le nombre de clique nécessaire pour la distance voulue
+  float w_radius = 3.5;
+  float circonference = 2 * PI * w_radius;
+
+  return (CLIC_PER_ROTATION * distance)/circonference;
 }
 
-float ErrorIncrement(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal)
+void SetMaster(Motors ID) // Power to the people!
 {
-  ErrorPowerTotal+= ErrorClicCycle(clicNb_cycle_MASTER, clicNb_cycle_SLAVE);
-  ErrorPowerTotal*KI;
-  return (ErrorPowerTotal);
-}
-
-void SwitchMotorsHierarchy() // Power to the people!
-{
+  switch (ID) 
+   {
+      case MOTOR_LEFT:      
+        MOTOR_MASTER = MOTOR_LEFT;
+        MOTOR_SLAVE = MOTOR_RIGHT;
+      case MOTOR_RIGHT:      
+        MOTOR_MASTER = MOTOR_RIGHT;
+        MOTOR_SLAVE = MOTOR_LEFT;
+      // Ne devrait JAMAIS être un cas par défaut comme il s'agit d'un
+      // ENUM. Sinon quoi revérifier la définition de l'ENUM Motors
+      default: break;
+   }
   int temp = MOTOR_MASTER;
   MOTOR_MASTER = MOTOR_SLAVE;
   MOTOR_SLAVE = temp;
@@ -120,7 +146,12 @@ void Tourner(float angle)
   {
     if(angle < 0)
     {
-      SwitchMotorsHierarchy();
+      SetMaster(MOTOR_LEFT); //Le moteur gauche est rendu MASTER
+    }
+
+    if(angle > 0)
+    {
+      SetMaster(MOTOR_RIGHT); //Le moteur droit est rendu MASTER
     }
 
     // Execution code virage
