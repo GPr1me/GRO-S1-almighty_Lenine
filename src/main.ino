@@ -115,7 +115,7 @@ float CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float initialM
 //Retourne le nombre de clique nécessaire pour la distance voulue
 int DistanceToClics(float distance)
 {
-  float w_radius = 3.5; //POUCES
+  float w_radius = 3.8; //CM
   float circonference = 2 * PI * w_radius;
 
   return (CLIC_PER_ROTATION * distance)/circonference;
@@ -180,7 +180,8 @@ Fonctions de boucle infini (loop())
 **************************************************************************** */
 // -> Se fait appeler perpetuellement suite au "setup"
 
-void loop() {
+void loop()
+ {
   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
   delay(10);// Delais pour décharger le CPU
   Avancer(0.5, 30);
