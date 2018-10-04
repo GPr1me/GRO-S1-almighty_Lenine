@@ -46,6 +46,7 @@ void Avancer(float speed, float distance)
   int clicNb_cycle_SLAVE = 0;
   int cycleNb = 0;
   float ErrorPowerTotal=0;
+  float eci = 0;
 
   while(ENCODER_Read(MOTOR_MASTER) < clicTotal)
   {
@@ -58,7 +59,7 @@ void Avancer(float speed, float distance)
     clicNb_cycle_SLAVE = ENCODER_Read(MOTOR_SLAVE)-clicNb_start_SLAVE;
 
 
-    //CorrectSpeed
+    eci = CorrectSpeed(clicNb_cycle_MASTER, clicNb_cycle_SLAVE, speed, eci);
     
     cycleNb++;
   }
@@ -70,31 +71,39 @@ void Avancer(float speed, float distance)
   ENCODER_Reset(MOTOR_SLAVE);
 }
 /*Cette fonction détermine la différence de cliques que le moteur slave assume*/
-int ErrorClicCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
+float ErrorClicCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
 {
-  return clicNb_cycle_MASTER-clicNb_cycle_SLAVE;
+  return ((clicNb_cycle_MASTER)-(clicNb_cycle_SLAVE))/CYCLEDELAY;
 }
 
 /*Cette fonction prend pour entrée la différence de cliques, la divise par la différence de temps
 choisie et multiplie finalement le tout par KP. */
-float ErrorPowerCycle(int errorClic_SLAVE)
+float ErrorPowerCycle(int errorClicCycle)
 {
-  int errorSpeed_SLAVE = errorClic_SLAVE/CYCLEDELAY;
-  return errorSpeed_SLAVE * KP;
+  return errorClicCycle * KP;
 }
 
 /*Cette fonction prend comme entrée le nombre de clique des deux moteurs ainsi que l'erreur cumulée
 depuis le début du trajet */
-float ErrorIncrement(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal)
+float ErrorClicIncrement(int errorClicCycle,float errorClicIncrement)
 {
-  /*Code contient erreur de logique: ErrorPowerTotal += ErrorClicCycle(clicNb_cycle_MASTER, clicNb_cycle_SLAVE));
-  return (ErrorPowerTotal);*/
+  float errorClicIncrement = errorClicIncrement + errorClicCycle;
+  return (errorClicIncrement);
 }
-
-void CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal,float InitialMotorSpeed) //Cette partie réalise l'addition des deux paramètres contenant KI et KP
+float ErrorPowerIncrement(float errorClicIncrement)
 {
-  int errorPower = ErrorPowerCycle(ErrorClicCycle(clicNb_cycle_MASTER,clicNb_cycle_SLAVE)) + ErrorIncrement(clicNb_cycle_MASTER,clicNb_cycle_SLAVE,ErrorPowerTotal);
-  MOTOR_SetSpeed(MOTOR_SLAVE, (InitialMotorSpeed+=errorPower));
+  float errorPowerIncrement = KI * errorClicIncrement;
+  return errorPowerIncrement;
+}
+float CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float initialMotorSpeed, float eci) //Cette partie réalise l'addition des deux paramètres contenant KI et KP
+{
+  int ecc = ErrorClicCycle(clicNb_cycle_MASTER,clicNb_cycle_SLAVE);
+  eci += ErrorClicIncrement(ecc, eci);
+  float errorPower = ErrorPowerCycle(ecc) 
+                 + ErrorPowerIncrement(eci);
+  initialMotorSpeed+=errorPower;
+  MOTOR_SetSpeed(MOTOR_SLAVE,initialMotorSpeed);
+  return eci;
 }
 
 //Retourne le nombre de clique nécessaire pour la distance voulue
