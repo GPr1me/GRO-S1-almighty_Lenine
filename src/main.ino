@@ -40,10 +40,13 @@ void Avancer(float speed, float distance)
 
   int clicNb_master = 0;
   int clicNb_slave = 0;
+
   int clicNb_start_MASTER = 0;
   int clicNb_start_SLAVE = 0;
+
   int clicNb_cycle_MASTER = 0;
   int clicNb_cycle_SLAVE = 0;
+  
   int cycleNb = 0;
   float ErrorPowerTotal=0;
 
