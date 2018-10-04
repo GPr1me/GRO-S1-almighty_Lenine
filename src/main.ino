@@ -87,8 +87,8 @@ float ErrorPowerCycle(int errorClic_SLAVE)
 depuis le début du trajet */
 float ErrorIncrement(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal)
 {
-  /*Code contient erreur de logique: ErrorPowerTotal += ErrorClicCycle(clicNb_cycle_MASTER, clicNb_cycle_SLAVE));
-  return (ErrorPowerTotal);*/
+  ErrorPowerTotal += ErrorClicCycle(clicNb_cycle_MASTER, clicNb_cycle_SLAVE));
+  return (ErrorPowerTotal);
 }
 
 void CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowerTotal,float InitialMotorSpeed) //Cette partie réalise l'addition des deux paramètres contenant KI et KP
