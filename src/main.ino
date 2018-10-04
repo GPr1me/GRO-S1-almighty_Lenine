@@ -113,13 +113,6 @@ int DistanceToClics(float distance)
   return (CLIC_PER_ROTATION * distance)/circonference;
 }
 
-void SwitchMotorsHierarchy() // Power to the people!
-{
-  int temp = MOTOR_MASTER;
-  MOTOR_MASTER = MOTOR_SLAVE;
-  MOTOR_SLAVE = temp;
-}
-
 void SetMaster(Motors ID) // Power to the people!
 {
   switch (ID) 
@@ -148,7 +141,7 @@ void Tourner(float angle)
   {
     if(angle < 0)
     {
-      SwitchMotorsHierarchy();
+      SetMaster(MOTOR_LEFT);
     }
 
     // Execution code virage
