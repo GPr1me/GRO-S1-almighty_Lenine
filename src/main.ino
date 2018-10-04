@@ -120,8 +120,20 @@ void SwitchMotorsHierarchy() // Power to the people!
   MOTOR_SLAVE = temp;
 }
 
-void SetMaster(int ID) // Power to the people!
+void SetMaster(Motors ID) // Power to the people!
 {
+  switch (ID) 
+   {
+      case MOTOR_LEFT:      
+        MOTOR_MASTER = MOTOR_LEFT;
+        MOTOR_SLAVE = MOTOR_RIGHT;
+      case MOTOR_RIGHT:      
+        MOTOR_MASTER = MOTOR_RIGHT;
+        MOTOR_SLAVE = MOTOR_LEFT;
+      // Ne devrait JAMAIS être un cas par défaut comme il s'agit d'un
+      // ENUM. Sinon quoi revérifier la définition de l'ENUM Motors
+      default: break;
+   }
   int temp = MOTOR_MASTER;
   MOTOR_MASTER = MOTOR_SLAVE;
   MOTOR_SLAVE = temp;
