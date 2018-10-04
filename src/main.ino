@@ -93,7 +93,7 @@ float ErrorPowerCycle(int errorClicCycle)
 depuis le début du trajet */
 float ErrorClicIncrement(int errorClicCycle,float errorClicIncrement)
 {
-  float errorClicIncrement = errorClicIncrement + errorClicCycle;
+  errorClicIncrement += errorClicCycle;
   return (errorClicIncrement);
 }
 float ErrorPowerIncrement(float errorClicIncrement)
@@ -183,5 +183,5 @@ Fonctions de boucle infini (loop())
 void loop() {
   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
   delay(10);// Delais pour décharger le CPU
-  Avancer(0.5,5)
+  Avancer(0.5, 30);
 }
