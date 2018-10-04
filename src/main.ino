@@ -141,7 +141,12 @@ void Tourner(float angle)
   {
     if(angle < 0)
     {
-      SetMaster(MOTOR_LEFT);
+      SetMaster(MOTOR_LEFT); //Le moteur gauche est rendu MASTER
+    }
+
+    if(angle > 0)
+    {
+      SetMaster(MOTOR_RIGHT); //Le moteur droit est rendu MASTER
     }
 
     // Execution code virage
