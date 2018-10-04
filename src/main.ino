@@ -49,7 +49,7 @@ void ACC_MASTER(float fin_speed, float ini_speed)
   if (ini_speed<fin_speed)
   {
     float n = (fin_speed-ini_speed)/10.;
-    for (int i=ini_speed, i<=fin_speed; i+=n)
+    for (int i=ini_speed; i<=fin_speed; i+=n)
     {
       MOTOR_SetSpeed(0, i);
       delay(50);
@@ -58,7 +58,7 @@ void ACC_MASTER(float fin_speed, float ini_speed)
   else if (ini_speed>fin_speed)
   {
     float n = (fin_speed-ini_speed)/10.;
-    for (int i=ini_speed, i>=fin_speed; i+=n)
+    for (int i=ini_speed; i>=fin_speed; i+=n)
     {
       MOTOR_SetSpeed(0, i);
       delay(50);
