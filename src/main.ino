@@ -26,6 +26,9 @@ const float KI = 0.00002;
 const int CYCLEDELAY = 250;
 const int CLIC_PER_ROTATION = 3200;
 
+const int MOTOR_LEFT = 0;
+const int MOTOR_RIGHT = 1;
+
 int MOTOR_MASTER = 0;
 int MOTOR_SLAVE = 1;
 
@@ -40,10 +43,13 @@ void Avancer(float speed, float distance)
 
   int clicNb_master = 0;
   int clicNb_slave = 0;
+
   int clicNb_start_MASTER = 0;
   int clicNb_start_SLAVE = 0;
+
   int clicNb_cycle_MASTER = 0;
   int clicNb_cycle_SLAVE = 0;
+
   int cycleNb = 0;
   float ErrorPowerTotal=0;
 
