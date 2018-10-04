@@ -26,8 +26,9 @@ const float KI = 0.00002;
 const int CYCLEDELAY = 250;
 const int CLIC_PER_ROTATION = 3200;
 
-const int MOTOR_LEFT = 0;
-const int MOTOR_RIGHT = 1;
+// Simule le type de base Booléen
+// Sera en réalité un entier égale à 0 ou 1
+typedef enum { MOTOR_LEFT, MOTOR_RIGHT } Motors;
 
 int MOTOR_MASTER = 0;
 int MOTOR_SLAVE = 1;
