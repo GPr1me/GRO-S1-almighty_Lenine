@@ -107,7 +107,7 @@ void CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float ErrorPowe
 //Retourne le nombre de clique nécessaire pour la distance voulue
 int DistanceToClics(float distance)
 {
-  float w_radius = 3.5;
+  float w_radius = 3.5; //POUCES
   float circonference = 2 * PI * w_radius;
 
   return (CLIC_PER_ROTATION * distance)/circonference;
@@ -134,7 +134,7 @@ void SetMaster(Motors ID) // Power to the people!
 
 // Prend pour acquis qu'un angle 0 ne tourne pas.
 // Un angle négatif tourne à gauche et positif à droite.
-void Tourner(float angle)
+void Turn(float angle)
 {
   // ne tourne pas à 0
   if(angle != 0)
@@ -175,4 +175,5 @@ Fonctions de boucle infini (loop())
 void loop() {
   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
   delay(10);// Delais pour décharger le CPU
+  Avancer(0.5,5)
 }
