@@ -27,6 +27,7 @@ const float KI = 0.00002;
 const int MOTOR_MASTER = 0;
 const int MOTOR_SLAVE = 1;
 //3200 coches par tour de roue
+//LEFT 0, RIGHT 1, FRONT 2, REAR 3
 
 /* ****************************************************************************
 Vos propres fonctions sont creees ici
