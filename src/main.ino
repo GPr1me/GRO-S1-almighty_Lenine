@@ -26,6 +26,10 @@ const float KI = 0.00002;
 const int CYCLEDELAY = 250;
 const int CLIC_PER_ROTATION = 3200;
 
+// Simule le type de base Booléen
+// Sera en réalité un entier égale à 0 ou 1
+typedef enum { MOTOR_LEFT, MOTOR_RIGHT } Motors;
+
 int MOTOR_MASTER = 0;
 int MOTOR_SLAVE = 1;
 
@@ -40,10 +44,13 @@ void Avancer(float speed, float distance)
 
   int clicNb_master = 0;
   int clicNb_slave = 0;
+
   int clicNb_start_MASTER = 0;
   int clicNb_start_SLAVE = 0;
+
   int clicNb_cycle_MASTER = 0;
   int clicNb_cycle_SLAVE = 0;
+
   int cycleNb = 0;
   float ErrorPowerTotal=0;
   float eci = 0;
@@ -57,7 +64,6 @@ void Avancer(float speed, float distance)
 
     clicNb_cycle_MASTER = ENCODER_Read(MOTOR_MASTER)-clicNb_start_MASTER;
     clicNb_cycle_SLAVE = ENCODER_Read(MOTOR_SLAVE)-clicNb_start_SLAVE;
-
 
     eci = CorrectSpeed(clicNb_cycle_MASTER, clicNb_cycle_SLAVE, speed, eci);
     
@@ -115,8 +121,20 @@ int DistanceToClics(float distance)
   return (CLIC_PER_ROTATION * distance)/circonference;
 }
 
-void SwitchMotorsHierarchy() // Power to the people!
+void SetMaster(Motors ID) // Power to the people!
 {
+  switch (ID) 
+   {
+      case MOTOR_LEFT:      
+        MOTOR_MASTER = MOTOR_LEFT;
+        MOTOR_SLAVE = MOTOR_RIGHT;
+      case MOTOR_RIGHT:      
+        MOTOR_MASTER = MOTOR_RIGHT;
+        MOTOR_SLAVE = MOTOR_LEFT;
+      // Ne devrait JAMAIS être un cas par défaut comme il s'agit d'un
+      // ENUM. Sinon quoi revérifier la définition de l'ENUM Motors
+      default: break;
+   }
   int temp = MOTOR_MASTER;
   MOTOR_MASTER = MOTOR_SLAVE;
   MOTOR_SLAVE = temp;
@@ -131,7 +149,12 @@ void Tourner(float angle)
   {
     if(angle < 0)
     {
-      SwitchMotorsHierarchy();
+      SetMaster(MOTOR_LEFT); //Le moteur gauche est rendu MASTER
+    }
+
+    if(angle > 0)
+    {
+      SetMaster(MOTOR_RIGHT); //Le moteur droit est rendu MASTER
     }
 
     // Execution code virage
