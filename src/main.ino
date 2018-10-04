@@ -26,7 +26,7 @@ const float KI = 0.00002;
 //const int TEMPS_PAUSE
 const int MOTOR_MASTER = 0;
 const int MOTOR_SLAVE = 1;
-
+//3200 coches par tour de roue
 
 /* ****************************************************************************
 Vos propres fonctions sont creees ici
