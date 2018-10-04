@@ -23,7 +23,7 @@ Variables globales et defines
 const float KP = 0.0001;
 const float KI = 0.00002;
 
-const int CYCLEDELAY = 250;
+const int CYCLEDELAY = 100;
 const int CLIC_PER_ROTATION = 3200;
 
 // Simule le type de base Booléen
@@ -57,6 +57,9 @@ void Avancer(float speed, float distance)
 
   while(ENCODER_Read(MOTOR_MASTER) < clicTotal)
   {
+    Serial.println("----------------------------------------------------------------------------------------------------\n\n");
+    Serial.println("cycleNumber: ");
+    Serial.println(cycleNb);
     clicNb_start_MASTER = ENCODER_Read(MOTOR_MASTER);
     clicNb_start_SLAVE = ENCODER_Read(MOTOR_SLAVE);
 
@@ -79,7 +82,8 @@ void Avancer(float speed, float distance)
 /*Cette fonction détermine la différence de cliques que le moteur slave assume*/
 float ErrorClicCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
 {
-  return ((clicNb_cycle_MASTER)-(clicNb_cycle_SLAVE))/CYCLEDELAY;
+  float temp = clicNb_cycle_MASTER - clicNb_cycle_SLAVE;
+  return temp/CYCLEDELAY;
 }
 
 /*Cette fonction prend pour entrée la différence de cliques, la divise par la différence de temps
@@ -91,7 +95,7 @@ float ErrorPowerCycle(int errorClicCycle)
 
 /*Cette fonction prend comme entrée le nombre de clique des deux moteurs ainsi que l'erreur cumulée
 depuis le début du trajet */
-float ErrorClicIncrement(int errorClicCycle,float errorClicIncrement)
+float ErrorClicIncrement(float errorClicCycle,float errorClicIncrement)
 {
   errorClicIncrement += errorClicCycle;
   return (errorClicIncrement);
@@ -103,10 +107,32 @@ float ErrorPowerIncrement(float errorClicIncrement)
 }
 float CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float initialMotorSpeed, float eci) //Cette partie réalise l'addition des deux paramètres contenant KI et KP
 {
-  int ecc = ErrorClicCycle(clicNb_cycle_MASTER,clicNb_cycle_SLAVE);
+  Serial.println("eci begin: ");
+  Serial.println(eci);
+
+  //Serial.println("clic master: ");
+  //Serial.println(clicNb_cycle_MASTER);
+  //Serial.println("clic slave: ");
+  //Serial.println(clicNb_cycle_SLAVE);
+
+  float ecc = ErrorClicCycle(clicNb_cycle_MASTER,clicNb_cycle_SLAVE);
+
+  Serial.println("ecc: ");
+  Serial.println(ecc);
+
   eci += ErrorClicIncrement(ecc, eci);
+
+  
+  Serial.println("eci after: ");
+  Serial.println(eci);
+
   float errorPower = ErrorPowerCycle(ecc) 
                  + ErrorPowerIncrement(eci);
+
+  
+  Serial.println("error power: ");
+  Serial.println(errorPower);
+
   initialMotorSpeed+=errorPower;
   MOTOR_SetSpeed(MOTOR_SLAVE,initialMotorSpeed);
   return eci;
@@ -128,9 +154,11 @@ void SetMaster(Motors ID) // Power to the people!
       case MOTOR_LEFT:      
         MOTOR_MASTER = MOTOR_LEFT;
         MOTOR_SLAVE = MOTOR_RIGHT;
+        break;
       case MOTOR_RIGHT:      
         MOTOR_MASTER = MOTOR_RIGHT;
         MOTOR_SLAVE = MOTOR_LEFT;
+        break;
       // Ne devrait JAMAIS être un cas par défaut comme il s'agit d'un
       // ENUM. Sinon quoi revérifier la définition de l'ENUM Motors
       default: break;
@@ -183,5 +211,10 @@ Fonctions de boucle infini (loop())
 void loop() {
   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
   delay(10);// Delais pour décharger le CPU
-  Avancer(0.5, 30);
+
+  if(ROBUS_IsBumper(3))
+  {
+    Avancer(0.4, 1000);
+    //Serial.println("test");
+  }
 }
