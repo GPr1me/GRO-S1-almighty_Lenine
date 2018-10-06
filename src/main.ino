@@ -44,7 +44,38 @@ void correctSpeed(int cycleNb,
   float MotorMaster_actualClicNb = ENCODER_Read(MOTOR_MASTER);
 }
 
+float ratio_de_virage(float rayon)
+//FONCTION POUR CALCULER LE RATIO DE VIRAGE
+{
+  // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
+  // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
+  // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
+  // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
+  float distance_entre_les_roues = 14;
+  float resultat = (rayon + distance_entre_les_roues)/rayon ;
+  // L'utilite de ce ratio c'est qu'avec un ratio donné, on va pouvoir
+  // dire aux 2 roues de tourner a la meme vitesse, mais en diviser une par
+  // le ratio pour qu'elle tourne moins vite.
+  // Donc, dependemment de quelle roue on divise par le ratio, le robot
+  // va tourner a droite ou a gauche et la seule chose qui va varier c'est le rayon.
+  return resultat;
+}
+
+float clic_to_speed(int nb_de_clics, float duree)
+// FONCTION POUR CHANGER LES CLICS EN VITESSE
+{
+  // Le nom des variables est long mais j'voulais être sûr que vous sachiez ce que je faisais
+  float circonference=(float)38/1000;
+  int clics_par_tour=3200;
+  // nombre de metres
+  float nb_m = (float)(circonference/clics_par_tour)*nb_de_clics;
+  // vitesse metres par seconde
+  float V_m_par_s = nb_m/duree;
+  return V_m_par_s;
+}
+
 void ACC_MASTER(float fin_speed, float ini_speed)
+// FONCTION POUR GERER L'ACCELERATION
 // La fonction est faite pour le moteur gauche en tant que MOTOR_MASTER
 // Si vous avez besoin du droit comme MOTOR_MASTER changez 
 // MOTOR_SetSpeed(0, i) pour MOTOR_SetSpeed(1, i)
