@@ -113,6 +113,10 @@ void ACC_MASTER(float fin_speed, float ini_speed)
     return;
   }
 }
+float arc_de_cercle (float angle, float rayon)
+{
+  return (angle*rayon);
+}
 
 /* ****************************************************************************
 Fonctions d'initialisation (setup)
