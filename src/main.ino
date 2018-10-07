@@ -168,8 +168,9 @@ void loop() {
 
 
 
-int main(void)
-{
+//int main(int argc, char const *argv[])
+
+//{
   
   //débuter avec l'accélération
   // distance de 200cm
@@ -232,6 +233,4 @@ int main(void)
   //ajouter correctspeed
 
 
-  return 0;
-}
-
+ // return 0;
