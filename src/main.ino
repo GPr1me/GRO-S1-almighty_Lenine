@@ -82,19 +82,19 @@ void ACC_MASTER(float fin_speed, float ini_speed)
 {
   if (ini_speed<fin_speed)
   // La diff entre les 2 if c'est que la vitesse finale va etre plus petite 
-  // que la vitesse initiale s'il ralentit et plus grande s'il accélère. Puisque
+  // que la vitesse initiale s'il ralentit et plus grande s'il accelere. Puisque
   // j'ai défini mon n comme étant vitesse finale - initiale, il va savoir tout seul
-  // s'il faut qu'il incrémente ou qu'il décrémente. 
+  // s'il faut qu'il incremente ou qu'il decremente. 
   {
     float n = (fin_speed-ini_speed)/10.;
-    // ici le n est divisé par 10. pour qu'il se rende à la vitesse finale en 10 loop
+    // ici le n est diviser par 10. pour qu'il se rende à la vitesse finale en 10 loop
     // si j'avais mis un n comme 0.05 ou qq chose comme ça, vu que les vitesses changent 
     // tout le temps, le n se serait jamais rendu pile sur la vitesse souhaitée.
     for (int i=ini_speed; i<=fin_speed; i+=n)
     {
       // vitesse moteur (Gauche, allant de v_initial à v_final)
       MOTOR_SetSpeed(0, i);
-      // delay sujet à changement ou à l'implémentation en tant que variable au besoin
+      // delay sujet à changement ou à l'implementation en tant que variable au besoin
       delay(50);
     }
   }
@@ -143,6 +143,10 @@ Fonctions de boucle infini (loop())
 void loop() {
   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
   delay(10);// Delais pour décharger le CPU
+
+  ACC_MASTER (0, 10);
+
+
 }
 
 
