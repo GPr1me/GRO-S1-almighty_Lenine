@@ -120,6 +120,14 @@ float arc_de_cercle ( float angle, float rayon)
   //mettre un petit rayon pour que le robot tourne assez vite sans que les roues arretes
 }
 
+// void slaveAdujst(float master, float ratio)
+// {
+// ENCODER_Reset(LEFT);
+// ENCODER_Reset(RIGHT);
+// MOTOR_SetSpeed();
+
+// }
+
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
 //la plus basse soit sur MOTOR_MASTER ou MOTOR_SLAVE.
 
@@ -143,6 +151,14 @@ Fonctions de boucle infini (loop())
 void loop() {
   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
   delay(10);// Delais pour décharger le CPU
+  if(ROBUS_IsBumper(REAR)){
+    MOTOR_SetSpeed(LEFT, 1.);
+    MOTOR_SetSpeed(RIGHT, 1.);
+    delay(2000);
+
+    MOTOR_SetSpeed(LEFT, 0);
+    MOTOR_SetSpeed(RIGHT, 0);
+  }
 }
 
 
