@@ -155,7 +155,6 @@ void loop() {
     MOTOR_SetSpeed(LEFT, 1.);
     MOTOR_SetSpeed(RIGHT, 1.);
     delay(2000);
-
 }
 
 
@@ -230,4 +229,6 @@ void loop() {
     MOTOR_SetSpeed(LEFT, 0);
     MOTOR_SetSpeed(RIGHT, 0);
   }
+  return 0;
+}
 
