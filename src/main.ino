@@ -155,8 +155,9 @@ void loop() {
     MOTOR_SetSpeed(LEFT, 1.);
     MOTOR_SetSpeed(RIGHT, 1.);
     delay(2000);
-
-<<<<<<< HEAD
+    MOTOR_SetSpeed(LEFT, 0);
+    MOTOR_SetSpeed(RIGHT, 0);
+  }
 }
 
 
@@ -227,9 +228,4 @@ int main(void)
 
   return 0;
 }
-=======
-    MOTOR_SetSpeed(LEFT, 0);
-    MOTOR_SetSpeed(RIGHT, 0);
-  }
-}
->>>>>>> 1fed503ecba238b176818930e0abba2be3c0df9e
+
