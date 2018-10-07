@@ -116,6 +116,8 @@ void ACC_MASTER(float fin_speed, float ini_speed)
 float arc_de_cercle ( float angle, float rayon)
 {
   return (2*PI*rayon*angle)/360;
+  // la longueur de l'arc est la distance que la roue va parcourir
+  //mettre un petit rayon pour que le robot tourne assez vite sans que les roues arretes
 }
 
 /* ****************************************************************************
