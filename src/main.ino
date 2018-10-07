@@ -150,6 +150,7 @@ void loop() {
 
 int main(void)
 {
+  //ACC_MASTER (0,10);
   //débuter avec l'accélération
   // distance de 200cm
   //ajouter correctspeed
