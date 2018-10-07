@@ -1,10 +1,7 @@
 {
     "terminal.integrated.env.windows": {
-<<<<<<< HEAD
         "PATH": "C:\\Users\\nasassx\\.platformio\\penv\\Scripts;C:\\Users\\nasassx\\.platformio\\penv;C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath;C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C:\\WINDOWS\\System32\\OpenSSH\\;C:\\Program Files\\Git\\cmd;C:\\Users\\nasassx\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\nasassx\\AppData\\Local\\Programs\\Microsoft VS Code\\bin;C:\\MinGW\\bin;C:\\Users\\nasassx\\AppData\\Local\\GitHubDesktop\\bin;C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath;C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C:\\WINDOWS\\System32\\OpenSSH\\;C:\\Program Files\\Git\\cmd;C:\\Users\\nasassx\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\nasassx\\AppData\\Local\\Programs\\Microsoft VS Code\\bin;C:\\MinGW\\bin;C:\\Users\\nasassx\\AppData\\Local\\GitHubDesktop\\bin",
-=======
         "PATH": "C:\\Users\\William R\\.platformio\\penv\\Scripts;C:\\Users\\William R\\.platformio\\penv;C:\\ProgramData\\Oracle\\Java\\javapath;C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C:\\WINDOWS\\System32\\OpenSSH\\;C:\\MinGW\\bin;C:\\Program Files\\Git\\cmd;C:\\Users\\William R\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\William R\\AppData\\Local\\Programs\\Microsoft VS Code\\bin;C:\\MinGW\\bin;;C:\\ProgramData\\Oracle\\Java\\javapath;C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C:\\WINDOWS\\System32\\OpenSSH\\;C:\\MinGW\\bin;C:\\Program Files\\Git\\cmd;C:\\Users\\William R\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\William R\\AppData\\Local\\Programs\\Microsoft VS Code\\bin;C:\\MinGW\\bin;",
->>>>>>> 13518549916fec1e5facd7bdd9aad97462305fa2
         "PLATFORMIO_CALLER": "vscode"
     }
 }
