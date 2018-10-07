@@ -156,13 +156,13 @@ void loop() {
     MOTOR_SetSpeed(RIGHT, 1.);
     delay(2000);
 
-<<<<<<< HEAD
 }
 
 
 
-int main(void)
-{
+//int main(int argc, char const *argv[])
+
+//{
   
   //débuter avec l'accélération
   // distance de 200cm
@@ -225,11 +225,9 @@ int main(void)
   //ajouter correctspeed
 
 
-  return 0;
-}
-=======
+ // return 0;
+  {
     MOTOR_SetSpeed(LEFT, 0);
     MOTOR_SetSpeed(RIGHT, 0);
   }
-}
->>>>>>> 1fed503ecba238b176818930e0abba2be3c0df9e
+
