@@ -11,7 +11,7 @@ Inclure les librairies de functions que vous voulez utiliser
 **************************************************************************** */
 
 #include <LibRobus.h> // Essentielle pour utiliser RobUS
-
+#include <Stream.h>
 
 
 /* ****************************************************************************
@@ -140,6 +140,7 @@ Fonctions d'initialisation (setup)
 
 void setup(){
   BoardInit();
+  Serial.begin(9600);
 }
 
 
@@ -152,9 +153,14 @@ void loop() {
   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
   delay(10);// Delais pour décharger le CPU
   if(ROBUS_IsBumper(REAR)){
+    ENCODER_Reset(LEFT);
+    ENCODER_Reset(RIGHT);
     MOTOR_SetSpeed(LEFT, 1.);
     MOTOR_SetSpeed(RIGHT, 1.);
     delay(2000);
+    Serial.print(ENCODER_Read(LEFT));
+    Serial.println(ENCODER_Read(RIGHT));
+    
     MOTOR_SetSpeed(LEFT, 0);
     MOTOR_SetSpeed(RIGHT, 0);
   }
