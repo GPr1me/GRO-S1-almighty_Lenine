@@ -20,8 +20,19 @@ Variables globales et defines
 // -> defines...
 // L'ensemble des fonctions y ont acces
 
-const float KP = 0.0001;
-const float KI = 0.00002;
+//variables pour gerer la correction
+//correction vient du total de erreur * KP + erreurTotal * KI
+float correctionR;
+
+float erreur;
+float erreurTotal;
+int oldL;
+int oldR;
+
+const float KP = 0.01;
+const float KI = 0.0002; 
+//try KP: 0.0001 trop petit, 0.001 mieux mais pas assez, 0.01 
+//try KI: 0.000002 trop petit, 0.00002 encore trop petit, 0.0002
 // DISTANCE_PAR_CLIC
 //const int TEMPS_PAUSE
 const int MOTOR_MASTER = 0;
@@ -93,7 +104,11 @@ void ACC_MASTER(float ini_speed, float fin_speed)
     for (int i=ini_speed; i<=fin_speed; i+=n)
     {
       // vitesse moteur (Gauche, allant de v_initial à v_final)
-      MOTOR_SetSpeed(0, i);
+      // MOTOR_SetSpeed(LEFT, i);
+
+      //ajout de adjustement slave
+      slaveAdujst(i, 0);
+      
       // delay sujet à changement ou à l'implementation en tant que variable au besoin
       delay(50);
     }
@@ -103,13 +118,16 @@ void ACC_MASTER(float ini_speed, float fin_speed)
     float n = (fin_speed-ini_speed)/10.;
     for (int i=ini_speed; i>=fin_speed; i+=n)
     {
-      MOTOR_SetSpeed(0, i);
+
+      // MOTOR_SetSpeed(LEFT, i);
+      slaveAdujst(i, 0);
       delay(50);
     }
   }
   // en gros si la vitesse finale et initiale sont pareils fait rien
   else
   {
+    slaveAdujst(fin_speed, 0);
     return;
   }
 }
@@ -119,14 +137,26 @@ float arc_de_cercle ( float angle, float rayon)
   // la longueur de l'arc est la distance que la roue va parcourir
   //mettre un petit rayon pour que le robot tourne assez vite sans que les roues arretes
 }
-
-// void slaveAdujst(float master, float ratio)
-// {
-// ENCODER_Reset(LEFT);
-// ENCODER_Reset(RIGHT);
-// MOTOR_SetSpeed();
-
-// }
+//doit ajuster les moteurs slave a la bonne vitesse
+//ratio utilise lors de tournant pour verifier si la vitesse des roues est bien ajustee
+void slaveAdujst(float master, float ratio)
+{
+  MOTOR_SetSpeed(LEFT, master);
+  MOTOR_SetSpeed(RIGHT, master + correctionR);
+  //devrait laisser le temps de lire environ 67 coches
+  delay(10);
+    //garde l'erreur trouve pour cette lecture
+  erreur = ((ENCODER_Read(LEFT) - oldL) - (ENCODER_Read(RIGHT) - oldR));
+  oldL = ENCODER_Read(LEFT);
+  oldR = ENCODER_Read(RIGHT);
+  erreurTotal = oldL - oldR;
+  if(erreurTotal <= 4){
+    correctionR = 0;
+  }
+  else{
+    correctionR = KI * erreur + KP * erreurTotal;
+  }
+}
 
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
 //la plus basse soit sur MOTOR_MASTER ou MOTOR_SLAVE.
@@ -141,6 +171,9 @@ Fonctions d'initialisation (setup)
 void setup(){
   BoardInit();
   Serial.begin(9600);
+  correctionR = 0;
+  oldL = 0;
+  oldR = 0;
 }
 
 
@@ -152,40 +185,137 @@ Fonctions de boucle infini (loop())
 void loop() { //test pour l'avance
   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
   delay(10);// Delais pour décharger le CPU
+  MOTOR_SetSpeed(LEFT, 0);
+  MOTOR_SetSpeed(RIGHT, 0);
   if(ROBUS_IsBumper(REAR)){
     ENCODER_Reset(LEFT);
     ENCODER_Reset(RIGHT);
-    MOTOR_SetSpeed(LEFT, 1.);
-    MOTOR_SetSpeed(RIGHT, 1.);
+    MOTOR_SetSpeed(LEFT, 0.7);
+    MOTOR_SetSpeed(RIGHT, 0.7);
     delay(2000);
     Serial.print(ENCODER_Read(LEFT));
+    Serial.print("  ");
     Serial.println(ENCODER_Read(RIGHT));
     
     MOTOR_SetSpeed(LEFT, 0);
     MOTOR_SetSpeed(RIGHT, 0);
   }
-}
-
-
-void loop()
-{
-  // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
-  delay(10);// Delais pour décharger le CPU
-  if(ROBUS_IsBumper(REAR))
-  {
-    ACC_MASTER(0, 0.8);
-    MOTOR_SetSpeed (LEFT, 0.8);
-    MOTOR_SetSpeed (RIGHT, 0.8);
-    delay (1500);
-    ACC_MASTER (0.8, 0.1);
-
-    arc_de_cercle (90, 2.0);
-    ratio_de_virage (2.0);
-    
+  if(ROBUS_IsBumper(LEFT)){
+    MOTOR_SetSpeed(LEFT, 1.);
+    MOTOR_SetSpeed(RIGHT, 1.);
+    delay (1000);
+    MOTOR_SetSpeed(LEFT, 0.);
+    MOTOR_SetSpeed(RIGHT, 0.);
   }
 
+  if(ROBUS_IsBumper(RIGHT)){
+    ENCODER_Reset(LEFT);
+    ENCODER_Reset(RIGHT);
+    Serial.print(ENCODER_Read(LEFT));
+    Serial.print("  ");
+    Serial.println(ENCODER_Read(RIGHT));
+    // ACC_MASTER(0, 0.7);
 
+    //fait ca pendant environ 1 seconde
+    for(int i = 0; i < 100; i++){
+      slaveAdujst(0.7, 0);
+    }
+    Serial.print(ENCODER_Read(LEFT));
+    Serial.print("  ");
+    Serial.println(ENCODER_Read(RIGHT));
+    //fait ca pendant environ 1 seconde
+    for(int i = 0; i < 100; i++){
+      slaveAdujst(0.7, 0);
+    }
+    Serial.print(ENCODER_Read(LEFT));
+    Serial.print("  ");
+    Serial.println(ENCODER_Read(RIGHT));
+    //fait ca pendant environ 1 seconde
+    for(int i = 0; i < 100; i++){
+      slaveAdujst(0.7, 0);
+    }
+    Serial.print(ENCODER_Read(LEFT));
+    Serial.print("  ");
+    Serial.println(ENCODER_Read(RIGHT));
+    //fait ca pendant environ 1 seconde
+    for(int i = 0; i < 100; i++){
+      slaveAdujst(0.7, 0);
+    }
+    Serial.print(ENCODER_Read(LEFT));
+    Serial.print("  ");
+    Serial.println(ENCODER_Read(RIGHT));
+    //fait ca pendant environ 1 seconde
+    for(int i = 0; i < 100; i++){
+      slaveAdujst(0.7, 0);
+    }
+    Serial.print(ENCODER_Read(LEFT));
+    Serial.print("  ");
+    Serial.println(ENCODER_Read(RIGHT));
+    for(int i = 0; i < 100; i++){
+      slaveAdujst(0.7, 0);
+    }
+    Serial.print(ENCODER_Read(LEFT));
+    Serial.print("  ");
+    Serial.println(ENCODER_Read(RIGHT));
+    for(int i = 0; i < 100; i++){
+      slaveAdujst(0.7, 0);
+    }
+    Serial.print(ENCODER_Read(LEFT));
+    Serial.print("  ");
+    Serial.println(ENCODER_Read(RIGHT));
+    for(int i = 0; i < 100; i++){
+      slaveAdujst(0.7, 0);
+    }
+    Serial.print(ENCODER_Read(LEFT));
+    Serial.print("  ");
+    Serial.println(ENCODER_Read(RIGHT));
+    for(int i = 0; i < 100; i++){
+      slaveAdujst(0.7, 0);
+    }
+    Serial.print(ENCODER_Read(LEFT));
+    Serial.print("  ");
+    Serial.println(ENCODER_Read(RIGHT));
+    for(int i = 0; i < 100; i++){
+      slaveAdujst(0.7, 0);
+    }
+    Serial.print(ENCODER_Read(LEFT));
+    Serial.print("  ");
+    Serial.println(ENCODER_Read(RIGHT));
+    for(int i = 0; i < 100; i++){
+      slaveAdujst(0.7, 0);
+    }
+    Serial.print(ENCODER_Read(LEFT));
+    Serial.print("  ");
+    Serial.println(ENCODER_Read(RIGHT));
+    for(int i = 0; i < 100; i++){
+      slaveAdujst(0.7, 0);
+    }
+    Serial.print(ENCODER_Read(LEFT));
+    Serial.print("  ");
+    Serial.println(ENCODER_Read(RIGHT));
+  }
 }
+
+
+// void loop()
+// {
+//   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
+//   delay(10);// Delais pour décharger le CPU
+//   if(ROBUS_IsBumper(REAR))
+//   {
+//     ACC_MASTER(0, 0.8);
+//     MOTOR_SetSpeed (LEFT, 0.8);
+//     MOTOR_SetSpeed (RIGHT, 0.8);
+//     delay (1500);
+//     ACC_MASTER (0.8, 0.1);
+
+//     arc_de_cercle (90, 2.0);
+//     ratio_de_virage (2.0);
+    
+//   }
+
+
+// }
 
 
 //int main(int argc, char const *argv[])
