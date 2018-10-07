@@ -120,6 +120,9 @@ float arc_de_cercle ( float angle, float rayon)
   //mettre un petit rayon pour que le robot tourne assez vite sans que les roues arretes
 }
 
+// Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
+//la plus basse soit sur MOTOR_MASTER ou MOTOR_SLAVE.
+
 /* ****************************************************************************
 Fonctions d'initialisation (setup)
 **************************************************************************** */
@@ -188,23 +191,23 @@ int main(void)
   //distance à parcourir des roues avec l'arc de cercle et le ratio
   // angle de 90deg
 
-//accélération
-//distance de 60cm
-//ajouter correctspeed
+  //accélération
+  //distance de 60cm
+  //ajouter correctspeed
 
-//distance à parcourir des roues avec l'arc de cercle et le ratio
-// angle de 45deg
+  //distance à parcourir des roues avec l'arc de cercle et le ratio
+  // angle de 45deg
 
-//accélération
-//distance de 50cm
-//ajouter correctspeed
+  //accélération
+  //distance de 50cm
+  //ajouter correctspeed
 
-//distance à parcourir des roues avec l'arc de cercle et le ratio
-// angle de 12.5deg
+  //distance à parcourir des roues avec l'arc de cercle et le ratio
+  // angle de 12.5deg
 
-//accélération
-//distance de 76cm
-//ajouter correctspeed
+  //accélération
+  //distance de 76cm
+  //ajouter correctspeed
 
 
   return 0;
