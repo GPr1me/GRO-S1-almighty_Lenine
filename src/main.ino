@@ -141,3 +141,71 @@ void loop() {
   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
   delay(10);// Delais pour décharger le CPU
 }
+
+
+
+int main(void)
+{
+  //débuter avec l'accélération
+  // distance de 200cm
+  //ajouter correctspeed
+
+  //distance à parcourir des roues avec l'arc de cercle et le ratio
+  // angle de 90deg
+
+  //accélération
+  //distance de 50cm
+  //ajouter correctspeed
+
+  //distance à parcourir des roues avec l'arc de cercle et le ratio
+  // angle de 90deg
+
+  //accélération
+  //distance de 45cm
+  //ajouter correctspeed
+
+  //distance à parcourir des roues avec l'arc de cercle et le ratio
+  // angle de 90deg
+
+  //accélération
+  //distance de 50cm
+  //ajouter correctspeed
+
+  //distance à parcourir des roues avec l'arc de cercle et le ratio
+  // angle de 90deg
+
+  //accélération
+  //distance de 18cm
+  //ajouter correctspeed
+
+  //distance à parcourir des roues avec l'arc de cercle et le ratio
+  // angle de 45deg
+
+  //accélération
+  //distance de 54cm
+  //ajouter correctspeed
+
+  //distance à parcourir des roues avec l'arc de cercle et le ratio
+  // angle de 90deg
+
+//accélération
+//distance de 60cm
+//ajouter correctspeed
+
+//distance à parcourir des roues avec l'arc de cercle et le ratio
+// angle de 45deg
+
+//accélération
+//distance de 50cm
+//ajouter correctspeed
+
+//distance à parcourir des roues avec l'arc de cercle et le ratio
+// angle de 12.5deg
+
+//accélération
+//distance de 76cm
+//ajouter correctspeed
+
+
+  return 0;
+}
