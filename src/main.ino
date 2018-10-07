@@ -74,7 +74,7 @@ float clic_to_speed(int nb_de_clics, float duree)
   return V_m_par_s;
 }
 
-void ACC_MASTER(float fin_speed, float ini_speed)
+void ACC_MASTER(float ini_speed, float fin_speed)
 // FONCTION POUR GERER L'ACCELERATION
 // La fonction est faite pour le moteur gauche en tant que MOTOR_MASTER
 // Si vous avez besoin du droit comme MOTOR_MASTER changez 
@@ -149,7 +149,7 @@ Fonctions de boucle infini (loop())
 **************************************************************************** */
 // -> Se fait appeler perpetuellement suite au "setup"
 
-void loop() {
+void loop() { //test pour l'avance
   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
   delay(10);// Delais pour décharger le CPU
   if(ROBUS_IsBumper(REAR)){
@@ -166,6 +166,26 @@ void loop() {
   }
 }
 
+
+void loop()
+{
+  // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
+  delay(10);// Delais pour décharger le CPU
+  if(ROBUS_IsBumper(REAR))
+  {
+    ACC_MASTER(0, 0.8);
+    MOTOR_SetSpeed (LEFT, 0.8);
+    MOTOR_SetSpeed (RIGHT, 0.8);
+    delay (1500);
+    ACC_MASTER (0.8, 0.1);
+
+    arc_de_cercle (90, 2.0);
+    ratio_de_virage (2.0);
+    
+  }
+
+
+}
 
 
 //int main(int argc, char const *argv[])
