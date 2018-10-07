@@ -225,10 +225,3 @@ void loop() {
 
 
  // return 0;
-  {
-    MOTOR_SetSpeed(LEFT, 0);
-    MOTOR_SetSpeed(RIGHT, 0);
-  }
-  return 0;
-}
-
