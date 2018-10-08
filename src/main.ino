@@ -23,7 +23,7 @@ Variables globales et defines
 const float KP = 0.0001;
 const float KI = 0.00002;
 
-const int CYCLEDELAY = 100;
+const float CYCLEDELAY = 0.1;
 const int CLIC_PER_ROTATION = 3200;
 
 // Simule le type de base Booléen
@@ -52,8 +52,9 @@ void Avancer(float speed, float distance)
   int clicNb_cycle_SLAVE = 0;
 
   int cycleNb = 0;
-  float ErrorPowerTotal=0;
-  float eci = 0;
+  float speed_cycle_error = 0;
+  float speed_total_error = 0;
+  float speed_total = 0;
 
   while(ENCODER_Read(MOTOR_MASTER) < clicTotal)
   {
@@ -63,13 +64,17 @@ void Avancer(float speed, float distance)
     clicNb_start_MASTER = ENCODER_Read(MOTOR_MASTER);
     clicNb_start_SLAVE = ENCODER_Read(MOTOR_SLAVE);
 
-    delay(CYCLEDELAY);
+    delay(CYCLEDELAY*1000);
 
     clicNb_cycle_MASTER = ENCODER_Read(MOTOR_MASTER)-clicNb_start_MASTER;
     clicNb_cycle_SLAVE = ENCODER_Read(MOTOR_SLAVE)-clicNb_start_SLAVE;
 
-    eci = CorrectSpeed(clicNb_cycle_MASTER, clicNb_cycle_SLAVE, speed, eci);
-    
+    speed_cycle_error = (clicNb_cycle_MASTER - clicNb_cycle_SLAVE)/CYCLEDELAY;
+    speed_total_error = speed_total_error + speed_cycle_error;
+
+    speed_total = speed + (speed_cycle_error * KP) + (speed_total_error * KI);
+    MOTOR_SetSpeed(MOTOR_SLAVE, speed_total);
+
     cycleNb++;
   }
 
@@ -78,64 +83,6 @@ void Avancer(float speed, float distance)
   MOTOR_SetSpeed(MOTOR_SLAVE, 0);
   ENCODER_Reset(MOTOR_MASTER);
   ENCODER_Reset(MOTOR_SLAVE);
-}
-/*Cette fonction détermine la différence de cliques que le moteur slave assume*/
-float ErrorClicCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
-{
-  float temp = clicNb_cycle_MASTER - clicNb_cycle_SLAVE;
-  return temp; //Auparavant divisé par CYCLEDELAY
-}
-
-/*Cette fonction prend pour entrée la différence de cliques, la divise par la différence de temps
-choisie et multiplie finalement le tout par KP. */
-float ErrorPowerCycle(int errorClicCycle)
-{
-  return errorClicCycle * KP;
-}
-
-/*Cette fonction prend comme entrée le nombre de clique des deux moteurs ainsi que l'erreur cumulée
-depuis le début du trajet */
-float ErrorClicIncrement(float errorClicCycle,float errorClicIncrement)
-{
-  errorClicIncrement += errorClicCycle;
-  return (errorClicIncrement);
-}
-float ErrorPowerIncrement(float errorClicIncrement)
-{
-  float errorPowerIncrement = KI * errorClicIncrement;
-  return errorPowerIncrement;
-}
-float CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float initialMotorSpeed, float eci) //Cette partie réalise l'addition des deux paramètres contenant KI et KP
-{
-  Serial.println("eci begin: ");
-  Serial.println(eci);
-
-  //Serial.println("clic master: ");
-  //Serial.println(clicNb_cycle_MASTER);
-  //Serial.println("clic slave: ");
-  //Serial.println(clicNb_cycle_SLAVE);
-
-  float ecc = ErrorClicCycle(clicNb_cycle_MASTER,clicNb_cycle_SLAVE);
-
-  Serial.println("ecc: ");
-  Serial.println(ecc);
-
-  eci += ErrorClicIncrement(ecc, eci);
-
-  
-  Serial.println("eci after: ");
-  Serial.println(eci);
-
-  float errorPower = ErrorPowerCycle(ecc) 
-                 + ErrorPowerIncrement(eci);
-
-  
-  Serial.println("error power: ");
-  Serial.println(errorPower);
-
-  initialMotorSpeed+=errorPower;
-  MOTOR_SetSpeed(MOTOR_SLAVE,initialMotorSpeed);
-  return eci;
 }
 
 //Retourne le nombre de clique nécessaire pour la distance voulue
