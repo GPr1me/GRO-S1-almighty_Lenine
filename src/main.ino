@@ -61,11 +61,16 @@ void correctSpeed(int cycleNb,
 float ratio_de_virage(float rayon)
 //FONCTION POUR CALCULER LE RATIO DE VIRAGE
 {
+<<<<<<< HEAD
   // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
   // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
   // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
   // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
   float distance_entre_les_roues = 19.05;
+=======
+ 
+  float distance_entre_les_roues = 19.05; //valeur en cm
+>>>>>>> 4c99d4b0ea356da8e74642ff2848aa11b59f7e1e
   float resultat = (rayon + distance_entre_les_roues)/rayon ;
   // L'utilite de ce ratio c'est qu'avec un ratio donné, on va pouvoir
   // dire aux 2 roues de tourner a la meme vitesse, mais en diviser une par
@@ -88,7 +93,7 @@ float clic_to_cm(int nb_de_clics)
 
 // Vitesse à 70% : 6776 clics par seconde
 //Vitesse à 100% : 9635.5 clics par seconde
-//Clics par cm = 23.876160 clics par cm
+//Clics par cm = 23.876160
 // (200+45/2)+50+45+50+(18+45/2)+(54+45/2)+(60+45/2)+50+76= 693.00
 // La distance du trajet est de 693.00cm
 //Le robot va faire 16546.17888 clics au total
@@ -142,13 +147,13 @@ void ACC_MASTER(float ini_speed, float fin_speed)
 }
 
 
-float arc_de_cercle ( float angle, float rayon)
+/*float arc_de_cercle ( float angle, float rayon)
 {
   return (2*PI*rayon*angle)/360;
   // la longueur de l'arc est la distance que la roue va parcourir
   //mettre un petit rayon pour que le robot tourne assez vite sans que les roues arretes
 }
-
+*/
 
 //doit ajuster les moteurs slave a la bonne vitesse
 //ratio utilise lors de tournant pour verifier si la vitesse des roues est bien ajustee
@@ -359,7 +364,7 @@ void loop() { //test pour l'avance
 //{
   
   //débuter avec l'accélération
-  // distance de 200cm
+  // distance de 222.5cm
   //ajouter correctspeed
 
   //distance à parcourir des roues avec l'arc de cercle et le ratio
@@ -387,21 +392,21 @@ void loop() { //test pour l'avance
   // angle de 90deg
 
   //accélération
-  //distance de 18cm
+  //distance de 40.5cm
   //ajouter correctspeed
 
   //distance à parcourir des roues avec l'arc de cercle et le ratio
   // angle de 45deg
 
   //accélération
-  //distance de 54cm
+  //distance de 76.5cm
   //ajouter correctspeed
 
   //distance à parcourir des roues avec l'arc de cercle et le ratio
   // angle de 90deg
 
   //accélération
-  //distance de 60cm
+  //distance de 82.5cm
   //ajouter correctspeed
 
   //distance à parcourir des roues avec l'arc de cercle et le ratio
