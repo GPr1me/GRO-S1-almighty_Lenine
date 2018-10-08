@@ -321,15 +321,12 @@ void loop() { //test pour l'avance
   }
   if(ROBUS_IsBumper(FRONT))
   {
-<<<<<<< HEAD
 
-=======
     ACC_MASTER(0, 0.8);
     // delay(1000); // delay prit au hasard
 
     ACC_MASTER (0.8, 0.2); 
     // delay (1000); //delay prit au hasard
->>>>>>> ed5e312f80feb54868b52018da14080bfe3d2ce8
   }
 }
 
