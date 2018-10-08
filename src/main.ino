@@ -61,11 +61,8 @@ void correctSpeed(int cycleNb,
 float ratio_de_virage(float rayon)
 //FONCTION POUR CALCULER LE RATIO DE VIRAGE
 {
-  // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
-  // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
-  // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
-  // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
-  float distance_entre_les_roues = 14;
+ 
+  float distance_entre_les_roues = 19.05; //valeur en cm
   float resultat = (rayon + distance_entre_les_roues)/rayon ;
   // L'utilite de ce ratio c'est qu'avec un ratio donné, on va pouvoir
   // dire aux 2 roues de tourner a la meme vitesse, mais en diviser une par
@@ -88,7 +85,7 @@ float clic_to_cm(int nb_de_clics)
 
 // Vitesse à 70% : 6776 clics par seconde
 //Vitesse à 100% : 9635.5 clics par seconde
-//Clics par cm = 23.876160 clics par cm
+//Clics par cm = 23.876160
 // (200+45/2)+50+45+50+(18+45/2)+(54+45/2)+(60+45/2)+50+76= 693.00
 // La distance du trajet est de 693.00cm
 //Le robot va faire 16546.17888 clics au total
@@ -142,13 +139,13 @@ void ACC_MASTER(float ini_speed, float fin_speed)
 }
 
 
-float arc_de_cercle ( float angle, float rayon)
+/*float arc_de_cercle ( float angle, float rayon)
 {
   return (2*PI*rayon*angle)/360;
   // la longueur de l'arc est la distance que la roue va parcourir
   //mettre un petit rayon pour que le robot tourne assez vite sans que les roues arretes
 }
-
+*/
 
 //doit ajuster les moteurs slave a la bonne vitesse
 //ratio utilise lors de tournant pour verifier si la vitesse des roues est bien ajustee
