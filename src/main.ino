@@ -357,7 +357,7 @@ void loop() { //test pour l'avance
 //{
   
   //débuter avec l'accélération
-  // distance de 200cm
+  // distance de 222.5cm
   //ajouter correctspeed
 
   //distance à parcourir des roues avec l'arc de cercle et le ratio
@@ -385,21 +385,21 @@ void loop() { //test pour l'avance
   // angle de 90deg
 
   //accélération
-  //distance de 18cm
+  //distance de 40.5cm
   //ajouter correctspeed
 
   //distance à parcourir des roues avec l'arc de cercle et le ratio
   // angle de 45deg
 
   //accélération
-  //distance de 54cm
+  //distance de 76.5cm
   //ajouter correctspeed
 
   //distance à parcourir des roues avec l'arc de cercle et le ratio
   // angle de 90deg
 
   //accélération
-  //distance de 60cm
+  //distance de 82.5cm
   //ajouter correctspeed
 
   //distance à parcourir des roues avec l'arc de cercle et le ratio
