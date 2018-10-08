@@ -39,7 +39,7 @@ const int MOTOR_MASTER = 0;
 const int MOTOR_SLAVE = 1;
 //3200 coches par tour de roue
 //LEFT 0, RIGHT 1, FRONT 2, REAR 3
-const float clics_par_cm = 23.876160;
+// const float clics_par_cm = 23.876160;
 //constante clics/cm;
 
 
@@ -75,17 +75,15 @@ float ratio_de_virage(float rayon)
   return resultat;
 }
 
-float clic_to_speed(int nb_de_clics, float duree)
+float clic_to_cm(int nb_de_clics)
 // FONCTION POUR CHANGER LES CLICS EN VITESSE
 {
   // Le nom des variables est long mais j'voulais être sûr que vous sachiez ce que je faisais
-  float circonference=(float)38/1000;
+  float circonference=(float)38/10*PI;
   int clics_par_tour=3200;
-  // nombre de metres
-  float nb_m = (float)(circonference/clics_par_tour)*nb_de_clics;
-  // vitesse metres par seconde
-  float V_m_par_s = nb_m/duree;
-  return V_m_par_s;
+  // nombre de cm
+  float nb_cm = (float)(circonference/clics_par_tour)*nb_de_clics;
+  return nb_cm;
 }
 
 // Vitesse à 70% : 6776 clics par seconde
@@ -142,12 +140,16 @@ void ACC_MASTER(float ini_speed, float fin_speed)
     return;
   }
 }
+
+
 float arc_de_cercle ( float angle, float rayon)
 {
   return (2*PI*rayon*angle)/360;
   // la longueur de l'arc est la distance que la roue va parcourir
   //mettre un petit rayon pour que le robot tourne assez vite sans que les roues arretes
 }
+
+
 //doit ajuster les moteurs slave a la bonne vitesse
 //ratio utilise lors de tournant pour verifier si la vitesse des roues est bien ajustee
 void slaveAdujst(float master, float ratio)
