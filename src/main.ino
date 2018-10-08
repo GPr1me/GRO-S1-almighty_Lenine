@@ -308,13 +308,7 @@ void loop() { //test pour l'avance
   }
   if(ROBUS_IsBumper(FRONT))
   {
-    ACC_MASTER(0, 0.8);
-    cm_to_clic(111.25);
-    // delay(1000); // delay prit au hasard
 
-    ACC_MASTER (0.8, 0.2); 
-    cm_to_clic (111.25);
-    // delay (1000); //delay prit au hasard
   }
 }
 
@@ -344,21 +338,6 @@ void loop() { //test pour l'avance
   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
   delay(10);// Delais pour décharger le CPU
   if(ROBUS_IsBumper(REAR))
-  {
-    ACC_MASTER(0, 0.8);
-    delay()
-
-    //total premiere distance = 222.5cm
-    MOTOR_SetSpeed (LEFT, 0.8);
-    MOTOR_SetSpeed (RIGHT, 0.8);
-    delay (1500);
-    ACC_MASTER (0.8, 0.1);
-
-    arc_de_cercle (90, 2.0);
-    ratio_de_virage (2.0);
-    clic_to_speed(36, 400); //valeurs prisent au hasard
-  }
-
 
 }
 */
