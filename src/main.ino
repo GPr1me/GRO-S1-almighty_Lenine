@@ -84,6 +84,14 @@ float clic_to_cm(int nb_de_clics)
   return nb_cm;
 }
 
+float cm_to_clic(float distance)
+//FONCTION POUR CHANGER LA DISTANCE EN NOMBRE DE CLICS
+{
+  float nb_de_clics;
+  nb_de_clics = 23.876160*distance; 
+  return nb_de_clics;
+}
+
 // Vitesse à 70% : 6776 clics par seconde
 //Vitesse à 100% : 9635.5 clics par seconde
 //Clics par cm = 23.876160
@@ -304,6 +312,16 @@ void loop() { //test pour l'avance
     Serial.print(ENCODER_Read(LEFT));
     Serial.print("  ");
     Serial.println(ENCODER_Read(RIGHT));
+  }
+  if(ROBUS_IsBumper(FRONT))
+  {
+    ACC_MASTER(0, 0.8);
+    cm_to_clic(111.25);
+    // delay(1000); // delay prit au hasard
+
+    ACC_MASTER (0.8, 0.2); 
+    cm_to_clic (111.25);
+    // delay (1000); //delay prit au hasard
   }
 }
 
