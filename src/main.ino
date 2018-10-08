@@ -307,23 +307,23 @@ void loop() { //test pour l'avance
 }
 
 
-// void loop()
-// {
-//   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
-//   delay(10);// Delais pour décharger le CPU
-//   if(ROBUS_IsBumper(REAR))
-//   {
-//     ACC_MASTER(0, 0.8);
-//     MOTOR_SetSpeed (LEFT, 0.8);
-//     MOTOR_SetSpeed (RIGHT, 0.8);
-//     delay (1500);
-//     ACC_MASTER (0.8, 0.1);
+/* void loop()
+ {
+   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
+   delay(10);// Delais pour décharger le CPU
+   if(ROBUS_IsBumper(REAR))
+   {
+     ACC_MASTER(0, 0.8);
+     MOTOR_SetSpeed (LEFT, 0.8);
+     MOTOR_SetSpeed (RIGHT, 0.8);
+     delay (1500);
+     ACC_MASTER (0.8, 0.1);
 
-//     arc_de_cercle (90, 2.0);
-//     ratio_de_virage (2.0);
+     ratio_de_virage (1.0); // rayon de 1 cm
     
-//   }
-
+    
+  }
+*/
 
 // }
 
