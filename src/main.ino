@@ -73,6 +73,7 @@ float ratio_de_virage(float rayon)
   return resultat;
 }
 
+
 float clic_to_cm(int nb_de_clics)
 // FONCTION POUR CHANGER LES CLICS EN VITESSE
 {
