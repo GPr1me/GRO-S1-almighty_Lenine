@@ -61,16 +61,9 @@ void correctSpeed(int cycleNb,
 float ratio_de_virage(float rayon)
 //FONCTION POUR CALCULER LE RATIO DE VIRAGE
 {
-<<<<<<< HEAD
-  // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
-  // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
-  // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
-  // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
+
   float distance_entre_les_roues = 19.05;
-=======
  
-  float distance_entre_les_roues = 19.05; //valeur en cm
->>>>>>> 4c99d4b0ea356da8e74642ff2848aa11b59f7e1e
   float resultat = (rayon + distance_entre_les_roues)/rayon ;
   // L'utilite de ce ratio c'est qu'avec un ratio donné, on va pouvoir
   // dire aux 2 roues de tourner a la meme vitesse, mais en diviser une par
