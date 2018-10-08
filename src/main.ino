@@ -29,10 +29,10 @@ float erreurTotal;
 int oldL;
 int oldR;
 
-const float KP = 0.01;
-const float KI = 0.0002; 
-//try KP: 0.0001 trop petit, 0.001 mieux mais pas assez, 0.01 
-//try KI: 0.000002 trop petit, 0.00002 encore trop petit, 0.0002
+const float KI = 0.0005;//0.0005 ok
+const float KP = 0.00001;//0.00001 ok 
+//try KP: 0.0001 trop grand, 0.001 pire, 0.01 nope, 0.000001 better hahaha, 0.00001, 0.0005
+//try KI: 0.000002 trop grand, 0.00002 pire, 0.0002 nope, 0.00000002 lol, 0.0000002, 0.00001
 // DISTANCE_PAR_CLIC
 //const int TEMPS_PAUSE
 const int MOTOR_MASTER = 0;
@@ -102,37 +102,36 @@ void ACC_MASTER(float ini_speed, float fin_speed)
 // Si vous avez besoin du droit comme MOTOR_MASTER changez 
 // MOTOR_SetSpeed(0, i) pour MOTOR_SetSpeed(1, i)
 {
-  if (ini_speed<fin_speed)
+  if (ini_speed < fin_speed)
   // La diff entre les 2 if c'est que la vitesse finale va etre plus petite 
   // que la vitesse initiale s'il ralentit et plus grande s'il accelere. Puisque
   // j'ai défini mon n comme étant vitesse finale - initiale, il va savoir tout seul
   // s'il faut qu'il incremente ou qu'il decremente. 
   {
-    float n = (fin_speed-ini_speed)/10.;
+    float n = (fin_speed - ini_speed)/10.;//10 pour 1 seconde
     // ici le n est diviser par 10. pour qu'il se rende à la vitesse finale en 10 loop
     // si j'avais mis un n comme 0.05 ou qq chose comme ça, vu que les vitesses changent 
     // tout le temps, le n se serait jamais rendu pile sur la vitesse souhaitée.
-    for (int i=ini_speed; i<=fin_speed; i+=n)
+    for (float i = ini_speed; i <= fin_speed; i+=n)
     {
       // vitesse moteur (Gauche, allant de v_initial à v_final)
       // MOTOR_SetSpeed(LEFT, i);
 
       //ajout de adjustement slave
       slaveAdujst(i, 0);
-      
       // delay sujet à changement ou à l'implementation en tant que variable au besoin
-      delay(50);
+      // delay(50);
     }
   }
-  else if (ini_speed>fin_speed)
+  else if (ini_speed > fin_speed)
   {
-    float n = (fin_speed-ini_speed)/10.;
-    for (int i=ini_speed; i>=fin_speed; i+=n)
+    float n = (fin_speed - ini_speed)/10.;
+    for (float i = ini_speed; i >= fin_speed; i+=n)
     {
 
       // MOTOR_SetSpeed(LEFT, i);
       slaveAdujst(i, 0);
-      delay(50);
+      // delay(50);
     }
   }
   // en gros si la vitesse finale et initiale sont pareils fait rien
@@ -150,23 +149,33 @@ float arc_de_cercle ( float angle, float rayon)
 }
 //doit ajuster les moteurs slave a la bonne vitesse
 //ratio utilise lors de tournant pour verifier si la vitesse des roues est bien ajustee
+//marche pour vitesses constantes apres quelques iterations
+
 void slaveAdujst(float master, float ratio)
 {
+  //ratio positif
+  if(ratio > 0){}
   MOTOR_SetSpeed(LEFT, master);
   MOTOR_SetSpeed(RIGHT, master + correctionR);
-  //devrait laisser le temps de lire environ 67 coches
-  delay(10);
-    //garde l'erreur trouve pour cette lecture
-  erreur = ((ENCODER_Read(LEFT) - oldL) - (ENCODER_Read(RIGHT) - oldR));
   oldL = ENCODER_Read(LEFT);
   oldR = ENCODER_Read(RIGHT);
-  erreurTotal = oldL - oldR;
-  if(erreurTotal <= 4){
-    correctionR = 0;
-  }
-  else{
-    correctionR = KI * erreur + KP * erreurTotal;
-  }
+  //devrait laisser le temps de lire environ 67 coches
+  delay(100); //100 ok, 50 perds de la precision a la longue 
+    //garde l'erreur trouve pour cette lecture
+  erreur = ((ENCODER_Read(LEFT) - oldL) - (ENCODER_Read(RIGHT) - oldR));
+  erreurTotal = (ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
+  // if(erreurTotal <= 4){
+  //   correctionR;
+  // }
+  // else{
+  Serial.print(erreur);
+  Serial.print("   ");  
+  Serial.print(erreurTotal);
+  Serial.print("   ");
+  Serial.println(correctionR);
+    correctionR += KI * erreur + KP * erreurTotal;
+    // Serial.println(correctionR);
+  // }
 }
 
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
@@ -201,109 +210,100 @@ void loop() { //test pour l'avance
   if(ROBUS_IsBumper(REAR)){
     ENCODER_Reset(LEFT);
     ENCODER_Reset(RIGHT);
-    MOTOR_SetSpeed(LEFT, 0.7);
-    MOTOR_SetSpeed(RIGHT, 0.7);
-    delay(2000);
-    Serial.print(ENCODER_Read(LEFT));
-    Serial.print("  ");
-    Serial.println(ENCODER_Read(RIGHT));
+    //accelere jusqu'a vitesse max
+    ACC_MASTER(0, 0.7);
+    while(ENCODER_Read(LEFT) < 128000){
+      ACC_MASTER(0.7, 0.7);  
+    }
+    ACC_MASTER(0.7, 0);
     
-    MOTOR_SetSpeed(LEFT, 0);
-    MOTOR_SetSpeed(RIGHT, 0);
   }
   if(ROBUS_IsBumper(LEFT)){
-    MOTOR_SetSpeed(LEFT, 1.);
-    MOTOR_SetSpeed(RIGHT, 1.);
-    delay (1000);
-    MOTOR_SetSpeed(LEFT, 0.);
-    MOTOR_SetSpeed(RIGHT, 0.);
+    ENCODER_Reset(LEFT);
+    ENCODER_Reset(RIGHT);
+    // Serial.print(ENCODER_Read(LEFT));
+    // Serial.print("  ");
+    // Serial.println(ENCODER_Read(RIGHT));
+    // ACC_MASTER(0, 0.7);
+
+    //fait ca pendant environ 1 seconde
+    for(int i = 0; i < 10; i++){
+      slaveAdujst(0.7, 0);
+    }
+    // Serial.print(ENCODER_Read(LEFT));
+    // Serial.print("  ");
+    // Serial.println(ENCODER_Read(RIGHT));
+    //fait ca pendant environ 1 seconde
+    for(int i = 0; i < 10; i++){
+      slaveAdujst(0.7, 0);
+    }
+    // Serial.print(ENCODER_Read(LEFT));
+    // Serial.print("  ");
+    // Serial.println(ENCODER_Read(RIGHT));
+    //fait ca pendant environ 1 seconde
+    for(int i = 0; i < 10; i++){
+      slaveAdujst(0.7, 0);
+    }
+    // Serial.print(ENCODER_Read(LEFT));
+    // Serial.print("  ");
+    // Serial.println(ENCODER_Read(RIGHT));
+    //fait ca pendant environ 1 seconde
+    for(int i = 0; i < 10; i++){
+      slaveAdujst(0.7, 0);
+    }
+    // Serial.print(ENCODER_Read(LEFT));
+    // Serial.print("  ");
+    // Serial.println(ENCODER_Read(RIGHT));
+    //fait ca pendant environ 1 seconde
+    for(int i = 0; i < 10; i++){
+      slaveAdujst(0.7, 0);
+    }
+    
   }
 
   if(ROBUS_IsBumper(RIGHT)){
     ENCODER_Reset(LEFT);
     ENCODER_Reset(RIGHT);
-    Serial.print(ENCODER_Read(LEFT));
-    Serial.print("  ");
-    Serial.println(ENCODER_Read(RIGHT));
+    // Serial.print(ENCODER_Read(LEFT));
+    // Serial.print("  ");
+    // Serial.println(ENCODER_Read(RIGHT));
     // ACC_MASTER(0, 0.7);
 
     //fait ca pendant environ 1 seconde
-    for(int i = 0; i < 100; i++){
-      slaveAdujst(0.7, 0);
+    for(int i = 0; i < 10; i++){
+      slaveAdujst(0.4, 0);
     }
-    Serial.print(ENCODER_Read(LEFT));
-    Serial.print("  ");
-    Serial.println(ENCODER_Read(RIGHT));
+    // Serial.print(ENCODER_Read(LEFT));
+    // Serial.print("  ");
+    // Serial.println(ENCODER_Read(RIGHT));
     //fait ca pendant environ 1 seconde
-    for(int i = 0; i < 100; i++){
-      slaveAdujst(0.7, 0);
+    for(int i = 0; i < 10; i++){
+      slaveAdujst(0.4, 0);
     }
-    Serial.print(ENCODER_Read(LEFT));
-    Serial.print("  ");
-    Serial.println(ENCODER_Read(RIGHT));
+    // Serial.print(ENCODER_Read(LEFT));
+    // Serial.print("  ");
+    // Serial.println(ENCODER_Read(RIGHT));
     //fait ca pendant environ 1 seconde
-    for(int i = 0; i < 100; i++){
-      slaveAdujst(0.7, 0);
+    for(int i = 0; i < 10; i++){
+      slaveAdujst(0.4, 0);
     }
-    Serial.print(ENCODER_Read(LEFT));
-    Serial.print("  ");
-    Serial.println(ENCODER_Read(RIGHT));
+    // Serial.print(ENCODER_Read(LEFT));
+    // Serial.print("  ");
+    // Serial.println(ENCODER_Read(RIGHT));
     //fait ca pendant environ 1 seconde
-    for(int i = 0; i < 100; i++){
-      slaveAdujst(0.7, 0);
+    for(int i = 0; i < 10; i++){
+      slaveAdujst(0.4, 0);
     }
-    Serial.print(ENCODER_Read(LEFT));
-    Serial.print("  ");
-    Serial.println(ENCODER_Read(RIGHT));
+    // Serial.print(ENCODER_Read(LEFT));
+    // Serial.print("  ");
+    // Serial.println(ENCODER_Read(RIGHT));
     //fait ca pendant environ 1 seconde
-    for(int i = 0; i < 100; i++){
-      slaveAdujst(0.7, 0);
+    for(int i = 0; i < 10; i++){
+      slaveAdujst(0.4, 0);
     }
-    Serial.print(ENCODER_Read(LEFT));
-    Serial.print("  ");
-    Serial.println(ENCODER_Read(RIGHT));
-    for(int i = 0; i < 100; i++){
-      slaveAdujst(0.7, 0);
-    }
-    Serial.print(ENCODER_Read(LEFT));
-    Serial.print("  ");
-    Serial.println(ENCODER_Read(RIGHT));
-    for(int i = 0; i < 100; i++){
-      slaveAdujst(0.7, 0);
-    }
-    Serial.print(ENCODER_Read(LEFT));
-    Serial.print("  ");
-    Serial.println(ENCODER_Read(RIGHT));
-    for(int i = 0; i < 100; i++){
-      slaveAdujst(0.7, 0);
-    }
-    Serial.print(ENCODER_Read(LEFT));
-    Serial.print("  ");
-    Serial.println(ENCODER_Read(RIGHT));
-    for(int i = 0; i < 100; i++){
-      slaveAdujst(0.7, 0);
-    }
-    Serial.print(ENCODER_Read(LEFT));
-    Serial.print("  ");
-    Serial.println(ENCODER_Read(RIGHT));
-    for(int i = 0; i < 100; i++){
-      slaveAdujst(0.7, 0);
-    }
-    Serial.print(ENCODER_Read(LEFT));
-    Serial.print("  ");
-    Serial.println(ENCODER_Read(RIGHT));
-    for(int i = 0; i < 100; i++){
-      slaveAdujst(0.7, 0);
-    }
-    Serial.print(ENCODER_Read(LEFT));
-    Serial.print("  ");
-    Serial.println(ENCODER_Read(RIGHT));
-    for(int i = 0; i < 100; i++){
-      slaveAdujst(0.7, 0);
-    }
-    Serial.print(ENCODER_Read(LEFT));
-    Serial.print("  ");
-    Serial.println(ENCODER_Read(RIGHT));
+    // Serial.print(ENCODER_Read(LEFT));
+    // Serial.print("  ");
+    // Serial.println(ENCODER_Read(RIGHT));
   }
 }
 
