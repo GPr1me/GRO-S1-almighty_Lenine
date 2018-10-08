@@ -37,9 +37,9 @@ const float KP = 0.00001;//0.00001 ok
 //const int TEMPS_PAUSE
 const int MOTOR_MASTER = 0;
 const int MOTOR_SLAVE = 1;
+const float distance_entre_les_roues = 19.05;
 //3200 coches par tour de roue
 //LEFT 0, RIGHT 1, FRONT 2, REAR 3
-// const float clics_par_cm = 23.876160;
 //constante clics/cm;
 
 
@@ -61,16 +61,29 @@ void correctSpeed(int cycleNb,
 float ratio_de_virage(float rayon)
 //FONCTION POUR CALCULER LE RATIO DE VIRAGE
 {
+  float resultat=0;
+    if (rayon>0)
+    {
+      resultat = (rayon + distance_entre_les_roues)/rayon ;
+      // L'utilite de ce ratio c'est qu'avec un ratio donné, on va pouvoir
+      // dire aux 2 roues de tourner a la meme vitesse, mais en diviser une par
+      // le ratio pour qu'elle tourne moins vite.
+      // Donc, dependemment de quelle roue on divise par le ratio, le robot
+      // va tourner a droite ou a gauche et la seule chose qui va varier c'est le rayon.
+    }
+    if (rayon<0)
+    {
+      resultat = (-1)*(rayon - distance_entre_les_roues)/rayon ;
+    }
+  
+return resultat;
+}
 
-  float distance_entre_les_roues = 19.05;
- 
-  float resultat = (rayon + distance_entre_les_roues)/rayon ;
-  // L'utilite de ce ratio c'est qu'avec un ratio donné, on va pouvoir
-  // dire aux 2 roues de tourner a la meme vitesse, mais en diviser une par
-  // le ratio pour qu'elle tourne moins vite.
-  // Donc, dependemment de quelle roue on divise par le ratio, le robot
-  // va tourner a droite ou a gauche et la seule chose qui va varier c'est le rayon.
-  return resultat;
+float angle_to_cm(float angle, float rayon)
+{
+  //degre
+  return( ((2*PI)*(distance_entre_les_roues+rayon))*(angle/360.0));
+  // On retourne un produit croise
 }
 
 
@@ -78,7 +91,7 @@ float clic_to_cm(int nb_de_clics)
 // FONCTION POUR CHANGER LES CLICS EN VITESSE
 {
   // Le nom des variables est long mais j'voulais être sûr que vous sachiez ce que je faisais
-  float circonference=(float)38/10*PI;
+  float circonference=(float)2*38/10*PI;
   int clics_par_tour=3200;
   // nombre de cm
   float nb_cm = (float)(circonference/clics_par_tour)*nb_de_clics;
@@ -309,11 +322,9 @@ void loop() { //test pour l'avance
   if(ROBUS_IsBumper(FRONT))
   {
     ACC_MASTER(0, 0.8);
-    cm_to_clic(111.25);
     // delay(1000); // delay prit au hasard
 
     ACC_MASTER (0.8, 0.2); 
-    cm_to_clic (111.25);
     // delay (1000); //delay prit au hasard
   }
 }
