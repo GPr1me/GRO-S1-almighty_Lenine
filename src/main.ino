@@ -65,7 +65,7 @@ float ratio_de_virage(float rayon)
   // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
   // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
   // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
-  float distance_entre_les_roues = 14;
+  float distance_entre_les_roues = 19.05;
   float resultat = (rayon + distance_entre_les_roues)/rayon ;
   // L'utilite de ce ratio c'est qu'avec un ratio donné, on va pouvoir
   // dire aux 2 roues de tourner a la meme vitesse, mais en diviser une par
