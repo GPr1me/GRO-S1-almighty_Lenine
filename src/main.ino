@@ -39,7 +39,7 @@ const int MOTOR_MASTER = 0;
 const int MOTOR_SLAVE = 1;
 //3200 coches par tour de roue
 //LEFT 0, RIGHT 1, FRONT 2, REAR 3
-const float clics_par_cm = 23.876160;
+// const float clics_par_cm = 23.876160;
 //constante clics/cm;
 
 
@@ -61,11 +61,9 @@ void correctSpeed(int cycleNb,
 float ratio_de_virage(float rayon)
 //FONCTION POUR CALCULER LE RATIO DE VIRAGE
 {
-  // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
-  // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
-  // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
-  // LE CHIFFRE 14 EST PAS BON VEUILLEZ MESURER
-  float distance_entre_les_roues = 14;
+
+  float distance_entre_les_roues = 19.05;
+ 
   float resultat = (rayon + distance_entre_les_roues)/rayon ;
   // L'utilite de ce ratio c'est qu'avec un ratio donné, on va pouvoir
   // dire aux 2 roues de tourner a la meme vitesse, mais en diviser une par
@@ -75,22 +73,29 @@ float ratio_de_virage(float rayon)
   return resultat;
 }
 
-float clic_to_speed(int nb_de_clics, float duree)
+
+float clic_to_cm(int nb_de_clics)
 // FONCTION POUR CHANGER LES CLICS EN VITESSE
 {
   // Le nom des variables est long mais j'voulais être sûr que vous sachiez ce que je faisais
-  float circonference=(float)38/1000;
+  float circonference=(float)38/10*PI;
   int clics_par_tour=3200;
-  // nombre de metres
-  float nb_m = (float)(circonference/clics_par_tour)*nb_de_clics;
-  // vitesse metres par seconde
-  float V_m_par_s = nb_m/duree;
-  return V_m_par_s;
+  // nombre de cm
+  float nb_cm = (float)(circonference/clics_par_tour)*nb_de_clics;
+  return nb_cm;
+}
+
+float cm_to_clic(float distance)
+//FONCTION POUR CHANGER LA DISTANCE EN NOMBRE DE CLICS
+{
+  float nb_de_clics;
+  nb_de_clics = 23.876160*distance; 
+  return nb_de_clics;
 }
 
 // Vitesse à 70% : 6776 clics par seconde
 //Vitesse à 100% : 9635.5 clics par seconde
-//Clics par cm = 23.876160 clics par cm
+//Clics par cm = 23.876160
 // (200+45/2)+50+45+50+(18+45/2)+(54+45/2)+(60+45/2)+50+76= 693.00
 // La distance du trajet est de 693.00cm
 //Le robot va faire 16546.17888 clics au total
@@ -141,12 +146,16 @@ void ACC_MASTER(float ini_speed, float fin_speed)
     return;
   }
 }
-float arc_de_cercle ( float angle, float rayon)
+
+
+/*float arc_de_cercle ( float angle, float rayon)
 {
   return (2*PI*rayon*angle)/360;
   // la longueur de l'arc est la distance que la roue va parcourir
   //mettre un petit rayon pour que le robot tourne assez vite sans que les roues arretes
 }
+*/
+
 //doit ajuster les moteurs slave a la bonne vitesse
 //ratio utilise lors de tournant pour verifier si la vitesse des roues est bien ajustee
 //marche pour vitesses constantes apres quelques iterations
@@ -305,26 +314,36 @@ void loop() { //test pour l'avance
     // Serial.print("  ");
     // Serial.println(ENCODER_Read(RIGHT));
   }
+  if(ROBUS_IsBumper(FRONT))
+  {
+    ACC_MASTER(0, 0.8);
+    cm_to_clic(111.25);
+    // delay(1000); // delay prit au hasard
+
+    ACC_MASTER (0.8, 0.2); 
+    cm_to_clic (111.25);
+    // delay (1000); //delay prit au hasard
+  }
 }
 
 
-// void loop()
-// {
-//   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
-//   delay(10);// Delais pour décharger le CPU
-//   if(ROBUS_IsBumper(REAR))
-//   {
-//     ACC_MASTER(0, 0.8);
-//     MOTOR_SetSpeed (LEFT, 0.8);
-//     MOTOR_SetSpeed (RIGHT, 0.8);
-//     delay (1500);
-//     ACC_MASTER (0.8, 0.1);
+/* void loop()
+ {
+   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
+   delay(10);// Delais pour décharger le CPU
+   if(ROBUS_IsBumper(REAR))
+   {
+     ACC_MASTER(0, 0.8);
+     MOTOR_SetSpeed (LEFT, 0.8);
+     MOTOR_SetSpeed (RIGHT, 0.8);
+     delay (1500);
+     ACC_MASTER (0.8, 0.1);
 
-//     arc_de_cercle (90, 2.0);
-//     ratio_de_virage (2.0);
+     ratio_de_virage (1.0); // rayon de 1 cm
     
-//   }
-
+    
+  }
+*/
 
 // }
 
@@ -357,7 +376,7 @@ void loop() { //test pour l'avance
 //{
   
   //débuter avec l'accélération
-  // distance de 200cm
+  // distance de 222.5cm
   //ajouter correctspeed
 
   //distance à parcourir des roues avec l'arc de cercle et le ratio
@@ -385,21 +404,21 @@ void loop() { //test pour l'avance
   // angle de 90deg
 
   //accélération
-  //distance de 18cm
+  //distance de 40.5cm
   //ajouter correctspeed
 
   //distance à parcourir des roues avec l'arc de cercle et le ratio
   // angle de 45deg
 
   //accélération
-  //distance de 54cm
+  //distance de 76.5cm
   //ajouter correctspeed
 
   //distance à parcourir des roues avec l'arc de cercle et le ratio
   // angle de 90deg
 
   //accélération
-  //distance de 60cm
+  //distance de 82.5cm
   //ajouter correctspeed
 
   //distance à parcourir des roues avec l'arc de cercle et le ratio
