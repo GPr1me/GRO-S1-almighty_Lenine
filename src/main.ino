@@ -83,7 +83,7 @@ void Avancer(float speed, float distance)
 float ErrorClicCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
 {
   float temp = clicNb_cycle_MASTER - clicNb_cycle_SLAVE;
-  return temp/CYCLEDELAY;
+  return temp; //Auparavant divisé par CYCLEDELAY
 }
 
 /*Cette fonction prend pour entrée la différence de cliques, la divise par la différence de temps
