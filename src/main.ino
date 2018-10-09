@@ -29,7 +29,7 @@ float erreurTotal;
 int oldL;
 int oldR;
 
-const float DELAY = 100.;
+const float DELAY = 100.0;
 const float KI = 0.0007;//0.0005 ok
 const float KP = 0.00001;//0.00001 ok 
 //try KP: 0.0001 trop grand, 0.001 pire, 0.01 nope, 0.000001 better hahaha, 0.00001, 0.0005
@@ -231,7 +231,7 @@ void slaveAdujst(float master, float ratio)
     oldL = ENCODER_Read(LEFT);
     oldR = ENCODER_Read(RIGHT);
     //devrait laisser le temps de lire environ 67 coches
-    delay(DeLAY); //100 ok, 50 perds de la precision en longue distance 
+    delay(DELAY); //100 ok, 50 perds de la precision en longue distance 
     //garde l'erreur trouve pour cette lecture
     erreur = ((ENCODER_Read(LEFT) - oldL) - (ENCODER_Read(RIGHT) - oldR));
     erreurTotal = (ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
