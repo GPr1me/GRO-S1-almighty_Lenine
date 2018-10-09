@@ -108,7 +108,7 @@ int AngleToClics (float angle)
   float arc_complet = 2 * PI * w_distance/2;
   float arc_angle = angle * arc_complet / 360;
 
-  return ()
+  return (DistanceToClics(arc_angle));
 }
 void SetMaster(Motors ID) // Power to the people!
 {
@@ -133,32 +133,62 @@ void SetMaster(Motors ID) // Power to the people!
 
 // Prend pour acquis qu'un angle 0 ne tourne pas.
 // Un angle négatif tourne à gauche et positif à droite.
-void Turn(float angle)
+/*void Turn(float angle)
 {
   ENCODER_Reset(MOTOR_MASTER);
   ENCODER_Reset(MOTOR_SLAVE);
   MOTOR_SetSpeed(MOTOR_MASTER, 0);
   MOTOR_SetSpeed(MOTOR_SLAVE, 0);
   delay(CYCLEDELAY * 1000);
+  int clicNb_start_MASTER = 0;
+  int clicNb_start_SLAVE = 0;
+  int clicNb_cycle_MASTER = 0;
+  int clicNb_cycle_SLAVE = 0;
+  float speed_total_error = 0;
+  float speed_cycle_error = 0;
+  int nbClic_turn = AngleToClics(angle);
+  float speed = 
+
   // ne tourne pas si angle=0
   if(angle != 0)
   {
     if(angle < 0)
     {
       SetMaster(MOTOR_RIGHT); //Le moteur droit est rendu MASTER
-      nbClic_turn = 
     }
 
     if(angle > 0)
     {
       SetMaster(MOTOR_LEFT); //Le moteur gauche est rendu MASTER
     }
+    while (ENCODER_Read(MOTOR_MASTER) < nbClic_turn)
+    {
+      clicNb_start_MASTER = ENCODER_Read(MOTOR_MASTER);
+      clicNb_start_SLAVE = ENCODER_Read(MOTOR_SLAVE);
 
-    // Execution code virage
+      delay(CYCLEDELAY*1000);
+
+      clicNb_cycle_MASTER = ENCODER_Read(MOTOR_MASTER)-clicNb_start_MASTER;
+      clicNb_cycle_SLAVE = ENCODER_Read(MOTOR_SLAVE)-clicNb_start_SLAVE;
+
+      speed_cycle_error = (clicNb_cycle_MASTER - clicNb_cycle_SLAVE)/CYCLEDELAY;
+      speed_total_error = speed_total_error + speed_cycle_error;
+
+      if (speed_accel > speed)
+      {
+        speed_accel += 0.5;
+      }
+
+      speed_total = speed + (speed_cycle_error * KP) + (speed_total_error * KI);
+      MOTOR_SetSpeed(MOTOR_SLAVE, speed_total);
+      MOTOR_SetSpeed(MOTOR_MASTER, speed_accel);
+    }
+
+  
 
 
   }
-}
+}*/
 
 /* ****************************************************************************
 Fonctions d'initialisation (setup)
