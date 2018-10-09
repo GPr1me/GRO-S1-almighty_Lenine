@@ -29,7 +29,8 @@ float erreurTotal;
 int oldL;
 int oldR;
 
-const float KI = 0.0005;//0.0005 ok
+const float DELAY = 100.;
+const float KI = 0.0007;//0.0005 ok
 const float KP = 0.00001;//0.00001 ok 
 //try KP: 0.0001 trop grand, 0.001 pire, 0.01 nope, 0.000001 better hahaha, 0.00001, 0.0005
 //try KI: 0.000002 trop grand, 0.00002 pire, 0.0002 nope, 0.00000002 lol, 0.0000002, 0.00001
@@ -183,7 +184,7 @@ void slaveAdujst(float master, float ratio)
     oldL = ENCODER_Read(LEFT);
     oldR = ENCODER_Read(RIGHT); //not sure
     //devrait laisser le temps de lire environ 67 coches
-    delay(100); //100 ok, 50 perds de la precision en longue distance 
+    delay(DELAY); //100 ok, 50 perds de la precision en longue distance 
     //garde l'erreur trouve pour cette lecture
     erreur = ((ENCODER_Read(LEFT) - oldL) - ( (ENCODER_Read(RIGHT) - oldR) / ratio) );
     erreurTotal = (ENCODER_Read(LEFT) - (ENCODER_Read(RIGHT) / ratio) );
@@ -207,7 +208,7 @@ void slaveAdujst(float master, float ratio)
     oldR = ENCODER_Read(RIGHT);
     oldL = ENCODER_Read(LEFT);
     //devrait laisser le temps de lire environ 67 coches
-    delay(100); //100 ok, 50 perds de la precision en longue distance 
+    delay(DELAY); //100 ok, 50 perds de la precision en longue distance 
     //garde l'erreur trouve pour cette lecture
     erreur = ((ENCODER_Read(RIGHT) - oldR) - ( (ENCODER_Read(LEFT) - oldL) / ratio) );
     erreurTotal = (ENCODER_Read(RIGHT) - ENCODER_Read(LEFT) / ratio);
@@ -230,7 +231,7 @@ void slaveAdujst(float master, float ratio)
     oldL = ENCODER_Read(LEFT);
     oldR = ENCODER_Read(RIGHT);
     //devrait laisser le temps de lire environ 67 coches
-    delay(100); //100 ok, 50 perds de la precision en longue distance 
+    delay(DeLAY); //100 ok, 50 perds de la precision en longue distance 
     //garde l'erreur trouve pour cette lecture
     erreur = ((ENCODER_Read(LEFT) - oldL) - (ENCODER_Read(RIGHT) - oldR));
     erreurTotal = (ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
@@ -283,7 +284,7 @@ void loop() { //test pour l'avance
     //accelere jusqu'a vitesse max
     ACC_MASTER(0, 0.8, 10);
     while(clic_to_cm( ENCODER_Read(LEFT) ) < 155){
-      ACC_MASTER(0.8, 0.8, 10);  
+      ACC_MASTER(0.8, 0.8,10);  
     }
     ACC_MASTER(0.8, 0.7, 10);
     resetAdjust();
