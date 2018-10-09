@@ -109,7 +109,10 @@ int DistanceToClics(float distance)
 
 int AngleToClics (float angle)
 {
-  float w_distance = 16.00;
+  // 18.05 pour tourner a 90deg
+  //18.95 pour tourner 360deg
+  //18.60 pour tourner 180deg
+  float w_distance = 18.05;
   float arc_complet = 2 * PI * w_distance/2;
   float arc_angle = angle * arc_complet / 360;
 
@@ -150,22 +153,32 @@ void Turn(float angle)
   int clicNb_cycle_SLAVE = 0;
   float speed_total_error = 0;
   float speed_cycle_error = 0;
-  int nbClic_turn = AngleToClics(angle);
   float speed_total = 0;
 
   // ne tourne pas si angle=0
-  if (angle!= 0)
+   if (angle!= 0)
   {
-    if(angle < 0)
+     if (angle > 0)
     {
-      SetMaster(MOTOR_RIGHT); //Le moteur droit est rendu MASTER
-      angle = angle * -1;
+      SetMaster(MOTOR_LEFT); //Le moteur gauche est rendu 
+      Serial.println("motor master");
+      Serial.println(MOTOR_LEFT);
+      Serial.println("angle");
+      Serial.println(angle);
     }
 
-    if(angle > 0)
+    if(angle < 0)
     {
-      SetMaster(MOTOR_LEFT); //Le moteur gauche est rendu MASTER
+      Serial.println("angle");
+      Serial.println(angle);
+      SetMaster(MOTOR_RIGHT); //Le moteur droit est rendu MASTER
+      angle *= -1;
+      Serial.println("angle");
+      Serial.println(angle);
+      Serial.println("motor master");
+      Serial.println(MOTOR_RIGHT);
     }
+    int nbClic_turn = AngleToClics(angle);
     MOTOR_SetSpeed(MOTOR_MASTER, speed);
     MOTOR_SetSpeed(MOTOR_SLAVE, -1* speed);
     while (ENCODER_Read(MOTOR_MASTER) < nbClic_turn)
@@ -184,8 +197,8 @@ void Turn(float angle)
       
       speed_total = speed + (speed_cycle_error * KP) + (speed_total_error * KI);
       MOTOR_SetSpeed(MOTOR_SLAVE, -1* speed_total);
-      Serial.println("nb de clic master");
-      Serial.println(ENCODER_Read(MOTOR_MASTER));
+      /*Serial.println("nb de clic master");
+      Serial.println(ENCODER_Read(MOTOR_MASTER));*/
     }
   MOTOR_SetSpeed(MOTOR_MASTER, 0);
   MOTOR_SetSpeed(MOTOR_SLAVE, 0);
@@ -219,13 +232,14 @@ void loop()
   if(ROBUS_IsBumper(2))
   {
     //Avancer(0.4, 100);
+    Turn(180);
+    delay(500);
+    Turn(-180);
+    /*delay(500);
     Turn(90);
     delay(500);
-    Turn(90);
-    delay(500);
-    Turn(-90);
-    delay(500);
-    Turn(-90);
+    Turn(90);*/
     //Serial.println("test");
+    // si tu enleve le if (angle>0); le master devient le moteur droit
   }
 }
