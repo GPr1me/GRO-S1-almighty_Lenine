@@ -109,7 +109,7 @@ int DistanceToClics(float distance)
 
 int AngleToClics (float angle)
 {
-  float w_distance = 18.45;
+  float w_distance = 16.00;
   float arc_complet = 2 * PI * w_distance/2;
   float arc_angle = angle * arc_complet / 360;
 
