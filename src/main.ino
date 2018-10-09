@@ -20,8 +20,8 @@ Variables globales et defines
 // -> defines...
 // L'ensemble des fonctions y ont acces
 
-const float KP = 0.0001;
-const float KI = 0.00002;
+const float KP = 0.00003;
+const float KI = 0.00008;
 
 const float CYCLEDELAY = 0.025;
 const int CLIC_PER_ROTATION = 3200;
@@ -35,12 +35,12 @@ int MOTOR_SLAVE = 1;
 
 void Avancer(float speed, float distance)
 {// start motors
-  float speed_accel = 0.05;
+  //float speed_accel = 0.05;
 
   ENCODER_Reset(MOTOR_MASTER);
   ENCODER_Reset(MOTOR_SLAVE);
-  MOTOR_SetSpeed(MOTOR_MASTER, speed_accel);
-  MOTOR_SetSpeed(MOTOR_SLAVE, speed_accel);
+  MOTOR_SetSpeed(MOTOR_MASTER, speed);
+  MOTOR_SetSpeed(MOTOR_SLAVE, speed);
 
   int clicTotal = DistanceToClics(distance);
 
@@ -82,6 +82,11 @@ void Avancer(float speed, float distance)
     speed_total = speed + (speed_cycle_error * KP) + (speed_total_error * KI);
     MOTOR_SetSpeed(MOTOR_SLAVE, speed_total);
     //MOTOR_SetSpeed(MOTOR_MASTER, speed_accel);
+    Serial.println("speed_cycle_error");
+    Serial.println(speed_cycle_error);
+    Serial.println("speed_total_error");
+    Serial.println(speed_total_error);
+
 
     cycleNb++;
   }
@@ -104,7 +109,7 @@ int DistanceToClics(float distance)
 
 int AngleToClics (float angle)
 {
-  float w_distance;
+  float w_distance = 19.05;
   float arc_complet = 2 * PI * w_distance/2;
   float arc_angle = angle * arc_complet / 360;
 
@@ -133,12 +138,13 @@ void SetMaster(Motors ID) // Power to the people!
 
 // Prend pour acquis qu'un angle 0 ne tourne pas.
 // Un angle négatif tourne à gauche et positif à droite.
-/*void Turn(float angle)
+void Turn(float angle)
 {
+  float speed = 0.2;
   ENCODER_Reset(MOTOR_MASTER);
   ENCODER_Reset(MOTOR_SLAVE);
-  MOTOR_SetSpeed(MOTOR_MASTER, 0);
-  MOTOR_SetSpeed(MOTOR_SLAVE, 0);
+  MOTOR_SetSpeed(MOTOR_MASTER, speed);
+  MOTOR_SetSpeed(MOTOR_SLAVE, -1* speed);
   delay(CYCLEDELAY * 1000);
   int clicNb_start_MASTER = 0;
   int clicNb_start_SLAVE = 0;
@@ -147,10 +153,10 @@ void SetMaster(Motors ID) // Power to the people!
   float speed_total_error = 0;
   float speed_cycle_error = 0;
   int nbClic_turn = AngleToClics(angle);
-  float speed = 
+  float speed_total = 0;
 
   // ne tourne pas si angle=0
-  if(angle != 0)
+  if (angle!= 0)
   {
     if(angle < 0)
     {
@@ -169,26 +175,21 @@ void SetMaster(Motors ID) // Power to the people!
       delay(CYCLEDELAY*1000);
 
       clicNb_cycle_MASTER = ENCODER_Read(MOTOR_MASTER)-clicNb_start_MASTER;
-      clicNb_cycle_SLAVE = ENCODER_Read(MOTOR_SLAVE)-clicNb_start_SLAVE;
+      clicNb_cycle_SLAVE = (ENCODER_Read(MOTOR_SLAVE)-clicNb_start_SLAVE)*-1;
 
       speed_cycle_error = (clicNb_cycle_MASTER - clicNb_cycle_SLAVE)/CYCLEDELAY;
       speed_total_error = speed_total_error + speed_cycle_error;
 
-      if (speed_accel > speed)
-      {
-        speed_accel += 0.5;
-      }
-
+      
       speed_total = speed + (speed_cycle_error * KP) + (speed_total_error * KI);
-      MOTOR_SetSpeed(MOTOR_SLAVE, speed_total);
-      MOTOR_SetSpeed(MOTOR_MASTER, speed_accel);
+      MOTOR_SetSpeed(MOTOR_SLAVE, -1* speed_total);
     }
 
   
 
 
   }
-}*/
+}
 
 /* ****************************************************************************
 Fonctions d'initialisation (setup)
@@ -215,6 +216,7 @@ void loop()
   if(ROBUS_IsBumper(2))
   {
     Avancer(0.4, 1000);
+    Turn(90);
     //Serial.println("test");
   }
 }
