@@ -322,6 +322,7 @@ void loop() { //test pour l'avance
     // Serial.println(ENCODER_Read(RIGHT));
   }
   if(ROBUS_IsBumper(FRONT))
+<<<<<<< HEAD
   {   
     ENCODER_ReadReset(MOTOR_MASTER);
     ENCODER_ReadReset(MOTOR_SLAVE);
@@ -332,6 +333,11 @@ void loop() { //test pour l'avance
     }
     ACC_MASTER(0.9999, 0, 10);
     
+=======
+  {
+
+    ACC_MASTER(0, 0.8);
+>>>>>>> 63ec20d71ce8b92362e0f302b0eac1b27e701440
     // delay(1000); // delay prit au hasard
 
     // ACC_MASTER (0.8, 0.2, 10); 
@@ -365,6 +371,7 @@ void loop() { //test pour l'avance
   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
   delay(10);// Delais pour décharger le CPU
   if(ROBUS_IsBumper(REAR))
+<<<<<<< HEAD
   {
     ACC_MASTER(0, 0.8, 10);
     delay()
@@ -380,6 +387,8 @@ void loop() { //test pour l'avance
     clic_to_speed(36, 400); //valeurs prisent au hasard
   }
 
+=======
+>>>>>>> 63ec20d71ce8b92362e0f302b0eac1b27e701440
 
 }
 */
