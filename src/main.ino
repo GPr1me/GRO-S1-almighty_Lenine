@@ -37,9 +37,9 @@ const float KP = 0.00001;//0.00001 ok
 //const int TEMPS_PAUSE
 const int MOTOR_MASTER = 0;
 const int MOTOR_SLAVE = 1;
+const float distance_entre_les_roues = 19.05;
 //3200 coches par tour de roue
 //LEFT 0, RIGHT 1, FRONT 2, REAR 3
-// const float clics_par_cm = 23.876160;
 //constante clics/cm;
 
 
@@ -61,16 +61,29 @@ void correctSpeed(int cycleNb,
 float ratio_de_virage(float rayon)
 //FONCTION POUR CALCULER LE RATIO DE VIRAGE
 {
+  float resultat=0;
+    if (rayon>0)
+    {
+      resultat = (rayon + distance_entre_les_roues)/rayon ;
+      // L'utilite de ce ratio c'est qu'avec un ratio donné, on va pouvoir
+      // dire aux 2 roues de tourner a la meme vitesse, mais en diviser une par
+      // le ratio pour qu'elle tourne moins vite.
+      // Donc, dependemment de quelle roue on divise par le ratio, le robot
+      // va tourner a droite ou a gauche et la seule chose qui va varier c'est le rayon.
+    }
+    if (rayon<0)
+    {
+      resultat = (-1)*(rayon - distance_entre_les_roues)/rayon ;
+    }
+  
+return resultat;
+}
 
-  float distance_entre_les_roues = 19.05;
- 
-  float resultat = (rayon + distance_entre_les_roues)/rayon ;
-  // L'utilite de ce ratio c'est qu'avec un ratio donné, on va pouvoir
-  // dire aux 2 roues de tourner a la meme vitesse, mais en diviser une par
-  // le ratio pour qu'elle tourne moins vite.
-  // Donc, dependemment de quelle roue on divise par le ratio, le robot
-  // va tourner a droite ou a gauche et la seule chose qui va varier c'est le rayon.
-  return resultat;
+float angle_to_cm(float angle, float rayon) //l'angle doit etre entre 0 et 360 deg
+{
+  //degre
+  return( ((2*PI)*(distance_entre_les_roues+rayon))*(angle/360.0));
+  // On retourne un produit croise
 }
 
 
@@ -78,7 +91,7 @@ float clic_to_cm(int nb_de_clics)
 // FONCTION POUR CHANGER LES CLICS EN VITESSE
 {
   // Le nom des variables est long mais j'voulais être sûr que vous sachiez ce que je faisais
-  float circonference=(float)38/10*PI;
+  float circonference=(float)2*38/10*PI;
   int clics_par_tour=3200;
   // nombre de cm
   float nb_cm = (float)(circonference/clics_par_tour)*nb_de_clics;
@@ -93,7 +106,7 @@ float clic_to_cm(int nb_de_clics)
 //Le robot va faire 16546.17888 clics au total
 // La vitesse doit être de 4% pour que le robot fasse le trajet en 60 secondes
 
-void ACC_MASTER(float ini_speed, float fin_speed)
+void ACC_MASTER(float ini_speed, float fin_speed, int nb_iterations)
 // FONCTION POUR GERER L'ACCELERATION
 // La fonction est faite pour le moteur gauche en tant que MOTOR_MASTER
 // Si vous avez besoin du droit comme MOTOR_MASTER changez 
@@ -105,7 +118,7 @@ void ACC_MASTER(float ini_speed, float fin_speed)
   // j'ai défini mon n comme étant vitesse finale - initiale, il va savoir tout seul
   // s'il faut qu'il incremente ou qu'il decremente. 
   {
-    float n = (fin_speed - ini_speed)/10.;//10 pour 1 seconde
+    float n = (fin_speed - ini_speed)/nb_iterations;//10 pour 1 seconde
     // ici le n est diviser par 10. pour qu'il se rende à la vitesse finale en 10 loop
     // si j'avais mis un n comme 0.05 ou qq chose comme ça, vu que les vitesses changent 
     // tout le temps, le n se serait jamais rendu pile sur la vitesse souhaitée.
@@ -122,7 +135,7 @@ void ACC_MASTER(float ini_speed, float fin_speed)
   }
   else if (ini_speed > fin_speed)
   {
-    float n = (fin_speed - ini_speed)/10.;
+    float n = (fin_speed - ini_speed)/nb_iterations;
     for (float i = ini_speed; i >= fin_speed; i+=n)
     {
 
@@ -268,21 +281,11 @@ void loop() { //test pour l'avance
     ENCODER_Reset(LEFT);
     ENCODER_Reset(RIGHT);
     //accelere jusqu'a vitesse max
-    ACC_MASTER(0, 0.7);
-    while(ENCODER_Read(LEFT) < 12800){
-      MOTOR_SetSpeed(LEFT, 0.7);
-      //une dixieme de la puissance
-      //how fast?
-      MOTOR_SetSpeed(RIGHT, 0.7 / 5);  
+    ACC_MASTER(0, 0.7, 10);
+    while(ENCODER_Read(LEFT) < 128000){
+      ACC_MASTER(0.7, 0.7, 10);  
     }
-    while(ENCODER_Read(LEFT) < 2 * 12800){
-      MOTOR_SetSpeed(RIGHT, 0.7);
-      //une dixieme de la puissance
-      //how fast?
-      MOTOR_SetSpeed(LEFT, 0.7 / 5);  
-    }
-    MOTOR_SetSpeed(LEFT, 0.0);
-    MOTOR_SetSpeed(RIGHT, 0.0);
+    ACC_MASTER(0.7, 0, 10);
     
   }
   if(ROBUS_IsBumper(LEFT)){
@@ -334,7 +337,7 @@ void loop() { //test pour l'avance
     // Serial.print(ENCODER_Read(LEFT));
     // Serial.print("  ");
     // Serial.println(ENCODER_Read(RIGHT));
-    // ACC_MASTER(0, 0.7);
+    // ACC_MASTER(0, 0.7, 10);
 
     //fait ca pendant environ 1 seconde
     for(int i = 0; i < 10; i++){
@@ -373,12 +376,16 @@ void loop() { //test pour l'avance
     // Serial.println(ENCODER_Read(RIGHT));
   }
   if(ROBUS_IsBumper(FRONT))
-  {
-    ACC_MASTER(0, 0.8);
-    // delay(1000); // delay prit au hasard
 
-    ACC_MASTER (0.8, 0.2); 
-    // delay (1000); //delay prit au hasard
+  {   
+    ENCODER_ReadReset(MOTOR_MASTER);
+    ENCODER_ReadReset(MOTOR_SLAVE);
+    ACC_MASTER(0, 0.9999, 10);
+    while (clic_to_cm(ENCODER_Read(MOTOR_MASTER))<180)
+    {
+     slaveAdujst(0.9999, 0);  
+    }
+    ACC_MASTER(0.9999, 0, 10);
   }
 }
 
@@ -389,11 +396,11 @@ void loop() { //test pour l'avance
    delay(10);// Delais pour décharger le CPU
    if(ROBUS_IsBumper(REAR))
    {
-     ACC_MASTER(0, 0.8);
+     ACC_MASTER(0, 0.8, 10);
      MOTOR_SetSpeed (LEFT, 0.8);
      MOTOR_SetSpeed (RIGHT, 0.8);
      delay (1500);
-     ACC_MASTER (0.8, 0.1);
+     ACC_MASTER (0.8, 0.1, 10);
 
      ratio_de_virage (1.0); // rayon de 1 cm
     
@@ -408,21 +415,6 @@ void loop() { //test pour l'avance
   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
   delay(10);// Delais pour décharger le CPU
   if(ROBUS_IsBumper(REAR))
-  {
-    ACC_MASTER(0, 0.8);
-    delay()
-
-    //total premiere distance = 222.5cm
-    MOTOR_SetSpeed (LEFT, 0.8);
-    MOTOR_SetSpeed (RIGHT, 0.8);
-    delay (1500);
-    ACC_MASTER (0.8, 0.1);
-
-    arc_de_cercle (90, 2.0);
-    ratio_de_virage (2.0);
-    clic_to_speed(36, 400); //valeurs prisent au hasard
-  }
-
 
 }
 */
