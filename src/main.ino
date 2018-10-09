@@ -20,8 +20,8 @@ Variables globales et defines
 // -> defines...
 // L'ensemble des fonctions y ont acces
 
-const float KP = 0.0001;
-const float KI = 0.00002;
+const float KP = 0.001;
+const float KI = 0.002;
 
 const int CYCLEDELAY = 100;
 const int CLIC_PER_ROTATION = 3200;
@@ -32,13 +32,14 @@ typedef enum { MOTOR_LEFT, MOTOR_RIGHT } Motors;
 
 int MOTOR_MASTER = 0;
 int MOTOR_SLAVE = 1;
+float eci = 0.0;
 
 void Avancer(float speed, float distance)
 {// start motors
   ENCODER_Reset(MOTOR_MASTER);
   ENCODER_Reset(MOTOR_SLAVE);
   MOTOR_SetSpeed(MOTOR_MASTER, speed);
-  MOTOR_SetSpeed(MOTOR_SLAVE, speed);
+  MOTOR_SetSpeed(MOTOR_SLAVE, speed-0.1);
 
   int clicTotal = DistanceToClics(distance);
 
@@ -53,7 +54,6 @@ void Avancer(float speed, float distance)
 
   int cycleNb = 0;
   float ErrorPowerTotal=0;
-  float eci = 0;
 
   while(ENCODER_Read(MOTOR_MASTER) < clicTotal)
   {
@@ -63,12 +63,11 @@ void Avancer(float speed, float distance)
     clicNb_start_MASTER = ENCODER_Read(MOTOR_MASTER);
     clicNb_start_SLAVE = ENCODER_Read(MOTOR_SLAVE);
 
-    delay(CYCLEDELAY);
-
     clicNb_cycle_MASTER = ENCODER_Read(MOTOR_MASTER)-clicNb_start_MASTER;
     clicNb_cycle_SLAVE = ENCODER_Read(MOTOR_SLAVE)-clicNb_start_SLAVE;
 
-    eci = CorrectSpeed(clicNb_cycle_MASTER, clicNb_cycle_SLAVE, speed, eci);
+    CorrectSpeed(clicNb_cycle_MASTER, clicNb_cycle_SLAVE, speed, eci);
+    delay(CYCLEDELAY);
     
     cycleNb++;
   }
@@ -83,29 +82,33 @@ void Avancer(float speed, float distance)
 float ErrorClicCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
 {
   float temp = clicNb_cycle_MASTER - clicNb_cycle_SLAVE;
-  return temp; //Auparavant divisé par CYCLEDELAY
+  return (temp); //Auparavant divisé par CYCLEDELAY
 }
 
 /*Cette fonction prend pour entrée la différence de cliques, la divise par la différence de temps
 choisie et multiplie finalement le tout par KP. */
-float ErrorPowerCycle(int errorClicCycle)
+float ErrorPowerCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
 {
-  return errorClicCycle * KP;
+  return (ErrorClicCycle(clicNb_cycle_MASTER,clicNb_cycle_SLAVE) * KP);
 }
 
 /*Cette fonction prend comme entrée le nombre de clique des deux moteurs ainsi que l'erreur cumulée
 depuis le début du trajet */
-float ErrorClicIncrement(float errorClicCycle,float errorClicIncrement)
+float ErrorClicIncrement(float errorClicIncrement,int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
 {
-  errorClicIncrement += errorClicCycle;
+  errorClicIncrement += ErrorClicCycle(clicNb_cycle_MASTER,clicNb_cycle_SLAVE);
   return (errorClicIncrement);
 }
-float ErrorPowerIncrement(float errorClicIncrement)
+
+
+float ErrorPowerIncrement(float errorClicIncrement,int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
 {
-  float errorPowerIncrement = KI * errorClicIncrement;
+  float errorPowerIncrement = KI * ErrorClicIncrement(errorClicIncrement,clicNb_cycle_MASTER,clicNb_cycle_SLAVE);
   return errorPowerIncrement;
 }
-float CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float initialMotorSpeed, float eci) //Cette partie réalise l'addition des deux paramètres contenant KI et KP
+
+
+void CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float initialMotorSpeed, float eci) //Cette partie réalise l'addition des deux paramètres contenant KI et KP
 {
   Serial.println("eci begin: ");
   Serial.println(eci);
@@ -120,22 +123,21 @@ float CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float initialM
   Serial.println("ecc: ");
   Serial.println(ecc);
 
-  eci += ErrorClicIncrement(ecc, eci);
+  eci += ErrorClicIncrement(eci, clicNb_cycle_MASTER,clicNb_cycle_SLAVE);
 
   
   Serial.println("eci after: ");
   Serial.println(eci);
 
-  float errorPower = ErrorPowerCycle(ecc) 
-                 + ErrorPowerIncrement(eci);
+  float errorPower = ErrorPowerCycle(clicNb_cycle_MASTER,clicNb_cycle_SLAVE) 
+                 + ErrorPowerIncrement(eci,clicNb_cycle_MASTER,clicNb_cycle_SLAVE);
 
   
   Serial.println("error power: ");
   Serial.println(errorPower);
 
-  initialMotorSpeed+=errorPower;
-  MOTOR_SetSpeed(MOTOR_SLAVE,initialMotorSpeed);
-  return eci;
+  MOTOR_SetSpeed(MOTOR_SLAVE,(initialMotorSpeed+errorPower); //vitesse initiale + correction
+  return;
 }
 
 //Retourne le nombre de clique nécessaire pour la distance voulue
