@@ -79,7 +79,7 @@ float ratio_de_virage(float rayon)
 return resultat;
 }
 
-float angle_to_cm(float angle, float rayon)
+float angle_to_cm(float angle, float rayon) //l'angle doit etre entre 0 et 360 deg
 {
   //degre
   return( ((2*PI)*(distance_entre_les_roues+rayon))*(angle/360.0));
@@ -106,7 +106,7 @@ float clic_to_cm(int nb_de_clics)
 //Le robot va faire 16546.17888 clics au total
 // La vitesse doit être de 4% pour que le robot fasse le trajet en 60 secondes
 
-void ACC_MASTER(float ini_speed, float fin_speed)
+void ACC_MASTER(float ini_speed, float fin_speed, int nb_iterations)
 // FONCTION POUR GERER L'ACCELERATION
 // La fonction est faite pour le moteur gauche en tant que MOTOR_MASTER
 // Si vous avez besoin du droit comme MOTOR_MASTER changez 
@@ -118,7 +118,7 @@ void ACC_MASTER(float ini_speed, float fin_speed)
   // j'ai défini mon n comme étant vitesse finale - initiale, il va savoir tout seul
   // s'il faut qu'il incremente ou qu'il decremente. 
   {
-    float n = (fin_speed - ini_speed)/10.;//10 pour 1 seconde
+    float n = (fin_speed - ini_speed)/nb_iterations;//10 pour 1 seconde
     // ici le n est diviser par 10. pour qu'il se rende à la vitesse finale en 10 loop
     // si j'avais mis un n comme 0.05 ou qq chose comme ça, vu que les vitesses changent 
     // tout le temps, le n se serait jamais rendu pile sur la vitesse souhaitée.
@@ -135,7 +135,7 @@ void ACC_MASTER(float ini_speed, float fin_speed)
   }
   else if (ini_speed > fin_speed)
   {
-    float n = (fin_speed - ini_speed)/10.;
+    float n = (fin_speed - ini_speed)/nb_iterations;
     for (float i = ini_speed; i >= fin_speed; i+=n)
     {
 
@@ -182,12 +182,14 @@ void slaveAdujst(float master, float ratio)
   //   correctionR;
   // }
   // else{
-  Serial.print(erreur);
-  Serial.print("   ");  
-  Serial.print(erreurTotal);
-  Serial.print("   ");
-  Serial.println(correctionR);
+
+  // Serial.print(erreur);
+  // Serial.print("   ");  
+  // Serial.print(erreurTotal);
+  // Serial.print("   ");
+  // Serial.println(correctionR);
     correctionR += KI * erreur + KP * erreurTotal;
+   
     // Serial.println(correctionR);
   // }
 }
@@ -225,11 +227,11 @@ void loop() { //test pour l'avance
     ENCODER_Reset(LEFT);
     ENCODER_Reset(RIGHT);
     //accelere jusqu'a vitesse max
-    ACC_MASTER(0, 0.7);
+    ACC_MASTER(0, 0.7, 10);
     while(ENCODER_Read(LEFT) < 128000){
-      ACC_MASTER(0.7, 0.7);  
+      ACC_MASTER(0.7, 0.7, 10);  
     }
-    ACC_MASTER(0.7, 0);
+    ACC_MASTER(0.7, 0, 10);
     
   }
   if(ROBUS_IsBumper(LEFT)){
@@ -281,7 +283,7 @@ void loop() { //test pour l'avance
     // Serial.print(ENCODER_Read(LEFT));
     // Serial.print("  ");
     // Serial.println(ENCODER_Read(RIGHT));
-    // ACC_MASTER(0, 0.7);
+    // ACC_MASTER(0, 0.7, 10);
 
     //fait ca pendant environ 1 seconde
     for(int i = 0; i < 10; i++){
@@ -320,11 +322,19 @@ void loop() { //test pour l'avance
     // Serial.println(ENCODER_Read(RIGHT));
   }
   if(ROBUS_IsBumper(FRONT))
-  {
-    ACC_MASTER(0, 0.8);
+  {   
+    ENCODER_ReadReset(MOTOR_MASTER);
+    ENCODER_ReadReset(MOTOR_SLAVE);
+    ACC_MASTER(0, 0.9999, 10);
+    while (clic_to_cm(ENCODER_Read(MOTOR_MASTER))<180)
+    {
+     slaveAdujst(0.9999, 0);  
+    }
+    ACC_MASTER(0.9999, 0, 10);
+    
     // delay(1000); // delay prit au hasard
 
-    ACC_MASTER (0.8, 0.2); 
+    // ACC_MASTER (0.8, 0.2, 10); 
     // delay (1000); //delay prit au hasard
   }
 }
@@ -336,11 +346,11 @@ void loop() { //test pour l'avance
    delay(10);// Delais pour décharger le CPU
    if(ROBUS_IsBumper(REAR))
    {
-     ACC_MASTER(0, 0.8);
+     ACC_MASTER(0, 0.8, 10);
      MOTOR_SetSpeed (LEFT, 0.8);
      MOTOR_SetSpeed (RIGHT, 0.8);
      delay (1500);
-     ACC_MASTER (0.8, 0.1);
+     ACC_MASTER (0.8, 0.1, 10);
 
      ratio_de_virage (1.0); // rayon de 1 cm
     
@@ -356,14 +366,14 @@ void loop() { //test pour l'avance
   delay(10);// Delais pour décharger le CPU
   if(ROBUS_IsBumper(REAR))
   {
-    ACC_MASTER(0, 0.8);
+    ACC_MASTER(0, 0.8, 10);
     delay()
 
     //total premiere distance = 222.5cm
     MOTOR_SetSpeed (LEFT, 0.8);
     MOTOR_SetSpeed (RIGHT, 0.8);
     delay (1500);
-    ACC_MASTER (0.8, 0.1);
+    ACC_MASTER (0.8, 0.1, 10);
 
     arc_de_cercle (90, 2.0);
     ratio_de_virage (2.0);
