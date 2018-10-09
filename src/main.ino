@@ -281,11 +281,16 @@ void loop() { //test pour l'avance
     ENCODER_Reset(LEFT);
     ENCODER_Reset(RIGHT);
     //accelere jusqu'a vitesse max
-    ACC_MASTER(0, 0.7, 10);
-    while(ENCODER_Read(LEFT) < 128000){
-      ACC_MASTER(0.7, 0.7, 10);  
+    ACC_MASTER(0, 0.8, 10);
+    while(clic_to_cm( ENCODER_Read(LEFT) ) < 155){
+      ACC_MASTER(0.8, 0.8, 10);  
     }
-    ACC_MASTER(0.7, 0, 10);
+    ACC_MASTER(0.8, 0.7, 10);
+    resetAdjust();
+    while( angle_to_cm(90, 3.0) > clic_to_cm(ENCODER_Read(RIGHT)) ){
+      slaveAdujst(0.7, ratio_de_virage(3.0));
+    }
+    ACC_MASTER(0.7, 0., 5);
     
   }
   if(ROBUS_IsBumper(LEFT)){
