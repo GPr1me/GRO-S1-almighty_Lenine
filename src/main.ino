@@ -35,7 +35,7 @@ int MOTOR_SLAVE = 1;
 
 void Avancer(float speed, float distance)
 {// start motors
-  float speed_accel = 0.5;
+  float speed_accel = 0.05;
 
   ENCODER_Reset(MOTOR_MASTER);
   ENCODER_Reset(MOTOR_SLAVE);
@@ -74,14 +74,14 @@ void Avancer(float speed, float distance)
     speed_cycle_error = (clicNb_cycle_MASTER - clicNb_cycle_SLAVE)/CYCLEDELAY;
     speed_total_error = speed_total_error + speed_cycle_error;
 
-  if (speed_accel > speed)
+  /*if (speed_accel > speed)
     {
-    speed_accel += 0.5;
-    }
+    speed_accel += 0.05;
+    }*/
 
-    speed_total = speed_accel + (speed_cycle_error * KP) + (speed_total_error * KI);
+    speed_total = speed + (speed_cycle_error * KP) + (speed_total_error * KI);
     MOTOR_SetSpeed(MOTOR_SLAVE, speed_total);
-    MOTOR_SetSpeed(MOTOR_MASTER, speed_accel);
+    //MOTOR_SetSpeed(MOTOR_MASTER, speed_accel);
 
     cycleNb++;
   }
