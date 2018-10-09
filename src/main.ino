@@ -23,7 +23,7 @@ Variables globales et defines
 const float KP = 0.0001;
 const float KI = 0.00002;
 
-const float CYCLEDELAY = 0.1;
+const float CYCLEDELAY = 0.025;
 const int CLIC_PER_ROTATION = 3200;
 
 // Simule le type de base Booléen
@@ -35,10 +35,12 @@ int MOTOR_SLAVE = 1;
 
 void Avancer(float speed, float distance)
 {// start motors
+  float speed_accel = 0.5;
+
   ENCODER_Reset(MOTOR_MASTER);
   ENCODER_Reset(MOTOR_SLAVE);
-  MOTOR_SetSpeed(MOTOR_MASTER, speed);
-  MOTOR_SetSpeed(MOTOR_SLAVE, speed);
+  MOTOR_SetSpeed(MOTOR_MASTER, speed_accel);
+  MOTOR_SetSpeed(MOTOR_SLAVE, speed_accel);
 
   int clicTotal = DistanceToClics(distance);
 
@@ -72,8 +74,14 @@ void Avancer(float speed, float distance)
     speed_cycle_error = (clicNb_cycle_MASTER - clicNb_cycle_SLAVE)/CYCLEDELAY;
     speed_total_error = speed_total_error + speed_cycle_error;
 
-    speed_total = speed + (speed_cycle_error * KP) + (speed_total_error * KI);
+  if (speed_accel > speed)
+    {
+    speed_accel += 0.5;
+    }
+
+    speed_total = speed_accel + (speed_cycle_error * KP) + (speed_total_error * KI);
     MOTOR_SetSpeed(MOTOR_SLAVE, speed_total);
+    MOTOR_SetSpeed(MOTOR_MASTER, speed_accel);
 
     cycleNb++;
   }
@@ -94,6 +102,14 @@ int DistanceToClics(float distance)
   return (CLIC_PER_ROTATION * distance)/circonference;
 }
 
+int AngleToClics (float angle)
+{
+  float w_distance;
+  float arc_complet = 2 * PI * w_distance/2;
+  float arc_angle = angle * arc_complet / 360;
+
+  return ()
+}
 void SetMaster(Motors ID) // Power to the people!
 {
   switch (ID) 
@@ -119,17 +135,23 @@ void SetMaster(Motors ID) // Power to the people!
 // Un angle négatif tourne à gauche et positif à droite.
 void Turn(float angle)
 {
-  // ne tourne pas à 0
+  ENCODER_Reset(MOTOR_MASTER);
+  ENCODER_Reset(MOTOR_SLAVE);
+  MOTOR_SetSpeed(MOTOR_MASTER, 0);
+  MOTOR_SetSpeed(MOTOR_SLAVE, 0);
+  delay(CYCLEDELAY * 1000);
+  // ne tourne pas si angle=0
   if(angle != 0)
   {
     if(angle < 0)
     {
-      SetMaster(MOTOR_LEFT); //Le moteur gauche est rendu MASTER
+      SetMaster(MOTOR_RIGHT); //Le moteur droit est rendu MASTER
+      nbClic_turn = 
     }
 
     if(angle > 0)
     {
-      SetMaster(MOTOR_RIGHT); //Le moteur droit est rendu MASTER
+      SetMaster(MOTOR_LEFT); //Le moteur gauche est rendu MASTER
     }
 
     // Execution code virage
@@ -160,7 +182,7 @@ void loop()
   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
   delay(10);// Delais pour décharger le CPU
 
-  if(ROBUS_IsBumper(3))
+  if(ROBUS_IsBumper(2))
   {
     Avancer(0.4, 1000);
     //Serial.println("test");
