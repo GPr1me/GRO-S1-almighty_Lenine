@@ -32,6 +32,9 @@ const float DISTANCE_ENTRE_LES_ROUES = 19.05;
 //LEFT 0, RIGHT 1, FRONT 2, REAR 3
 //constante clics/cm;
 
+int oldL = 0;
+int oldR = 0;
+
 
 /* ****************************************************************************
 Vos propres fonctions sont creees ici
@@ -180,6 +183,8 @@ void MoveForward(double distance, int iterations, float start_speed, float end_s
 /// </summary>
 void ResetEncoders()
 {
+  oldL = 0;
+  oldR = 0;
   ENCODER_Reset(LEFT);
   ENCODER_Reset(RIGHT);
 }
@@ -199,8 +204,6 @@ float SlaveAdjust(float speed_master, float ratio, float correction)
 {
   // Serial.println(ratio);
 
-  int oldL = 0;
-  int oldR = 0;
   float erreur;
   float erreurTotal;
 
