@@ -392,6 +392,7 @@ void loop()
   if(ROBUS_IsBumper(REAR))
   {
     DoParcours();
+    SlaveAdjust();
   }
 
   if(ROBUS_IsBumper(LEFT))
