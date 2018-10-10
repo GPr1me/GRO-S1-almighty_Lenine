@@ -314,31 +314,6 @@ void spin(float v, float angle){
   }
 }
 
-//fonction spin. de preference une vitesse d'environ 0.4 devrait etre ideale
-//recoit une vitesse et angle a tourner
-//angle negatif a gauche, angle positif a droite
-//nice
-void spin(float v, float angle){
-  if(angle < 0){
-    resetAdjust();
-    MOTOR_SetSpeed(LEFT, -(v + 0.01) ); //0.0
-    MOTOR_SetSpeed(RIGHT, (v - 0)); // 0.01 
-    while(angle_to_cm(-angle, distance_entre_les_roues / -2.) > clic_to_cm(ENCODER_Read(RIGHT))){
-    }
-    MOTOR_SetSpeed(LEFT, 0);
-    MOTOR_SetSpeed(RIGHT, 0);
-  }
-  else{
-    resetAdjust();
-    MOTOR_SetSpeed(LEFT, v);
-    MOTOR_SetSpeed(RIGHT, -(v - 0.01));
-    while(angle_to_cm(angle, distance_entre_les_roues / -2.) > clic_to_cm(ENCODER_Read(LEFT))){
-    }
-    MOTOR_SetSpeed(LEFT, 0);
-    MOTOR_SetSpeed(RIGHT, 0);
-  }
-}
-
 
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
 //la plus basse soit sur MOTOR_MASTER ou MOTOR_SLAVE.
@@ -542,9 +517,17 @@ void loop() { //test pour l'avance
   }
 
   if(ROBUS_IsBumper(RIGHT)){
-   spin(0.2, 180);
+   spin(0.2, 180.);
    delay(1000);
-   spin(0.2, -180);
+   spin(0.2, 90.);
+   delay(1000);
+   spin(0.2, 90.);
+   delay(1000);
+   spin(0.2, -180.);
+   delay(1000);
+   spin(0.2, -90.);
+   delay(1000);
+   spin(0.2, -90.);
   }
   
   if(ROBUS_IsBumper(FRONT))
