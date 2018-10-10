@@ -88,14 +88,9 @@ return resultat;
 
 float angle_to_cm(float angle, float rayon) //l'angle doit etre entre 0 et 360 deg
 {
-  if(rayon < 0){
-    return ( ((2 * PI) * (distance_entre_les_roues + -1 * rayon)) * (angle / 360.0)); 
-  }
-  else{
-    //degre
-    return ( ((2 * PI) * (distance_entre_les_roues + rayon)) * (angle / 360.0));
-    // On retourne un produit croise
-  }
+  //degre
+  return ( ((2 * PI) * (distance_entre_les_roues + rayon)) * (angle / 360.0));
+  // On retourne un produit croise
 }
 
 
@@ -261,8 +256,10 @@ void slaveAdujst(float master, float ratio)
     // Serial.println(correctionR);
   }
 }
+
 //distance en cm a atteindre
-void avancer(float distance, int iterations, int vI, int vF){
+void avancer(double distance, int iterations, float vI, float vF){
+  //resets values for adjustement
   resetAdjust();
   //accelere jusqu'a vitesse max
   ACC_MASTER(vI, vF, iterations);
@@ -270,14 +267,26 @@ void avancer(float distance, int iterations, int vI, int vF){
     ACC_MASTER(vF, vF, iterations);  
   }
 }
+
 //v: vitesse a laquelle tourner 
 //rayon: rayon du tournant (+ a droite, - a gauche)
 //angle: rotation a faire
 void tourner(float v, float rayon, float angle){
-  resetAdjust();
-  slaveAdujst(v, ratio_de_virage(rayon));
-  while( angle_to_cm(angle, rayon) > clic_to_cm(ENCODER_Read(RIGHT)) ){
+  if(rayon < 0){
+    //resets values for adjustement
+    resetAdjust();
     slaveAdujst(v, ratio_de_virage(rayon));
+    while(angle_to_cm(angle, -rayon) > clic_to_cm(ENCODER_Read(RIGHT)) ){
+      slaveAdujst(v, ratio_de_virage(rayon));
+    }
+  }
+  else{
+    //resets values for adjustement
+    resetAdjust();
+    slaveAdujst(v, ratio_de_virage(rayon));
+    while(angle_to_cm(angle, rayon) > clic_to_cm(ENCODER_Read(LEFT))){
+      slaveAdujst(v, ratio_de_virage(rayon));
+    }
   }
 }
 
@@ -312,81 +321,47 @@ void loop() { //test pour l'avance
   MOTOR_SetSpeed(LEFT, 0);
   MOTOR_SetSpeed(RIGHT, 0);
   if(ROBUS_IsBumper(REAR)){
-    resetAdjust();
-    //accelere jusqu'a vitesse max
-    ACC_MASTER(0, 0.8, 10);
-    while(clic_to_cm( ENCODER_Read(LEFT) ) < 190){
-      ACC_MASTER(0.8, 0.8, 10);  
-    }
-    ACC_MASTER(0.8, 0.7, 2);
+
+    avancer(186, 20, 0, 0.8);
+
+    avancer(0, 6, 0.8, 0.6);
     
-    resetAdjust();
-    slaveAdujst(0.7, ratio_de_virage(-3.0));
-    while( angle_to_cm(90, 3.0) > clic_to_cm(ENCODER_Read(RIGHT)) ){
-      // Serial.print(ENCODER_Read(RIGHT) );
-      // Serial.print("   ");
-      // Serial.println(clic_to_cm(ENCODER_Read(RIGHT)));
-      slaveAdujst(0.7, ratio_de_virage(-3.0));
-      // MOTOR_SetSpeed(LEFT, 0.7 / ratio_de_virage(3.0));
-    }
-
-    resetAdjust();
-    slaveAdujst(0.7, ratio_de_virage(+18.0));
-    while( angle_to_cm(180, 18.0) > clic_to_cm(ENCODER_Read(LEFT)) ){
-      // long int x = ENCODER_Read(LEFT);
-      // Serial.print(x);
-      // Serial.print("   ");
-      // Serial.println(clic_to_cm(x));
-      slaveAdujst(0.7, ratio_de_virage(+18.0));
-    }
-    resetAdjust();
-    slaveAdujst(0.7, ratio_de_virage(-3.0));
-    while( angle_to_cm(50, 3.0) > clic_to_cm(ENCODER_Read(RIGHT)) ){
-       slaveAdujst(0.7, ratio_de_virage(-3.0));
-    }
-    resetAdjust();
-    MOTOR_SetSpeed(LEFT, 0.6);
-    slaveAdujst(0.6, 0);
-    while(clic_to_cm( ENCODER_Read(LEFT) ) < 60){
-       
-    }
-    resetAdjust();
-    slaveAdujst(0.7, ratio_de_virage(-3.0));
-    while( angle_to_cm(60, 3.0) > clic_to_cm(ENCODER_Read(RIGHT)) ){
-       slaveAdujst(0.7, ratio_de_virage(-3.0));
-    }
-    resetAdjust();
-    MOTOR_SetSpeed(LEFT, 0.6);
-    slaveAdujst(0.6, 0);
-    while(clic_to_cm( ENCODER_Read(LEFT) ) < 40){
-       
-    }
-    resetAdjust();
-    slaveAdujst(0.7, ratio_de_virage(+25.0));
-    while( angle_to_cm(25, 25.0) > clic_to_cm(ENCODER_Read(LEFT)) ){
-      slaveAdujst(0.7, ratio_de_virage(+25.0));
-    }
-    resetAdjust();
-    MOTOR_SetSpeed(LEFT, 0.6);
-    slaveAdujst(0.6, 0);
-    while(clic_to_cm( ENCODER_Read(LEFT) ) < 20){
-       
-    }
-    resetAdjust();
-    slaveAdujst(0.7, ratio_de_virage(+25.0));
-    while( angle_to_cm(25, 25.0) > clic_to_cm(ENCODER_Read(LEFT)) ){
-      slaveAdujst(0.7, ratio_de_virage(+25.0));
-    }
-    resetAdjust();
-    MOTOR_SetSpeed(LEFT, 0.6);
-    slaveAdujst(0.6, 0);
-    while(clic_to_cm( ENCODER_Read(LEFT) ) < 20){
-       
-    }
-
-    slaveAdujst(0, 0);
-
+    tourner(0.6, -3.0, 90);
     
+    tourner(0.6, 18, 180);
+
+    tourner(0.6, -3.0, 52);
+
+    avancer(0, 6, 0.6, 0.7);
+    
+    avancer(38, 5, 0.7, 0.7);
+
+    avancer(0, 6, 0.7, 0.6);
+    
+    tourner(0.6, -3.0, 68);
+
+    avancer(0, 6, 0.6, 0.7);
+    
+    avancer(22, 5, 0.7, 0.7);
+
+    avancer(0, 6, 0.7, 0.6);
+    
+    tourner(0.6, 12, 42);
+
+    avancer(0, 6, 0.6, 0.7);
+
+    avancer(20, 5, 0.7, 0.7);
+
+    avancer(0, 6, 0.7, 0.6);
+
+    tourner(0.6, 12, 16);
+
+    avancer(0, 6, 0.6, 0.7);
+
+    avancer(68, 5, 0.7, 0.7);
+
+    avancer(0, 10, 0.7, 0);
+        
   }
   if(ROBUS_IsBumper(LEFT)){
     ENCODER_Reset(LEFT);
