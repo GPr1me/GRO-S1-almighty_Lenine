@@ -99,7 +99,7 @@ float correction = 0;
 }
 #pragma endregion
 
-#pragma region CalcTurnRation
+#pragma region CalcTurnRatio
 //ratio marche bien avec adaptation vitesse et fonction Turn
 //par contre, avec des plus grands rayons. fonction angle a cm a tendance a ne plus donner les distances voulues
 //peut-etre mettre en double
@@ -110,7 +110,7 @@ float correction = 0;
 /// </summary>
 /// <param name="rayon">Rayon du tournant</param>
 /// <returns>Le ratio permettant de tourner en respectant le rayon.</returns>
-float CalcTurnRation(float rayon)
+float CalcTurnRatio(float rayon)
 {
     if (rayon > 0)
     {
@@ -166,10 +166,10 @@ void MoveForward(double distance, int iterations, float start_speed, float end_s
   //resets values for adjustement
   ResetEncoders();
   //accelere jusqu'a vitesse max
-  // ACC_MASTER(start_speed, end_speed, iterations);
+  ACC_MASTER(start_speed, end_speed, iterations);
   while(ClicToCM( ENCODER_Read(LEFT) ) < distance)
   {
-    ACC_MASTER(start_speed, end_speed, iterations);  
+    ACC_MASTER(end_speed, end_speed, iterations);  
   }
 }
 #pragma endregion
@@ -251,11 +251,11 @@ void Turn(float speed, float rayon, float angle)
   int sign = rayon < 0 ? -1 : 1;
 
   ResetEncoders();
-  correction = SlaveAdjust(speed, CalcTurnRation(rayon), correction);
+  correction = SlaveAdjust(speed, CalcTurnRatio(rayon), correction);
 
   while(DegToCM(angle, sign*rayon) > ClicToCM(ENCODER_Read(RIGHT)))
     {
-      correction = SlaveAdjust(speed, CalcTurnRation(rayon), correction);
+      correction = SlaveAdjust(speed, CalcTurnRatio(rayon), correction);
     }
 }
 #pragma endregion
@@ -288,7 +288,7 @@ void spin(float v, float angle){
 }
 #pragma endregion
 
-void turnOnSelf( float angle, float speed )
+/*void turnOnSelf( float angle, float speed )
 {
   ResetEncoders();
   if (angle < 0)
@@ -306,7 +306,7 @@ void turnOnSelf( float angle, float speed )
   MOTOR_SetSpeed(LEFT,speed);
   }
   
-}
+}*/
 
 #pragma region DoParcours
 // Exécution du défi du parcours
@@ -382,12 +382,15 @@ void loop()
   MOTOR_SetSpeed(LEFT, 0);
   MOTOR_SetSpeed(RIGHT, 0);
 
-  MoveForward(0, 10, 0.7, 0);
+  /* MoveForward(0, 10, 0.7, 0);
   
   turnOnSelf(180, 0.5);
-  MoveForward(0, 10, 0, 0);
+  MoveForward(0, 10, 0, 0); */
         
-  
+  if(ROBUS_IsBumper(REAR))
+  {
+    DoParcours();
+  }
 
   if(ROBUS_IsBumper(LEFT))
   {
