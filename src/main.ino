@@ -52,11 +52,6 @@ Vos propres fonctions sont creees ici
 //par contre, avec des plus grands rayons. fonction angle a cm a tendance a ne plus donner les distances voulues
 //peut-etre mettre en double
 
-
-void maFonction(){
-  // code
-}
-
 void correctSpeed(int cycleNb,
                   int clicNbGoal, 
                   int actualTotalClicNb,
@@ -290,6 +285,28 @@ void tourner(float v, float rayon, float angle){
   }
 }
 
+void turnOnSelf( float angle, float speed )
+{
+  resetAdjust();
+  if (angle < 0)
+  {
+    while (clic_to_cm(ENCODER_Read(RIGHT)) < PI*distance_entre_les_roues*0.5);
+    MOTOR_SetSpeed(RIGHT,speed);
+    while (clic_to_cm(ENCODER_Read(LEFT)) > PI*distance_entre_les_roues*0.5);
+    MOTOR_SetSpeed(LEFT,-speed);
+  }
+  else if (angle > 0)
+  {
+  while (clic_to_cm(ENCODER_Read(RIGHT)) > PI*distance_entre_les_roues*0.5);
+  MOTOR_SetSpeed(RIGHT,-speed);
+  while (clic_to_cm(ENCODER_Read(LEFT)) < PI*distance_entre_les_roues*0.5);
+  MOTOR_SetSpeed(LEFT,speed);
+  }
+  
+}
+
+
+
 
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
 //la plus basse soit sur MOTOR_MASTER ou MOTOR_SLAVE.
@@ -361,6 +378,9 @@ void loop() { //test pour l'avance
     avancer(68, 5, 0.7, 0.7);
 
     avancer(0, 10, 0.7, 0);
+    
+    turnOnSelf(180, 0.5);
+    avancer(0, 10, 0, 0);
         
   }
   if(ROBUS_IsBumper(LEFT)){
@@ -453,14 +473,47 @@ void loop() { //test pour l'avance
   if(ROBUS_IsBumper(FRONT))
 
   {   
-    ENCODER_ReadReset(MOTOR_MASTER);
-    ENCODER_ReadReset(MOTOR_SLAVE);
-    ACC_MASTER(0, 0.9999, 10);
-    while (clic_to_cm(ENCODER_Read(MOTOR_MASTER))<180)
-    {
-     slaveAdujst(0.9999, 0);  
-    }
-    ACC_MASTER(0.9999, 0, 10);
+  
+    avancer(186, 20, 0, 0.8);
+
+    avancer(0, 6, 0.8, 0.6);
+    
+    tourner(0.6, -3.0, 90);
+    
+    tourner(0.6, 18, 180);
+
+    tourner(0.6, -3.0, 52);
+
+    avancer(0, 6, 0.6, 0.7);
+    
+    avancer(38, 5, 0.7, 0.7);
+
+    avancer(0, 6, 0.7, 0.6);
+    
+    tourner(0.6, -3.0, 68);
+
+    avancer(0, 6, 0.6, 0.7);
+    
+    avancer(22, 5, 0.7, 0.7);
+
+    avancer(0, 6, 0.7, 0.6);
+    
+    tourner(0.6, 12, 42);
+
+    avancer(0, 6, 0.6, 0.7);
+
+    avancer(20, 5, 0.7, 0.7);
+
+    avancer(0, 6, 0.7, 0.6);
+
+    tourner(0.6, 12, 16);
+
+    avancer(0, 6, 0.6, 0.7);
+
+    avancer(68, 5, 0.7, 0.7);
+
+    avancer(0, 10, 0.7, 0);
+        
   }
 }
 
