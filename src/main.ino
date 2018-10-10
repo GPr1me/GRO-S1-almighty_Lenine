@@ -32,6 +32,7 @@ typedef enum { MOTOR_LEFT, MOTOR_RIGHT } Motors;
 
 int MOTOR_MASTER = 0;
 int MOTOR_SLAVE = 1;
+float eci = 0.0;
 
 void Avancer(float speed, float distance)
 {// start motors
