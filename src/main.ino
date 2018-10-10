@@ -298,7 +298,7 @@ void spin(float v, float angle){
     resetAdjust();
     MOTOR_SetSpeed(LEFT, -(v + 0.01) ); //0.0
     MOTOR_SetSpeed(RIGHT, (v - 0)); // 0.01 
-    while(angle_to_cm(-angle, distance_entre_les_roues / -2.) > clic_to_cm(ENCODER_Read(RIGHT))){
+    while(angle_to_cm(- (angle - 10), distance_entre_les_roues / -2.) > clic_to_cm(ENCODER_Read(RIGHT))){
     }
     MOTOR_SetSpeed(LEFT, 0);
     MOTOR_SetSpeed(RIGHT, 0);
@@ -517,17 +517,18 @@ void loop() { //test pour l'avance
   }
 
   if(ROBUS_IsBumper(RIGHT)){
+   spin(0.2, -180.);
+   delay(1000);
+   spin(0.2, -90.);
+   delay(1000);
+   spin(0.2, -90.);
+   delay(1000);
    spin(0.2, 180.);
    delay(1000);
    spin(0.2, 90.);
    delay(1000);
    spin(0.2, 90.);
    delay(1000);
-   spin(0.2, -180.);
-   delay(1000);
-   spin(0.2, -90.);
-   delay(1000);
-   spin(0.2, -90.);
   }
   
   if(ROBUS_IsBumper(FRONT))
