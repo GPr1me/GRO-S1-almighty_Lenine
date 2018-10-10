@@ -336,9 +336,9 @@ void loop() { //test pour l'avance
     
     avancer(38, 5, 0.7, 0.7);
 
-    avancer(0, 6, 0.7, 0.6);
+    avancer(0, 6, 0.7, 0.4);
     
-    tourner(0.6, -3.0, 68);
+    tourner(0.4, -3.0, 68);
 
     avancer(0, 6, 0.6, 0.7);
     
