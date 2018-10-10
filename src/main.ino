@@ -290,7 +290,7 @@ void spin(float v, float angle){
 
 #pragma region DoParcours
 // Exécution du défi du parcours
-DoParcours()
+int DoParcours()
 {
   Serial.println("MoveFoward1");
   MoveFoward(186, 20, 0, 0.8);
