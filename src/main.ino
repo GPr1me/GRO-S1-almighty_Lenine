@@ -82,9 +82,14 @@ return resultat;
 
 float angle_to_cm(float angle, float rayon) //l'angle doit etre entre 0 et 360 deg
 {
-  //degre
-  return( ((2*PI)*(distance_entre_les_roues+rayon))*(angle/360.0));
-  // On retourne un produit croise
+  if(rayon < 0){
+    return ( ((2 * PI) * (distance_entre_les_roues + -1 * rayon)) * (angle / 360.0)); 
+  }
+  else{
+    //degre
+    return ( ((2 * PI) * (distance_entre_les_roues + rayon)) * (angle / 360.0));
+    // On retourne un produit croise
+  }
 }
 
 
@@ -182,7 +187,7 @@ void slaveAdujst(float master, float ratio)
   //ratio positif tourne a droite alors relentie la droite
   if(ratio > 0){
     MOTOR_SetSpeed(LEFT, master);
-    MOTOR_SetSpeed(RIGHT, master / ratio + 0.03);
+    MOTOR_SetSpeed(RIGHT, (master / ratio) + 0.01);
     // oldL = ENCODER_Read(LEFT);
     // oldR = ENCODER_Read(RIGHT); //not sure
     //devrait laisser le temps de lire environ 67 coches
@@ -250,6 +255,26 @@ void slaveAdujst(float master, float ratio)
     // Serial.println(correctionR);
   }
 }
+//distance en cm a atteindre
+void avancer(float distance, int iterations, int vI, int vF){
+  resetAdjust();
+  //accelere jusqu'a vitesse max
+  ACC_MASTER(vI, vF, iterations);
+  while(clic_to_cm( ENCODER_Read(LEFT) ) < distance){
+    ACC_MASTER(vF, vF, iterations);  
+  }
+}
+//v: vitesse a laquelle tourner 
+//rayon: rayon du tournant (+ a droite, - a gauche)
+//angle: rotation a faire
+void tourner(float v, float rayon, float angle){
+  resetAdjust();
+  slaveAdujst(v, ratio_de_virage(rayon));
+  while( angle_to_cm(angle, rayon) > clic_to_cm(ENCODER_Read(RIGHT)) ){
+    slaveAdujst(v, ratio_de_virage(rayon));
+  }
+}
+
 
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
 //la plus basse soit sur MOTOR_MASTER ou MOTOR_SLAVE.
@@ -298,6 +323,7 @@ void loop() { //test pour l'avance
       slaveAdujst(0.7, ratio_de_virage(-3.0));
       // MOTOR_SetSpeed(LEFT, 0.7 / ratio_de_virage(3.0));
     }
+
     resetAdjust();
     slaveAdujst(0.7, ratio_de_virage(+15.0));
     while( angle_to_cm(180, 15.0) > clic_to_cm(ENCODER_Read(LEFT)) ){
