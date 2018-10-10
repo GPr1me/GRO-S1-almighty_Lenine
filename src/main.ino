@@ -23,10 +23,10 @@ Variables globales et defines
 //correction vient du total de erreur * KP + erreurTotal * KI
 //float correction;
 
-float erreur;
-float erreurTotal;
-int oldL;
-int oldR;
+//float erreur;
+//float erreurTotal;
+//int oldL;
+//int oldR;
 
 const float DELAY = 20.0;
 const float KI = 0.0007;//0.0005 ok
@@ -145,8 +145,8 @@ float correction = 0;
 
 //reset values for adjustement from turns to straight lines and vice-versa
 void ResetAdjust(){
-  oldL = 0;
-  oldR = 0;
+  //oldL = 0;
+  //oldR = 0;
   //correction = 0;
   ENCODER_Reset(LEFT);
   ENCODER_Reset(RIGHT);
@@ -159,6 +159,10 @@ void ResetAdjust(){
 float SlaveAdjust(float master, float ratio, float correction)
 {
   Serial.println(ratio);
+  int oldL = 0;
+  int oldR = 0;
+  float erreur;
+  float erreurTotal;
 
   //ratio positif tourne a droite alors relentie la droite
   if(ratio > 0){
@@ -392,8 +396,8 @@ Fonctions d'initialisation (setup)
 void setup(){
   BoardInit();
   Serial.begin(9600);
-  oldL = 0;
-  oldR = 0;
+  //oldL = 0;
+  //oldR = 0;
 }
 
 
