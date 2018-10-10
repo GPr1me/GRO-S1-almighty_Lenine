@@ -231,12 +231,6 @@ float SlaveAdjust(float speed_master, float ratio, float correction)
     erreur = ((ENCODER_Read(LEFT) - oldL) - (ENCODER_Read(RIGHT) - oldR));
     erreurTotal = (ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
 
-    /* Serial.print(erreur);
-    Serial.print("   ");  
-    Serial.print(erreurTotal);
-    Serial.print("   ");
-    Serial.println(correction); */
-
     correction += KI * erreur + KP * erreurTotal;
   }
 
@@ -258,21 +252,6 @@ void Turn(float speed, float rayon, float angle)
 
   ResetEncoders();
   correction = SlaveAdjust(speed, CalcTurnRation(rayon), correction);
-
-  /* if(rayon < 0)
-  {
-    while(DegToCM(angle, -rayon) > ClicToCM(ENCODER_Read(RIGHT)))
-    {
-      correction = SlaveAdjust(speed, CalcTurnRation(rayon), correction);
-    }
-  }
-  else
-  {
-    while(DegToCM(angle, rayon) > ClicToCM(ENCODER_Read(LEFT)))
-    {
-      correction = SlaveAdjust(speed, CalcTurnRation(rayon), correction);
-    }
-  } */
 
   while(DegToCM(angle, sign*rayon) > ClicToCM(ENCODER_Read(RIGHT)))
     {
