@@ -47,6 +47,12 @@ const float distance_entre_les_roues = 19.05;
 /* ****************************************************************************
 Vos propres fonctions sont creees ici
 **************************************************************************** */
+
+//ratio marche bien avec adaptation vitesse et fonction tourner
+//par contre, avec des plus grands rayons. fonction angle a cm a tendance a ne plus donner les distances voulues
+//peut-etre mettre en double
+
+
 void maFonction(){
   // code
 }
@@ -284,7 +290,7 @@ void loop() { //test pour l'avance
     resetAdjust();
     //accelere jusqu'a vitesse max
     ACC_MASTER(0, 0.8, 10);
-    while(clic_to_cm( ENCODER_Read(LEFT) ) < 155){
+    while(clic_to_cm( ENCODER_Read(LEFT) ) < 190){
       ACC_MASTER(0.8, 0.8, 10);  
     }
     ACC_MASTER(0.8, 0.7, 2);
@@ -299,15 +305,59 @@ void loop() { //test pour l'avance
       // MOTOR_SetSpeed(LEFT, 0.7 / ratio_de_virage(3.0));
     }
     resetAdjust();
-    slaveAdujst(0.7, ratio_de_virage(+15.0));
-    while( angle_to_cm(180, 15.0) > clic_to_cm(ENCODER_Read(LEFT)) ){
+    slaveAdujst(0.7, ratio_de_virage(+18.0));
+    while( angle_to_cm(180, 18.0) > clic_to_cm(ENCODER_Read(LEFT)) ){
       // long int x = ENCODER_Read(LEFT);
       // Serial.print(x);
       // Serial.print("   ");
       // Serial.println(clic_to_cm(x));
-      slaveAdujst(0.7, ratio_de_virage(+15.0));
+      slaveAdujst(0.7, ratio_de_virage(+18.0));
     }
     resetAdjust();
+    slaveAdujst(0.7, ratio_de_virage(-3.0));
+    while( angle_to_cm(50, 3.0) > clic_to_cm(ENCODER_Read(RIGHT)) ){
+       slaveAdujst(0.7, ratio_de_virage(-3.0));
+    }
+    resetAdjust();
+    MOTOR_SetSpeed(LEFT, 0.6);
+    slaveAdujst(0.6, 0);
+    while(clic_to_cm( ENCODER_Read(LEFT) ) < 60){
+       
+    }
+    resetAdjust();
+    slaveAdujst(0.7, ratio_de_virage(-3.0));
+    while( angle_to_cm(60, 3.0) > clic_to_cm(ENCODER_Read(RIGHT)) ){
+       slaveAdujst(0.7, ratio_de_virage(-3.0));
+    }
+    resetAdjust();
+    MOTOR_SetSpeed(LEFT, 0.6);
+    slaveAdujst(0.6, 0);
+    while(clic_to_cm( ENCODER_Read(LEFT) ) < 40){
+       
+    }
+    resetAdjust();
+    slaveAdujst(0.7, ratio_de_virage(+25.0));
+    while( angle_to_cm(25, 25.0) > clic_to_cm(ENCODER_Read(LEFT)) ){
+      slaveAdujst(0.7, ratio_de_virage(+25.0));
+    }
+    resetAdjust();
+    MOTOR_SetSpeed(LEFT, 0.6);
+    slaveAdujst(0.6, 0);
+    while(clic_to_cm( ENCODER_Read(LEFT) ) < 20){
+       
+    }
+    resetAdjust();
+    slaveAdujst(0.7, ratio_de_virage(+25.0));
+    while( angle_to_cm(25, 25.0) > clic_to_cm(ENCODER_Read(LEFT)) ){
+      slaveAdujst(0.7, ratio_de_virage(+25.0));
+    }
+    resetAdjust();
+    MOTOR_SetSpeed(LEFT, 0.6);
+    slaveAdujst(0.6, 0);
+    while(clic_to_cm( ENCODER_Read(LEFT) ) < 20){
+       
+    }
+
     slaveAdujst(0, 0);
 
     
