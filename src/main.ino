@@ -20,10 +20,10 @@ Variables globales et defines
 // -> defines...
 // L'ensemble des fonctions y ont acces
 
-const float KP = 0.001;
-const float KI = 0.002;
+const float KP = 0.000025;
+const float KI = 0.00012;
 
-const int CYCLEDELAY = 100;
+const float CYCLEDELAY = 0.025;
 const int CLIC_PER_ROTATION = 3200;
 
 // Simule le type de base Booléen
@@ -36,10 +36,12 @@ float eci = 0.0;
 
 void Avancer(float speed, float distance)
 {// start motors
+  float speed_accel = 0.05;
+
   ENCODER_Reset(MOTOR_MASTER);
   ENCODER_Reset(MOTOR_SLAVE);
-  MOTOR_SetSpeed(MOTOR_MASTER, speed);
-  MOTOR_SetSpeed(MOTOR_SLAVE, speed-0.1);
+  MOTOR_SetSpeed(MOTOR_MASTER, speed_accel);
+  MOTOR_SetSpeed(MOTOR_SLAVE, speed_accel);
 
   int clicTotal = DistanceToClics(distance);
 
@@ -53,7 +55,9 @@ void Avancer(float speed, float distance)
   int clicNb_cycle_SLAVE = 0;
 
   int cycleNb = 0;
-  float ErrorPowerTotal=0;
+  float speed_cycle_error = 0;
+  float speed_total_error = 0;
+  float speed_total = 0;
 
   while(ENCODER_Read(MOTOR_MASTER) < clicTotal)
   {
@@ -63,12 +67,28 @@ void Avancer(float speed, float distance)
     clicNb_start_MASTER = ENCODER_Read(MOTOR_MASTER);
     clicNb_start_SLAVE = ENCODER_Read(MOTOR_SLAVE);
 
+    delay(CYCLEDELAY*1000);
+
     clicNb_cycle_MASTER = ENCODER_Read(MOTOR_MASTER)-clicNb_start_MASTER;
     clicNb_cycle_SLAVE = ENCODER_Read(MOTOR_SLAVE)-clicNb_start_SLAVE;
 
-    CorrectSpeed(clicNb_cycle_MASTER, clicNb_cycle_SLAVE, speed, eci);
-    delay(CYCLEDELAY);
-    
+    speed_cycle_error = (clicNb_cycle_MASTER - clicNb_cycle_SLAVE)/CYCLEDELAY;
+    speed_total_error = speed_total_error + speed_cycle_error;
+
+    if (speed_accel < speed)
+    {
+    speed_accel += 0.05;
+    }
+
+    speed_total = speed_accel + (speed_cycle_error * KP) + (speed_total_error * KI);
+    MOTOR_SetSpeed(MOTOR_SLAVE, speed_total);
+    MOTOR_SetSpeed(MOTOR_MASTER, speed_accel);
+    Serial.println("speed_cycle_error");
+    Serial.println(speed_cycle_error);
+    Serial.println("speed_total_error");
+    Serial.println(speed_total_error);
+
+
     cycleNb++;
   }
 
@@ -77,67 +97,6 @@ void Avancer(float speed, float distance)
   MOTOR_SetSpeed(MOTOR_SLAVE, 0);
   ENCODER_Reset(MOTOR_MASTER);
   ENCODER_Reset(MOTOR_SLAVE);
-}
-/*Cette fonction détermine la différence de cliques que le moteur slave assume*/
-float ErrorClicCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
-{
-  float temp = clicNb_cycle_MASTER - clicNb_cycle_SLAVE;
-  return (temp); //Auparavant divisé par CYCLEDELAY
-}
-
-/*Cette fonction prend pour entrée la différence de cliques, la divise par la différence de temps
-choisie et multiplie finalement le tout par KP. */
-float ErrorPowerCycle(int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
-{
-  return (ErrorClicCycle(clicNb_cycle_MASTER,clicNb_cycle_SLAVE) * KP);
-}
-
-/*Cette fonction prend comme entrée le nombre de clique des deux moteurs ainsi que l'erreur cumulée
-depuis le début du trajet */
-float ErrorClicIncrement(float errorClicIncrement,int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
-{
-  errorClicIncrement += ErrorClicCycle(clicNb_cycle_MASTER,clicNb_cycle_SLAVE);
-  return (errorClicIncrement);
-}
-
-
-float ErrorPowerIncrement(float errorClicIncrement,int clicNb_cycle_MASTER, int clicNb_cycle_SLAVE)
-{
-  float errorPowerIncrement = KI * ErrorClicIncrement(errorClicIncrement,clicNb_cycle_MASTER,clicNb_cycle_SLAVE);
-  return errorPowerIncrement;
-}
-
-
-void CorrectSpeed(int clicNb_cycle_MASTER,int clicNb_cycle_SLAVE,float initialMotorSpeed, float eci) //Cette partie réalise l'addition des deux paramètres contenant KI et KP
-{
-  Serial.println("eci begin: ");
-  Serial.println(eci);
-
-  //Serial.println("clic master: ");
-  //Serial.println(clicNb_cycle_MASTER);
-  //Serial.println("clic slave: ");
-  //Serial.println(clicNb_cycle_SLAVE);
-
-  float ecc = ErrorClicCycle(clicNb_cycle_MASTER,clicNb_cycle_SLAVE);
-
-  Serial.println("ecc: ");
-  Serial.println(ecc);
-
-  eci += ErrorClicIncrement(eci, clicNb_cycle_MASTER,clicNb_cycle_SLAVE);
-
-  
-  Serial.println("eci after: ");
-  Serial.println(eci);
-
-  float errorPower = ErrorPowerCycle(clicNb_cycle_MASTER,clicNb_cycle_SLAVE) 
-                 + ErrorPowerIncrement(eci,clicNb_cycle_MASTER,clicNb_cycle_SLAVE);
-
-  
-  Serial.println("error power: ");
-  Serial.println(errorPower);
-
-  MOTOR_SetSpeed(MOTOR_SLAVE,(initialMotorSpeed+errorPower); //vitesse initiale + correction
-  return;
 }
 
 //Retourne le nombre de clique nécessaire pour la distance voulue
@@ -149,6 +108,17 @@ int DistanceToClics(float distance)
   return (CLIC_PER_ROTATION * distance)/circonference;
 }
 
+int AngleToClics (float angle)
+{
+  // 18.05 pour tourner a 90deg
+  //18.95 pour tourner 360deg
+  //18.60 pour tourner 180deg
+  float w_distance = 18.05;
+  float arc_complet = 2 * PI * w_distance/2;
+  float arc_angle = angle * arc_complet / 360;
+
+  return (DistanceToClics(arc_angle));
+}
 void SetMaster(Motors ID) // Power to the people!
 {
   switch (ID) 
@@ -174,22 +144,67 @@ void SetMaster(Motors ID) // Power to the people!
 // Un angle négatif tourne à gauche et positif à droite.
 void Turn(float angle)
 {
-  // ne tourne pas à 0
-  if(angle != 0)
+  float speed = 0.2;
+  ENCODER_Reset(MOTOR_MASTER);
+  ENCODER_Reset(MOTOR_SLAVE);
+  delay(CYCLEDELAY * 10000);
+  int clicNb_start_MASTER = 0;
+  int clicNb_start_SLAVE = 0;
+  int clicNb_cycle_MASTER = 0;
+  int clicNb_cycle_SLAVE = 0;
+  float speed_total_error = 0;
+  float speed_cycle_error = 0;
+  float speed_total = 0;
+
+  // ne tourne pas si angle=0
+   if (angle!= 0)
   {
+     if (angle > 0)
+    {
+      SetMaster(MOTOR_LEFT); //Le moteur gauche est rendu 
+      Serial.println("motor master");
+      Serial.println(MOTOR_LEFT);
+      Serial.println("angle");
+      Serial.println(angle);
+    }
+
     if(angle < 0)
     {
-      SetMaster(MOTOR_LEFT); //Le moteur gauche est rendu MASTER
-    }
-
-    if(angle > 0)
-    {
+      Serial.println("angle");
+      Serial.println(angle);
       SetMaster(MOTOR_RIGHT); //Le moteur droit est rendu MASTER
+      angle *= -1;
+      Serial.println("angle");
+      Serial.println(angle);
+      Serial.println("motor master");
+      Serial.println(MOTOR_RIGHT);
     }
+    int nbClic_turn = AngleToClics(angle);
+    MOTOR_SetSpeed(MOTOR_MASTER, speed);
+    MOTOR_SetSpeed(MOTOR_SLAVE, -1* speed);
+    while (ENCODER_Read(MOTOR_MASTER) < nbClic_turn)
+    {
+      clicNb_start_MASTER = ENCODER_Read(MOTOR_MASTER);
+      clicNb_start_SLAVE = ENCODER_Read(MOTOR_SLAVE);
 
-    // Execution code virage
+      delay(CYCLEDELAY*1000);
 
+      clicNb_cycle_MASTER = ENCODER_Read(MOTOR_MASTER)-clicNb_start_MASTER;
+      clicNb_cycle_SLAVE = (ENCODER_Read(MOTOR_SLAVE)-clicNb_start_SLAVE)*-1;
 
+      speed_cycle_error = (clicNb_cycle_MASTER - clicNb_cycle_SLAVE)/CYCLEDELAY;
+      speed_total_error = speed_total_error + speed_cycle_error;
+
+      
+      speed_total = speed + (speed_cycle_error * KP) + (speed_total_error * KI);
+      MOTOR_SetSpeed(MOTOR_SLAVE, -1* speed_total);
+      /*Serial.println("nb de clic master");
+      Serial.println(ENCODER_Read(MOTOR_MASTER));*/
+    }
+  MOTOR_SetSpeed(MOTOR_MASTER, 0);
+  MOTOR_SetSpeed(MOTOR_SLAVE, 0);
+  ENCODER_Reset(MOTOR_MASTER);
+  ENCODER_Reset(MOTOR_SLAVE);
   }
 }
 
@@ -215,9 +230,17 @@ void loop()
   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
   delay(10);// Delais pour décharger le CPU
 
-  if(ROBUS_IsBumper(3))
+  if(ROBUS_IsBumper(2))
   {
-    Avancer(0.4, 1000);
+    //Avancer(0.4, 100);
+    Turn(180);
+    delay(500);
+    Turn(-180);
+    /*delay(500);
+    Turn(90);
+    delay(500);
+    Turn(90);*/
     //Serial.println("test");
+    // si tu enleve le if (angle>0); le master devient le moteur droit
   }
 }
