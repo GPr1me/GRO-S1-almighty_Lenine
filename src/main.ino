@@ -289,6 +289,30 @@ void tourner(float v, float rayon, float angle){
     }
   }
 }
+//fonction spin. de preference une vitesse d'environ 0.4 devrait etre ideale
+//recoit une vitesse et angle a tourner
+//angle negatif a gauche, angle positif a droite
+//nice
+void spin(float v, float angle){
+  if(angle < 0){
+    resetAdjust();
+    MOTOR_SetSpeed(LEFT, -(v + 0.01) ); //0.0
+    MOTOR_SetSpeed(RIGHT, (v - 0)); // 0.01 
+    while(angle_to_cm(-angle, distance_entre_les_roues / -2.) > clic_to_cm(ENCODER_Read(RIGHT))){
+    }
+    MOTOR_SetSpeed(LEFT, 0);
+    MOTOR_SetSpeed(RIGHT, 0);
+  }
+  else{
+    resetAdjust();
+    MOTOR_SetSpeed(LEFT, v);
+    MOTOR_SetSpeed(RIGHT, -(v - 0.01));
+    while(angle_to_cm(angle, distance_entre_les_roues / -2.) > clic_to_cm(ENCODER_Read(LEFT))){
+    }
+    MOTOR_SetSpeed(LEFT, 0);
+    MOTOR_SetSpeed(RIGHT, 0);
+  }
+}
 
 //fonction spin. de preference une vitesse d'environ 0.4 devrait etre ideale
 //recoit une vitesse et angle a tourner
@@ -431,6 +455,49 @@ void loop() { //test pour l'avance
 
     spin(0.5, 720);
         
+    spin(0.2,180);
+
+    avancer(0,10,0,0.7);
+
+    avancer(68, 5 , 0.7, 0.7);
+
+    avancer(0, 6, 0.7, 0.6);
+
+    tourner(0.6, -12, 16);
+
+    avancer(0, 6, 0.6, 0.7);
+
+    avancer(20, 5, 0.7, 0.7);
+
+    avancer(0, 6, 0.7, 0.6);
+
+    tourner(0.6, -12, 42);
+
+    avancer(0, 6, 0.6, 0.7);
+
+    avancer(22, 5, 0.7, 0.7);
+
+    avancer(0, 6, 0.7, 0.6);
+
+    tourner(0.6, 3.0, 68);
+
+    avancer(0, 6, 0.6, 0.7);
+
+    avancer(38, 5, 0.7, 0.7);
+
+    avancer(0, 6, 0.7, 0.6);
+
+    tourner(0.6, 3.0, 52);
+
+    tourner(0.6, -18, 180);
+
+    tourner(0.6, 3.0, 90);
+
+    avancer(0, 6, 0.6, 0.8);
+
+    avancer(188, 20, 0.8, 0);
+
+    spin(0.5, 720);
   }
   if(ROBUS_IsBumper(LEFT)){
     ENCODER_Reset(LEFT);
