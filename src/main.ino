@@ -289,6 +289,17 @@ void tourner(float v, float rayon, float angle){
     }
   }
 }
+//fonction spin. de preference une vitesse d'environ 0.4 devrait etre ideale
+//recoit une vitesse et angle a tourner
+void spin(float v, float angle){
+  resetAdjust();
+  MOTOR_SetSpeed(LEFT, v);
+  MOTOR_SetSpeed(RIGHT, v - 0.01);
+  while(angle_to_cm(angle, distance_entre_les_roues / -2.) > clic_to_cm(ENCODER_Read(LEFT))){
+  }
+  MOTOR_SetSpeed(LEFT, 0);
+  MOTOR_SetSpeed(RIGHT, 0);
+}
 
 
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
