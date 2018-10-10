@@ -166,10 +166,10 @@ void MoveFoward(double distance, int iterations, float start_speed, float end_sp
   //resets values for adjustement
   ResetEncoders();
   //accelere jusqu'a vitesse max
-  ACC_MASTER(start_speed, end_speed, iterations);
+  // ACC_MASTER(start_speed, end_speed, iterations);
   while(ClicToCM( ENCODER_Read(LEFT) ) < distance)
   {
-    ACC_MASTER(end_speed, end_speed, iterations);  
+    ACC_MASTER(start_speed, end_speed, iterations);  
   }
 }
 #pragma endregion
@@ -259,6 +259,21 @@ void Turn(float speed, float rayon, float angle)
   ResetEncoders();
   correction = SlaveAdjust(speed, CalcTurnRation(rayon), correction);
 
+  /* if(rayon < 0)
+  {
+    while(DegToCM(angle, -rayon) > ClicToCM(ENCODER_Read(RIGHT)))
+    {
+      correction = SlaveAdjust(speed, CalcTurnRation(rayon), correction);
+    }
+  }
+  else
+  {
+    while(DegToCM(angle, rayon) > ClicToCM(ENCODER_Read(LEFT)))
+    {
+      correction = SlaveAdjust(speed, CalcTurnRation(rayon), correction);
+    }
+  } */
+
   while(DegToCM(angle, sign*rayon) > ClicToCM(ENCODER_Read(RIGHT)))
     {
       correction = SlaveAdjust(speed, CalcTurnRation(rayon), correction);
@@ -266,7 +281,33 @@ void Turn(float speed, float rayon, float angle)
 }
 #pragma endregion
 
+#pragma region Spin
 
+//fonction spin. de preference une vitesse d'environ 0.4 devrait etre ideale
+//recoit une vitesse et angle a tourner
+//angle negatif a gauche, angle positif a droite
+//nice
+void spin(float v, float angle){
+  if(angle < 0){
+    resetAdjust();
+    MOTOR_SetSpeed(LEFT, -(v + 0.01) ); //0.0
+    MOTOR_SetSpeed(RIGHT, (v - 0)); // 0.01 
+    while(angle_to_cm(- (angle - 10), distance_entre_les_roues / -2.) > clic_to_cm(ENCODER_Read(RIGHT))){
+    }
+    MOTOR_SetSpeed(LEFT, 0);
+    MOTOR_SetSpeed(RIGHT, 0);
+  }
+  else{
+    resetAdjust();
+    MOTOR_SetSpeed(LEFT, v);
+    MOTOR_SetSpeed(RIGHT, -(v - 0.01));
+    while(angle_to_cm(angle, distance_entre_les_roues / -2.) > clic_to_cm(ENCODER_Read(LEFT))){
+    }
+    MOTOR_SetSpeed(LEFT, 0);
+    MOTOR_SetSpeed(RIGHT, 0);
+  }
+}
+#pragma endregion
 
 #pragma region DoParcours
 // Exécution du défi du parcours
@@ -274,6 +315,7 @@ DoParcours()
 {
   Serial.println("MoveFoward1");
   MoveFoward(186, 20, 0, 0.8);
+  return;
   MoveFoward(0, 6, 0.8, 0.6);
 
   Serial.println("Turn1");
