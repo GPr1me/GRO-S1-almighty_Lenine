@@ -314,7 +314,6 @@ int DoParcours()
 {
   Serial.println("MoveForward1");
   MoveForward(186, 20, 0, 0.8);
-  return;
   MoveForward(0, 6, 0.8, 0.6);
 
   Serial.println("Turn1");
