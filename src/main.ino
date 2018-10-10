@@ -292,6 +292,7 @@ void tourner(float v, float rayon, float angle){
 //fonction spin. de preference une vitesse d'environ 0.4 devrait etre ideale
 //recoit une vitesse et angle a tourner
 //angle negatif a gauche, angle positif a droite
+//nice
 void spin(float v, float angle){
   if(angle < 0){
     resetAdjust();
