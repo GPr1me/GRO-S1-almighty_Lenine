@@ -295,9 +295,9 @@ void tourner(float v, float rayon, float angle){
 void spin(float v, float angle){
   if(angle < 0){
     resetAdjust();
-    MOTOR_SetSpeed(LEFT, -v);
-    MOTOR_SetSpeed(RIGHT, (v - 0.01);
-    while(angle_to_cm(angle, distance_entre_les_roues / -2.) > clic_to_cm(ENCODER_Read(LEFT))){
+    MOTOR_SetSpeed(LEFT, -(v + 0.01) ); //0.0
+    MOTOR_SetSpeed(RIGHT, (v - 0)); // 0.01 
+    while(angle_to_cm(-angle, distance_entre_les_roues / -2.) > clic_to_cm(ENCODER_Read(RIGHT))){
     }
     MOTOR_SetSpeed(LEFT, 0);
     MOTOR_SetSpeed(RIGHT, 0);
@@ -305,7 +305,7 @@ void spin(float v, float angle){
   else{
     resetAdjust();
     MOTOR_SetSpeed(LEFT, v);
-    MOTOR_SetSpeed(RIGHT, -(v - 0.01);
+    MOTOR_SetSpeed(RIGHT, -(v - 0.01));
     while(angle_to_cm(angle, distance_entre_les_roues / -2.) > clic_to_cm(ENCODER_Read(LEFT))){
     }
     MOTOR_SetSpeed(LEFT, 0);
@@ -385,6 +385,49 @@ void loop() { //test pour l'avance
 
     avancer(0, 10, 0.7, 0);
         
+    spin(0.2,180);
+
+    avancer(0,10,0,0.7);
+
+    avancer(68, 5 , 0.7, 0.7);
+
+    avancer(0, 6, 0.7, 0.6);
+
+    tourner(0.6, -12, 16);
+
+    avancer(0, 6, 0.6, 0.7);
+
+    avancer(20, 5, 0.7, 0.7);
+
+    avancer(0, 6, 0.7, 0.6);
+
+    tourner(0.6, -12, 42);
+
+    avancer(0, 6, 0.6, 0.7);
+
+    avancer(22, 5, 0.7, 0.7);
+
+    avancer(0, 6, 0.7, 0.6);
+
+    tourner(0.6, 3.0, 68);
+
+    avancer(0, 6, 0.6, 0.7);
+
+    avancer(38, 5, 0.7, 0.7);
+
+    avancer(0, 6, 0.7, 0.6);
+
+    tourner(0.6, 3.0, 52);
+
+    tourner(0.6, -18, 180);
+
+    tourner(0.6, 3.0, 90);
+
+    avancer(0, 6, 0.6, 0.8);
+
+    avancer(188, 20, 0.8, 0);
+
+    spin(0.5, 720);
   }
   if(ROBUS_IsBumper(LEFT)){
     ENCODER_Reset(LEFT);
@@ -430,48 +473,9 @@ void loop() { //test pour l'avance
   }
 
   if(ROBUS_IsBumper(RIGHT)){
-    ENCODER_Reset(LEFT);
-    ENCODER_Reset(RIGHT);
-    // Serial.print(ENCODER_Read(LEFT));
-    // Serial.print("  ");
-    // Serial.println(ENCODER_Read(RIGHT));
-    // ACC_MASTER(0, 0.7, 10);
-
-    //fait ca pendant environ 1 seconde
-    for(int i = 0; i < 10; i++){
-      slaveAdujst(0.4, 0);
-    }
-    // Serial.print(ENCODER_Read(LEFT));
-    // Serial.print("  ");
-    // Serial.println(ENCODER_Read(RIGHT));
-    //fait ca pendant environ 1 seconde
-    for(int i = 0; i < 10; i++){
-      slaveAdujst(0.4, 0);
-    }
-    // Serial.print(ENCODER_Read(LEFT));
-    // Serial.print("  ");
-    // Serial.println(ENCODER_Read(RIGHT));
-    //fait ca pendant environ 1 seconde
-    for(int i = 0; i < 10; i++){
-      slaveAdujst(0.4, 0);
-    }
-    // Serial.print(ENCODER_Read(LEFT));
-    // Serial.print("  ");
-    // Serial.println(ENCODER_Read(RIGHT));
-    //fait ca pendant environ 1 seconde
-    for(int i = 0; i < 10; i++){
-      slaveAdujst(0.4, 0);
-    }
-    // Serial.print(ENCODER_Read(LEFT));
-    // Serial.print("  ");
-    // Serial.println(ENCODER_Read(RIGHT));
-    //fait ca pendant environ 1 seconde
-    for(int i = 0; i < 10; i++){
-      slaveAdujst(0.4, 0);
-    }
-    // Serial.print(ENCODER_Read(LEFT));
-    // Serial.print("  ");
-    // Serial.println(ENCODER_Read(RIGHT));
+   spin(0.2, 180);
+   delay(1000);
+   spin(0.2, -180);
   }
   if(ROBUS_IsBumper(FRONT))
 
