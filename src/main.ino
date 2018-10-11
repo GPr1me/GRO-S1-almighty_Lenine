@@ -405,7 +405,7 @@ void avancer(double distance, int iterations, float vI, float vF){
 //angle: rotation a faire
 void tourner(float v, float rayon, float angle){
   if(v < 0){
-    //turn droite
+    //tourne a droite
     if(rayon < 0){
       //resets values for adjustement
       resetAdjust();
@@ -414,7 +414,7 @@ void tourner(float v, float rayon, float angle){
         slaveAdujst(v, ratio_de_virage(rayon));
       }
     }
-    //turn gauche
+    //tourne a gauche
     else{
       //resets values for adjustement
       resetAdjust();
@@ -425,6 +425,7 @@ void tourner(float v, float rayon, float angle){
     }
   }
   else{
+    //tourne a gauche
     if(rayon < 0){
       //resets values for adjustement
       resetAdjust();
@@ -433,6 +434,7 @@ void tourner(float v, float rayon, float angle){
         slaveAdujst(v, ratio_de_virage(rayon));
       }
     }
+    //tourne a droite
     else{
       //resets values for adjustement
       resetAdjust();
@@ -488,15 +490,15 @@ void loop() { //test pour l'avance
 
     avancer(0, 6, 0.6, 0.7);
     
-    avancer(38, 5, 0.7, 0.7);
+    avancer(40, 5, 0.7, 0.7);
 
     avancer(0, 6, 0.7, 0.4);
     
     tourner(0.4, -3.0, 68);
 
-    avancer(0, 8, 0.4, 0.7);
+    avancer(0, 12, 0.4, 0.7);
     
-    avancer(22, 5, 0.7, 0.7);
+    avancer(15, 5, 0.7, 0.7);
 
     avancer(0, 6, 0.7, 0.6);
     
@@ -504,40 +506,62 @@ void loop() { //test pour l'avance
 
     avancer(0, 6, 0.6, 0.7);
 
-    avancer(20, 5, 0.7, 0.7);
+    avancer(18, 5, 0.7, 0.7);
 
     avancer(0, 6, 0.7, 0.6);
 
-    tourner(0.6, 12, 16);
+    tourner(0.6, 12, 12);
 
     avancer(0, 6, 0.6, 0.7);
 
-    avancer(55, 5, 0.7, 0.7);
+    avancer(58, 5, 0.7, 0.7);
 
     avancer(0, 15, 0.7, 0);
     
     // FIN ALLÉ
     delay(200);
     
-    avancer(-55, 20, 0, -0.7);
+    avancer(-55, 20, 0, -0.7); // Premiere ligne retour
 
-    avancer(0, 10, -0.7, -0.4);
+    avancer(0, 10, -0.7, -0.4); // Deceleration
 
-    tourner(-0.4, 12.0, 20);
+    tourner(-0.4, 12.0, 22); // Premier tournant retour
 
-    avancer(0, 10, -0.4, -0.7);
+    avancer(0, 10, -0.4, -0.7); // accel ligne 2
     
-    avancer(-6, 5, -0.7, -0.7);
+    avancer(-6, 5, -0.7, -0.7); // ligne 2
 
-    avancer(0, 10, -0.7, -0.4);
+    avancer(0, 10, -0.7, -0.4); // decel ligne 2
 
-    tourner(-0.4, 12.0, 60);
+    tourner(-0.4, 12.0, 53); // tournant pour ligne 3
 
-    avancer(0, 10, -0.4, -0.7);
+    avancer(0, 10, -0.4, -0.7); // accel ligne 3
 
-    avancer(30, 10, -0.7, -0.7);
+    avancer(-29.5, 10, -0.7, -0.7); // ligne 3
 
-    avancer(0, 10, -0.7, 0);
+    avancer(0, 10, -0.7, -0.4); // decel ligne 3
+ 
+    tourner(-0.4, -3.0, 95); // tournant 90
+
+    avancer(0, 10, -0.4, -0.7); // accel ligne 4
+
+    avancer(-1.5, 5, -0.7, -0.7); // ligne 4
+
+    avancer(0, 10, -0.7, -0.4); // decel ligne 4
+
+    tourner(-0.4, 3.0, 62); // tournant pour ligne 5
+
+    tourner(-0.4, -8.0, 92); // tournant pour ligne 6
+
+    tourner(-0.4, 10.0, 90); //tournant pour U turn 1/2
+
+    tourner(-0.4, 10.0, 102); //tournant pour U turn 1/2
+
+    tourner(-0.4, -28.0, 78); //tournant vers ligne finale
+
+    avancer(-190, 12, -0.4, -0.9); //accel final stretch
+
+    avancer(0, 10, -0.9, 0); //decelleration du champion
 
 
   }
