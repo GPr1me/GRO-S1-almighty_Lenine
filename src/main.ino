@@ -69,7 +69,7 @@ float ratio_de_virage(float rayon)
 //FONCTION POUR CALCULER LE RATIO DE VIRAGE
 {
   float resultat=0;
-    if (rayon>0)
+    if (rayon > 0)
     {
       resultat = (rayon + distance_entre_les_roues)/rayon ;
       // L'utilite de ce ratio c'est qu'avec un ratio donné, on va pouvoir
@@ -78,7 +78,7 @@ float ratio_de_virage(float rayon)
       // Donc, dependemment de quelle roue on divise par le ratio, le robot
       // va tourner a droite ou a gauche et la seule chose qui va varier c'est le rayon.
     }
-    if (rayon<0)
+    if (rayon < 0)
     {
       resultat = (-1)*(rayon - distance_entre_les_roues)/rayon ;
     }
@@ -119,43 +119,91 @@ void ACC_MASTER(float ini_speed, float fin_speed, int nb_iterations)
 // Si vous avez besoin du droit comme MOTOR_MASTER changez 
 // MOTOR_SetSpeed(0, i) pour MOTOR_SetSpeed(1, i)
 {
-  if (ini_speed < fin_speed)
-  // La diff entre les 2 if c'est que la vitesse finale va etre plus petite 
-  // que la vitesse initiale s'il ralentit et plus grande s'il accelere. Puisque
-  // j'ai défini mon n comme étant vitesse finale - initiale, il va savoir tout seul
-  // s'il faut qu'il incremente ou qu'il decremente. 
-  {
-    float n = (fin_speed - ini_speed)/nb_iterations;//10 pour 1 seconde
-    // ici le n est diviser par 10. pour qu'il se rende à la vitesse finale en 10 loop
-    // si j'avais mis un n comme 0.05 ou qq chose comme ça, vu que les vitesses changent 
-    // tout le temps, le n se serait jamais rendu pile sur la vitesse souhaitée.
-    for (float i = ini_speed; i <= fin_speed; i+=n)
+  //avec valeurs negatives
+  if(fin_speed < 0 || ini_speed < 0){
+    //si accelere en reculant
+    if (ini_speed > fin_speed)
+    // La diff entre les 2 if c'est que la vitesse finale va etre plus petite 
+    // que la vitesse initiale s'il ralentit et plus grande s'il accelere. Puisque
+    // j'ai défini mon n comme étant vitesse finale - initiale, il va savoir tout seul
+    // s'il faut qu'il incremente ou qu'il decremente. 
     {
-      // vitesse moteur (Gauche, allant de v_initial à v_final)
-      // MOTOR_SetSpeed(LEFT, i);
+      float n = (fin_speed - ini_speed) / nb_iterations;//10 pour 1 seconde
+      // ici le n est diviser par 10. pour qu'il se rende à la vitesse finale en 10 loop
+      // si j'avais mis un n comme 0.05 ou qq chose comme ça, vu que les vitesses changent 
+      // tout le temps, le n se serait jamais rendu pile sur la vitesse souhaitée.
 
-      //ajout de adjustement slave
-      slaveAdujst(i, 0);
-      // delay sujet à changement ou à l'implementation en tant que variable au besoin
-      // delay(50);
+      //accelere vers une plus petite valeur
+      for (float i = ini_speed; i >= fin_speed; i+=n)
+      {
+        // vitesse moteur (Gauche, allant de v_initial à v_final)
+        // MOTOR_SetSpeed(LEFT, i);
+
+        //ajout de adjustement slave
+        slaveAdujst(i, 0);
+        // delay sujet à changement ou à l'implementation en tant que variable au besoin
+        // delay(50);
+      }
+    }
+    //si ralentit en reculant
+    else if (ini_speed < fin_speed)
+    {
+      float n = (fin_speed - ini_speed)/nb_iterations;
+      for (float i = ini_speed; i <= fin_speed; i+=n)
+      {
+
+        // MOTOR_SetSpeed(LEFT, i);
+        slaveAdujst(i, 0);
+        // delay(50);
+      }
+    }
+    // en gros si la vitesse finale et initiale sont pareils fait rien
+    else
+    {
+      slaveAdujst(fin_speed, 0);
+      return;
     }
   }
-  else if (ini_speed > fin_speed)
-  {
-    float n = (fin_speed - ini_speed)/nb_iterations;
-    for (float i = ini_speed; i >= fin_speed; i+=n)
-    {
+  else{
 
-      // MOTOR_SetSpeed(LEFT, i);
-      slaveAdujst(i, 0);
-      // delay(50);
+    if (ini_speed < fin_speed)
+    // La diff entre les 2 if c'est que la vitesse finale va etre plus petite 
+    // que la vitesse initiale s'il ralentit et plus grande s'il accelere. Puisque
+    // j'ai défini mon n comme étant vitesse finale - initiale, il va savoir tout seul
+    // s'il faut qu'il incremente ou qu'il decremente. 
+    {
+      float n = (fin_speed - ini_speed)/nb_iterations;//10 pour 1 seconde
+      // ici le n est diviser par 10. pour qu'il se rende à la vitesse finale en 10 loop
+      // si j'avais mis un n comme 0.05 ou qq chose comme ça, vu que les vitesses changent 
+      // tout le temps, le n se serait jamais rendu pile sur la vitesse souhaitée.
+      for (float i = ini_speed; i <= fin_speed; i+=n)
+      {
+        // vitesse moteur (Gauche, allant de v_initial à v_final)
+        // MOTOR_SetSpeed(LEFT, i);
+
+        //ajout de adjustement slave
+        slaveAdujst(i, 0);
+        // delay sujet à changement ou à l'implementation en tant que variable au besoin
+        // delay(50);
+      }
     }
-  }
-  // en gros si la vitesse finale et initiale sont pareils fait rien
-  else
-  {
-    slaveAdujst(fin_speed, 0);
-    return;
+    else if (ini_speed > fin_speed)
+    {
+      float n = (fin_speed - ini_speed)/nb_iterations;
+      for (float i = ini_speed; i >= fin_speed; i+=n)
+      {
+
+        // MOTOR_SetSpeed(LEFT, i);
+        slaveAdujst(i, 0);
+        // delay(50);
+      }
+    }
+    // en gros si la vitesse finale et initiale sont pareils fait rien
+    else
+    {
+      slaveAdujst(fin_speed, 0);
+      return;
+    }
   }
 }
 
@@ -184,87 +232,171 @@ void resetAdjust(){
 void slaveAdujst(float master, float ratio)
 {
   Serial.println(ratio);
+  if(master < 0){
+    //ratio positif tourne a droite alors relentie la droite
+    if(ratio > 0){
+      MOTOR_SetSpeed(LEFT, master);
+      MOTOR_SetSpeed(RIGHT, (master / ratio) - 0.01);
+      // oldL = ENCODER_Read(LEFT);
+      // oldR = ENCODER_Read(RIGHT); //not sure
+      //devrait laisser le temps de lire environ 67 coches
+      // delay(DELAY); //100 ok, 50 perds de la precision en longue distance 
+      //garde l'erreur trouve pour cette lecture
+      // erreur = ((ENCODER_Read(LEFT) - oldL) - ( (ENCODER_Read(RIGHT) - oldR) * ratio) );
+      // erreurTotal = (ENCODER_Read(LEFT) - (ENCODER_Read(RIGHT) * ratio) );
+      // if(erreurTotal <= 4){
+      //   correctionR;
+      // }
+      // else{
+      // Serial.print(erreur);
+      // Serial.print("   ");  
+      // Serial.print(erreurTotal);
+      // Serial.print("   ");
+      // Serial.println(correction);
+      // correction += KI * erreur + KP * erreurTotal;
+      // Serial.println(correctionR);
 
-  //ratio positif tourne a droite alors relentie la droite
-  if(ratio > 0){
-    MOTOR_SetSpeed(LEFT, master);
-    MOTOR_SetSpeed(RIGHT, (master / ratio) + 0.01);
-    // oldL = ENCODER_Read(LEFT);
-    // oldR = ENCODER_Read(RIGHT); //not sure
-    //devrait laisser le temps de lire environ 67 coches
-    // delay(DELAY); //100 ok, 50 perds de la precision en longue distance 
-    //garde l'erreur trouve pour cette lecture
-    // erreur = ((ENCODER_Read(LEFT) - oldL) - ( (ENCODER_Read(RIGHT) - oldR) * ratio) );
-    // erreurTotal = (ENCODER_Read(LEFT) - (ENCODER_Read(RIGHT) * ratio) );
-    // if(erreurTotal <= 4){
-    //   correctionR;
-    // }
-    // else{
-    // Serial.print(erreur);
-    // Serial.print("   ");  
-    // Serial.print(erreurTotal);
-    // Serial.print("   ");
-    // Serial.println(correction);
-    // correction += KI * erreur + KP * erreurTotal;
-    // Serial.println(correctionR);
+    }
+    //ratio negatif tourne a gauche alors relentie gauche
+    else if(ratio < 0){
+      MOTOR_SetSpeed(RIGHT, master);
+      MOTOR_SetSpeed(LEFT, (master / -ratio));
+      // oldR = ENCODER_Read(RIGHT);
+      // oldL = ENCODER_Read(LEFT);
+      //devrait laisser le temps de lire environ 67 coches
+      // delay(DELAY); //100 ok, 50 perds de la precision en longue distance 
+      //garde l'erreur trouve pour cette lecture
+      // erreur = ((ENCODER_Read(RIGHT) - oldR) - ( (ENCODER_Read(LEFT) - oldL) * -ratio) );
+      // erreurTotal = (ENCODER_Read(RIGHT) - ENCODER_Read(LEFT) * -ratio);
+      // if(erreurTotal <= 4){
+      //   correctionR;
+      // }
+      // else{
+      // Serial.print(erreur);
+      // Serial.print("   ");  
+      // Serial.print(erreurTotal);
+      // Serial.print("   ");
+      // Serial.println(correction);
+      // correction += KI * erreur + KP * erreurTotal;
+      // Serial.println(correctionR);
 
-  }
-  //ratio negatif tourne a gauche alors relentie gauche
-  else if(ratio < 0){
-    MOTOR_SetSpeed(RIGHT, master);
-    MOTOR_SetSpeed(LEFT, (master / -ratio));
-    // oldR = ENCODER_Read(RIGHT);
-    // oldL = ENCODER_Read(LEFT);
-    //devrait laisser le temps de lire environ 67 coches
-    // delay(DELAY); //100 ok, 50 perds de la precision en longue distance 
-    //garde l'erreur trouve pour cette lecture
-    // erreur = ((ENCODER_Read(RIGHT) - oldR) - ( (ENCODER_Read(LEFT) - oldL) * -ratio) );
-    // erreurTotal = (ENCODER_Read(RIGHT) - ENCODER_Read(LEFT) * -ratio);
-    // if(erreurTotal <= 4){
-    //   correctionR;
-    // }
-    // else{
-    // Serial.print(erreur);
-    // Serial.print("   ");  
-    // Serial.print(erreurTotal);
-    // Serial.print("   ");
-    // Serial.println(correction);
-    // correction += KI * erreur + KP * erreurTotal;
-    // Serial.println(correctionR);
-
+    }
+    else{
+      MOTOR_SetSpeed(LEFT, master);
+      MOTOR_SetSpeed(RIGHT, master + correction);
+      oldL = ENCODER_Read(LEFT);
+      oldR = ENCODER_Read(RIGHT);
+      //devrait laisser le temps de lire environ 67 coches
+      delay(DELAY); //100 ok, 50 perds de la precision en longue distance 
+      //garde l'erreur trouve pour cette lecture
+      erreur = ((ENCODER_Read(LEFT) - oldL) - (ENCODER_Read(RIGHT) - oldR));
+      erreurTotal = (ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
+      // if(erreurTotal <= 4){
+      //   correctionR;
+      // }
+      // else{
+      Serial.print(erreur);
+      Serial.print("   ");  
+      Serial.print(erreurTotal);
+      Serial.print("   ");
+      Serial.println(correction);
+      correction += KI * erreur + KP * erreurTotal;
+      // Serial.println(correctionR);
+    }
   }
   else{
-    MOTOR_SetSpeed(LEFT, master);
-    MOTOR_SetSpeed(RIGHT, master + correction);
-    oldL = ENCODER_Read(LEFT);
-    oldR = ENCODER_Read(RIGHT);
-    //devrait laisser le temps de lire environ 67 coches
-    delay(DELAY); //100 ok, 50 perds de la precision en longue distance 
-    //garde l'erreur trouve pour cette lecture
-    erreur = ((ENCODER_Read(LEFT) - oldL) - (ENCODER_Read(RIGHT) - oldR));
-    erreurTotal = (ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
-    // if(erreurTotal <= 4){
-    //   correctionR;
-    // }
-    // else{
-    Serial.print(erreur);
-    Serial.print("   ");  
-    Serial.print(erreurTotal);
-    Serial.print("   ");
-    Serial.println(correction);
-    correction += KI * erreur + KP * erreurTotal;
-    // Serial.println(correctionR);
+    //ratio positif tourne a droite alors relentie la droite
+    if(ratio > 0){
+      MOTOR_SetSpeed(LEFT, master);
+      MOTOR_SetSpeed(RIGHT, (master / ratio) + 0.01);
+      // oldL = ENCODER_Read(LEFT);
+      // oldR = ENCODER_Read(RIGHT); //not sure
+      //devrait laisser le temps de lire environ 67 coches
+      // delay(DELAY); //100 ok, 50 perds de la precision en longue distance 
+      //garde l'erreur trouve pour cette lecture
+      // erreur = ((ENCODER_Read(LEFT) - oldL) - ( (ENCODER_Read(RIGHT) - oldR) * ratio) );
+      // erreurTotal = (ENCODER_Read(LEFT) - (ENCODER_Read(RIGHT) * ratio) );
+      // if(erreurTotal <= 4){
+      //   correctionR;
+      // }
+      // else{
+      // Serial.print(erreur);
+      // Serial.print("   ");  
+      // Serial.print(erreurTotal);
+      // Serial.print("   ");
+      // Serial.println(correction);
+      // correction += KI * erreur + KP * erreurTotal;
+      // Serial.println(correctionR);
+
+    }
+    //ratio negatif tourne a gauche alors relentie gauche
+    else if(ratio < 0){
+      MOTOR_SetSpeed(RIGHT, master);
+      MOTOR_SetSpeed(LEFT, (master / -ratio));
+      // oldR = ENCODER_Read(RIGHT);
+      // oldL = ENCODER_Read(LEFT);
+      //devrait laisser le temps de lire environ 67 coches
+      // delay(DELAY); //100 ok, 50 perds de la precision en longue distance 
+      //garde l'erreur trouve pour cette lecture
+      // erreur = ((ENCODER_Read(RIGHT) - oldR) - ( (ENCODER_Read(LEFT) - oldL) * -ratio) );
+      // erreurTotal = (ENCODER_Read(RIGHT) - ENCODER_Read(LEFT) * -ratio);
+      // if(erreurTotal <= 4){
+      //   correctionR;
+      // }
+      // else{
+      // Serial.print(erreur);
+      // Serial.print("   ");  
+      // Serial.print(erreurTotal);
+      // Serial.print("   ");
+      // Serial.println(correction);
+      // correction += KI * erreur + KP * erreurTotal;
+      // Serial.println(correctionR);
+
+    }
+    else{
+      MOTOR_SetSpeed(LEFT, master);
+      MOTOR_SetSpeed(RIGHT, master + correction);
+      oldL = ENCODER_Read(LEFT);
+      oldR = ENCODER_Read(RIGHT);
+      //devrait laisser le temps de lire environ 67 coches
+      delay(DELAY); //100 ok, 50 perds de la precision en longue distance 
+      //garde l'erreur trouve pour cette lecture
+      erreur = ((ENCODER_Read(LEFT) - oldL) - (ENCODER_Read(RIGHT) - oldR));
+      erreurTotal = (ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
+      // if(erreurTotal <= 4){
+      //   correctionR;
+      // }
+      // else{
+      Serial.print(erreur);
+      Serial.print("   ");  
+      Serial.print(erreurTotal);
+      Serial.print("   ");
+      Serial.println(correction);
+      correction += KI * erreur + KP * erreurTotal;
+      // Serial.println(correctionR);
+    }
   }
 }
 
 //distance en cm a atteindre
 void avancer(double distance, int iterations, float vI, float vF){
-  //resets values for adjustement
-  resetAdjust();
-  //accelere jusqu'a vitesse max
-  ACC_MASTER(vI, vF, iterations);
-  while(clic_to_cm( ENCODER_Read(LEFT) ) < distance){
-    ACC_MASTER(vF, vF, iterations);  
+  if(vF < 0 || vI < 0){
+    //resets values for adjustement
+    resetAdjust();
+    //accelere jusqu'a vitesse max
+    ACC_MASTER(vI, vF, iterations);
+    while(clic_to_cm( ENCODER_Read(LEFT) ) > distance){
+      ACC_MASTER(vF, vF, iterations);  
+    }
+  }
+  else{
+    //resets values for adjustement
+    resetAdjust();
+    //accelere jusqu'a vitesse max
+    ACC_MASTER(vI, vF, iterations);
+    while(clic_to_cm( ENCODER_Read(LEFT) ) < distance){
+      ACC_MASTER(vF, vF, iterations);  
+    }
   }
 }
 
@@ -272,20 +404,42 @@ void avancer(double distance, int iterations, float vI, float vF){
 //rayon: rayon du tournant (+ a droite, - a gauche)
 //angle: rotation a faire
 void tourner(float v, float rayon, float angle){
-  if(rayon < 0){
-    //resets values for adjustement
-    resetAdjust();
-    slaveAdujst(v, ratio_de_virage(rayon));
-    while(angle_to_cm(angle, -rayon) > clic_to_cm(ENCODER_Read(RIGHT)) ){
+  if(v < 0){
+    //turn droite
+    if(rayon < 0){
+      //resets values for adjustement
+      resetAdjust();
       slaveAdujst(v, ratio_de_virage(rayon));
+      while(angle_to_cm(angle, -rayon) > -clic_to_cm(ENCODER_Read(RIGHT)) ){
+        slaveAdujst(v, ratio_de_virage(rayon));
+      }
+    }
+    //turn gauche
+    else{
+      //resets values for adjustement
+      resetAdjust();
+      slaveAdujst(v, ratio_de_virage(rayon));
+      while(angle_to_cm(angle, rayon) > -clic_to_cm(ENCODER_Read(LEFT))){
+        slaveAdujst(v, ratio_de_virage(rayon));
+      }
     }
   }
   else{
-    //resets values for adjustement
-    resetAdjust();
-    slaveAdujst(v, ratio_de_virage(rayon));
-    while(angle_to_cm(angle, rayon) > clic_to_cm(ENCODER_Read(LEFT))){
+    if(rayon < 0){
+      //resets values for adjustement
+      resetAdjust();
       slaveAdujst(v, ratio_de_virage(rayon));
+      while(angle_to_cm(angle, -rayon) > clic_to_cm(ENCODER_Read(RIGHT)) ){
+        slaveAdujst(v, ratio_de_virage(rayon));
+      }
+    }
+    else{
+      //resets values for adjustement
+      resetAdjust();
+      slaveAdujst(v, ratio_de_virage(rayon));
+      while(angle_to_cm(angle, rayon) > clic_to_cm(ENCODER_Read(LEFT))){
+        slaveAdujst(v, ratio_de_virage(rayon));
+      }
     }
   }
 }
@@ -340,7 +494,7 @@ void loop() { //test pour l'avance
     
     tourner(0.4, -3.0, 68);
 
-    avancer(0, 6, 0.6, 0.7);
+    avancer(0, 8, 0.4, 0.7);
     
     avancer(22, 5, 0.7, 0.7);
 
@@ -358,11 +512,34 @@ void loop() { //test pour l'avance
 
     avancer(0, 6, 0.6, 0.7);
 
-    avancer(68, 5, 0.7, 0.7);
+    avancer(55, 5, 0.7, 0.7);
 
-    avancer(0, 10, 0.7, 0);
+    avancer(0, 15, 0.7, 0);
+    
     // FIN ALLÉ
-        
+    delay(200);
+    
+    avancer(-55, 20, 0, -0.7);
+
+    avancer(0, 10, -0.7, -0.4);
+
+    tourner(-0.4, 12.0, 20);
+
+    avancer(0, 10, -0.4, -0.7);
+    
+    avancer(-6, 5, -0.7, -0.7);
+
+    avancer(0, 10, -0.7, -0.4);
+
+    tourner(-0.4, 12.0, 60);
+
+    avancer(0, 10, -0.4, -0.7);
+
+    avancer(30, 10, -0.7, -0.7);
+
+    avancer(0, 10, -0.7, 0);
+
+
   }
   if(ROBUS_IsBumper(LEFT)){
     ENCODER_Reset(LEFT);
