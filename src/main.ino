@@ -26,8 +26,8 @@ float correction;
 
 float erreur;
 float erreurTotal;
-int oldL;
-int oldR;
+long int oldL;
+long int oldR;
 
 const float DELAY = 20.0;
 const float KI = 0.0007;//0.0005 ok
@@ -233,53 +233,22 @@ void slaveAdujst(float master, float ratio)
 {
   Serial.println(ratio);
   if(master < 0){
-    //ratio positif tourne a droite alors relentie la droite
+    //TODO
+    //ratios pour tourner de reculons sont a retravailler
+    //en jouant avec on peut faire qu'un angle de 180 et 90 fassent les
+    //tournants souhaitees avec differentes valeurs les tournant effectues varient
+
+    //ratio positif tourne a gauche alors relentie la droite (ok) (over) 
     if(ratio > 0){
-      MOTOR_SetSpeed(LEFT, master);
-      MOTOR_SetSpeed(RIGHT, (master / ratio) - 0.01);
-      // oldL = ENCODER_Read(LEFT);
-      // oldR = ENCODER_Read(RIGHT); //not sure
-      //devrait laisser le temps de lire environ 67 coches
-      // delay(DELAY); //100 ok, 50 perds de la precision en longue distance 
-      //garde l'erreur trouve pour cette lecture
-      // erreur = ((ENCODER_Read(LEFT) - oldL) - ( (ENCODER_Read(RIGHT) - oldR) * ratio) );
-      // erreurTotal = (ENCODER_Read(LEFT) - (ENCODER_Read(RIGHT) * ratio) );
-      // if(erreurTotal <= 4){
-      //   correctionR;
-      // }
-      // else{
-      // Serial.print(erreur);
-      // Serial.print("   ");  
-      // Serial.print(erreurTotal);
-      // Serial.print("   ");
-      // Serial.println(correction);
-      // correction += KI * erreur + KP * erreurTotal;
-      // Serial.println(correctionR);
-
+      MOTOR_SetSpeed(LEFT, master - 0.02);
+      MOTOR_SetSpeed(RIGHT, (master / ratio)); //-0.01
+      
     }
-    //ratio negatif tourne a gauche alors relentie gauche
+    //ratio negatif tourne a droite alors relentie gauche (droite a adapter) tourne trop
     else if(ratio < 0){
-      MOTOR_SetSpeed(RIGHT, master);
-      MOTOR_SetSpeed(LEFT, (master / -ratio));
-      // oldR = ENCODER_Read(RIGHT);
-      // oldL = ENCODER_Read(LEFT);
-      //devrait laisser le temps de lire environ 67 coches
-      // delay(DELAY); //100 ok, 50 perds de la precision en longue distance 
-      //garde l'erreur trouve pour cette lecture
-      // erreur = ((ENCODER_Read(RIGHT) - oldR) - ( (ENCODER_Read(LEFT) - oldL) * -ratio) );
-      // erreurTotal = (ENCODER_Read(RIGHT) - ENCODER_Read(LEFT) * -ratio);
-      // if(erreurTotal <= 4){
-      //   correctionR;
-      // }
-      // else{
-      // Serial.print(erreur);
-      // Serial.print("   ");  
-      // Serial.print(erreurTotal);
-      // Serial.print("   ");
-      // Serial.println(correction);
-      // correction += KI * erreur + KP * erreurTotal;
-      // Serial.println(correctionR);
-
+      MOTOR_SetSpeed(RIGHT, master );//0.08
+      MOTOR_SetSpeed(LEFT, (master / -ratio) - 0.01);
+      
     }
     else{
       MOTOR_SetSpeed(LEFT, master);
@@ -309,25 +278,7 @@ void slaveAdujst(float master, float ratio)
     if(ratio > 0){
       MOTOR_SetSpeed(LEFT, master);
       MOTOR_SetSpeed(RIGHT, (master / ratio) + 0.01);
-      // oldL = ENCODER_Read(LEFT);
-      // oldR = ENCODER_Read(RIGHT); //not sure
-      //devrait laisser le temps de lire environ 67 coches
-      // delay(DELAY); //100 ok, 50 perds de la precision en longue distance 
-      //garde l'erreur trouve pour cette lecture
-      // erreur = ((ENCODER_Read(LEFT) - oldL) - ( (ENCODER_Read(RIGHT) - oldR) * ratio) );
-      // erreurTotal = (ENCODER_Read(LEFT) - (ENCODER_Read(RIGHT) * ratio) );
-      // if(erreurTotal <= 4){
-      //   correctionR;
-      // }
-      // else{
-      // Serial.print(erreur);
-      // Serial.print("   ");  
-      // Serial.print(erreurTotal);
-      // Serial.print("   ");
-      // Serial.println(correction);
-      // correction += KI * erreur + KP * erreurTotal;
-      // Serial.println(correctionR);
-
+      
     }
     //ratio negatif tourne a gauche alors relentie gauche
     else if(ratio < 0){
@@ -542,46 +493,34 @@ void loop() { //test pour l'avance
 
   }
   if(ROBUS_IsBumper(LEFT)){
-    ENCODER_Reset(LEFT);
-    ENCODER_Reset(RIGHT);
-    // Serial.print(ENCODER_Read(LEFT));
-    // Serial.print("  ");
-    // Serial.println(ENCODER_Read(RIGHT));
-    // ACC_MASTER(0, 0.7);
-
-    //fait ca pendant environ 1 seconde
-    for(int i = 0; i < 10; i++){
-      slaveAdujst(0.7, 0);
-    }
-    // Serial.print(ENCODER_Read(LEFT));
-    // Serial.print("  ");
-    // Serial.println(ENCODER_Read(RIGHT));
-    //fait ca pendant environ 1 seconde
-    for(int i = 0; i < 10; i++){
-      slaveAdujst(0.7, 0);
-    }
-    // Serial.print(ENCODER_Read(LEFT));
-    // Serial.print("  ");
-    // Serial.println(ENCODER_Read(RIGHT));
-    //fait ca pendant environ 1 seconde
-    for(int i = 0; i < 10; i++){
-      slaveAdujst(0.7, 0);
-    }
-    // Serial.print(ENCODER_Read(LEFT));
-    // Serial.print("  ");
-    // Serial.println(ENCODER_Read(RIGHT));
-    //fait ca pendant environ 1 seconde
-    for(int i = 0; i < 10; i++){
-      slaveAdujst(0.7, 0);
-    }
-    // Serial.print(ENCODER_Read(LEFT));
-    // Serial.print("  ");
-    // Serial.println(ENCODER_Read(RIGHT));
-    //fait ca pendant environ 1 seconde
-    for(int i = 0; i < 10; i++){
-      slaveAdujst(0.7, 0);
-    }
-    
+    resetAdjust();
+    delay(500);
+    //rayon + a gauche
+    tourner(-0.6, 3., 180); //(ok)
+    MOTOR_SetSpeed(LEFT, 0);
+    MOTOR_SetSpeed(RIGHT, 0);
+    delay(500);
+    tourner(-0.6, 3., 90); //(over)
+    MOTOR_SetSpeed(LEFT, 0);
+    MOTOR_SetSpeed(RIGHT, 0);
+    delay(500);
+    tourner(-0.6, 3., 90); //(over)
+    MOTOR_SetSpeed(LEFT, 0);
+    MOTOR_SetSpeed(RIGHT, 0);
+    delay(500);
+    //rayon - a droite
+    tourner(-0.6, -3., 180); //(over)
+    MOTOR_SetSpeed(LEFT, 0);
+    MOTOR_SetSpeed(RIGHT, 0);
+    delay(500);
+    tourner(-0.6, -3., 90); //(over)
+    MOTOR_SetSpeed(LEFT, 0);
+    MOTOR_SetSpeed(RIGHT, 0);
+    delay(500);
+    tourner(-0.6, -3., 90); //(over)
+    MOTOR_SetSpeed(LEFT, 0);
+    MOTOR_SetSpeed(RIGHT, 0);
+    delay(500);
   }
 
   if(ROBUS_IsBumper(RIGHT)){
