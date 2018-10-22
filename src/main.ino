@@ -110,7 +110,6 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
   }
   else{
 
-    
     //Puisque j'ai défini mon n comme étant vitesse finale - initiale, il va savoir tout seul
     //s'il faut qu'il incremente ou qu'il decremente 
     //si veut acc vers une vitesse pour avancer de face ou relentir de reculons
@@ -230,6 +229,39 @@ void slaveAdjust(float master, float ratio)
     // Serial.println(correction);
   }
 }
+//corrects for spins with master as left
+//+ value spin right 
+//- value spin left
+void adjustSpin(float master){
+  MOTOR_SetSpeed(LEFT, master); //+
+  MOTOR_SetSpeed(RIGHT, - (master + correction)); //-
+  if(master > 0){
+    //+
+    oldL = ENCODER_Read(LEFT);
+    //-
+    oldR = ENCODER_Read(RIGHT);
+
+    delay(DELAY);
+
+    erreur = (ENCODER_Read(LEFT) - oldL - (oldR - ENCODER_Read(RIGHT)));
+    erreurTotal = (ENCODER_Read(LEFT) + ENCODER_Read(RIGHT));
+    correction += KI * erreur + KP * erreurTotal;
+  }
+  else{
+    MOTOR_SetSpeed(LEFT, master); //-
+    MOTOR_SetSpeed(RIGHT, -(master - correction));//+
+    //-
+    oldL = ENCODER_Read(LEFT);
+    //+
+    oldR = ENCODER_Read(RIGHT);
+
+    delay(DELAY);
+
+    erreur = (oldL - ENCODER_Read(LEFT) - (ENCODER_Read(RIGHT) - oldR));
+    erreurTotal = (-ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
+    correction += KI * erreur + KP * erreurTotal;
+  }
+}
 
 //distance en cm a atteindre. Positive si avance, negative si recule
 void avancer(double distance, int iterations, float vI, float vF){
@@ -245,7 +277,7 @@ void avancer(double distance, int iterations, float vI, float vF){
     //clics vont etre negatifs alors distance negative
     while(clic_to_cm( ENCODER_Read(LEFT) ) > distance){
       //continue a faire la correction
-      ACC_MASTER(vF, vF, iterations, 0.);  
+      slaveAdjust(vF, 0.);  
     }
   }
 
@@ -255,7 +287,7 @@ void avancer(double distance, int iterations, float vI, float vF){
     //clics vont etre positifs alors distance positive
     while(clic_to_cm( ENCODER_Read(LEFT) ) < distance){
       //continue a faire la correction
-      ACC_MASTER(vF, vF, iterations, 0.);  
+      slaveAdjust(vF, 0.);  
     }
   }
   //si vitesse finale est de 0. Ignore la distance. Donc, relentit pendant les iterations jusqu'a l'arret
@@ -318,6 +350,44 @@ void tourner(float vI, float vF, int iterations, float rayon, double angle){
   }
 }
 
+//acceleration pas possible pour le moment
+//contient nouveau PID
+//angle + a droite, angle - a gauche
+//vitesse de 0.4 assez vite
+void spin(float v, double angle){
+  //angle + distance +, angle - distance -
+  double distance = angle_to_cm(angle, (distance_entre_les_roues - (0.005 * 12) ) / -2.); 
+  //spin a droite
+  if(angle > 0){
+    //valeurs mises a 0 pour ajustement
+    resetAdjust();
+    
+    //ajuste pendant les tours
+    adjustSpin(v);
+    
+    //wait till master reaches the distance
+    //since corrected same distance
+    while(distance > clic_to_cm(ENCODER_Read(LEFT))){
+      adjustSpin(v);  
+    }    
+    MOTOR_SetSpeed(LEFT, 0);
+    MOTOR_SetSpeed(RIGHT, 0);
+  }
+  //spin a gauche avec angle -
+  else{
+    //valeurs mises a 0 pour ajustement
+    resetAdjust();
+
+    adjustSpin(-v);
+    //wait till one reaches distance
+    while(-distance > clic_to_cm(ENCODER_Read(RIGHT))){
+      adjustSpin(-v);
+    }
+    MOTOR_SetSpeed(LEFT, 0);
+    MOTOR_SetSpeed(RIGHT, 0);
+  }
+
+}
 
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
 //la plus basse soit sur MOTOR_MASTER ou MOTOR_SLAVE.
@@ -354,11 +424,11 @@ void loop() { //test pour l'avance
 
     avancer(0, 6, 0.8, 0.6);
     
-    tourner(0.6, -3.0, 90);
+    tourner(0.6, 0.6, 20, -3.0, 90);
     
-    tourner(0.6, 18, 180);
+    tourner(0.6, 0.6, 20, 18, 180);
 
-    tourner(0.6, -3.0, 52);
+    tourner(0.6, 0.6, 20, -3.0, 52);
 
     avancer(0, 6, 0.6, 0.7);
     
@@ -366,7 +436,7 @@ void loop() { //test pour l'avance
 
     avancer(0, 6, 0.7, 0.4);
     
-    tourner(0.4, -3.0, 68);
+    tourner(0.4, 0.4, 20, -3.0, 68);
 
     avancer(0, 12, 0.4, 0.7);
     
@@ -374,7 +444,7 @@ void loop() { //test pour l'avance
 
     avancer(0, 6, 0.7, 0.6);
     
-    tourner(0.6, 12, 42);
+    tourner(0.6, 0.6, 20, 12, 42);
 
     avancer(0, 6, 0.6, 0.7);
 
@@ -382,7 +452,7 @@ void loop() { //test pour l'avance
 
     avancer(0, 6, 0.7, 0.6);
 
-    tourner(0.6, 12, 12);
+    tourner(0.6, 0.6, 20, 12, 12);
 
     avancer(0, 6, 0.6, 0.7);
 
@@ -397,7 +467,7 @@ void loop() { //test pour l'avance
 
     avancer(0, 10, -0.7, -0.4); // Deceleration
 
-    tourner(-0.4, 12.0, 22); // Premier tournant retour
+    tourner(-0.4, -0.4, 20, 12.0, 22); // Premier tournant retour
 
     avancer(0, 10, -0.4, -0.7); // accel ligne 2
     
@@ -405,7 +475,7 @@ void loop() { //test pour l'avance
 
     avancer(0, 10, -0.7, -0.4); // decel ligne 2
 
-    tourner(-0.4, 12.0, 53); // tournant pour ligne 3
+    tourner(-0.4, -0.4, 20, 12.0, 53); // tournant pour ligne 3
 
     avancer(0, 10, -0.4, -0.7); // accel ligne 3
 
@@ -413,7 +483,7 @@ void loop() { //test pour l'avance
 
     avancer(0, 10, -0.7, -0.4); // decel ligne 3
  
-    tourner(-0.4, -3.0, 95); // tournant 90
+    tourner(-0.4, -0.4, 20, -3.0, 95); // tournant 90
 
     avancer(0, 10, -0.4, -0.7); // accel ligne 4
 
@@ -421,15 +491,15 @@ void loop() { //test pour l'avance
 
     avancer(0, 10, -0.7, -0.4); // decel ligne 4
 
-    tourner(-0.4, 3.0, 62); // tournant pour ligne 5
+    tourner(-0.4, -0.4, 20, 3.0, 62); // tournant pour ligne 5
 
-    tourner(-0.4, -8.0, 92); // tournant pour ligne 6
+    tourner(-0.4, -0.4, 20, -8.0, 92); // tournant pour ligne 6
 
-    tourner(-0.4, 10.0, 90); //tournant pour U turn 1/2
+    tourner(-0.4, -0.4, 20, 10.0, 90); //tournant pour U turn 1/2
 
-    tourner(-0.4, 10.0, 102); //tournant pour U turn 1/2
+    tourner(-0.4, -0.4, 20, 10.0, 102); //tournant pour U turn 1/2
 
-    tourner(-0.4, -28.0, 78); //tournant vers ligne finale
+    tourner(-0.4, -0.4, 20, -28.0, 78); //tournant vers ligne finale
 
     avancer(-190, 12, -0.4, -0.9); //accel final stretch
 
@@ -442,62 +512,159 @@ void loop() { //test pour l'avance
   if(ROBUS_IsBumper(LEFT)){
     resetAdjust();
     delay(500);
-    //rayon + a gauche de reculons
-    tourner(-0.6, 3., 180); //(ok)
-    avancer(0, 0, -0.6, 0);
-    delay(500);
-    tourner(-0.6, 3., 90); //(over)
-    avancer(0, 0, -0.6, 0);
-    delay(500);
-    tourner(-0.6, 3., 90); //(over)
-    avancer(0, 0, -0.6, 0);
-    delay(500);
-    //rayon - a droite de reculons
-    tourner(-0.6, -3., 180); //(over)
-    avancer(0, 0, -0.6, 0);
-    delay(500);
-    tourner(-0.6, -3., 90); //(over)
-    avancer(0, 0, -0.6, 0);
-    delay(500);
-    tourner(-0.6, -3., 90); //(over)
-    avancer(0, 0, -0.6, 0);
-    delay(500);
+    // //rayon + a gauche de reculons
+    // tourner(-0.6, -0.6, 20, 3., 180); //(ok)
+    // avancer(0, 0, -0.6, 0);
+    // delay(500);
+    // tourner(-0.6, -0.6, 20, 3., 90); //(over)
+    // avancer(0, 0, -0.6, 0);
+    // delay(500);
+    // tourner(-0.6, -0.6, 20, 3., 90); //(over)
+    // avancer(0, 0, -0.6, 0);
+    // delay(500);
+    // //rayon - a droite de reculons
+    // tourner(-0.6, -0.6, 20, -3., 180); //(over)
+    // avancer(0, 0, -0.6, 0);
+    // delay(500);
+    // tourner(-0.6, -0.6, 20, -3., 90); //(over)
+    // avancer(0, 0, -0.6, 0);
+    // delay(500);
+    // tourner(-0.6, -0.6, 20, -3., 90); //(over)
+    // avancer(0, 0, -0.6, 0);
+    // delay(500);
+
+    spin(0.4, 90);
+    delay(1000);
+
+    spin(0.4, -90);
+    delay(1000);
+
+    spin(0.4, 180);
+    delay(1000);
+
+    spin(0.4, -180);
+    delay(1000);
+
+    spin(0.4, 270);
+    delay(1000);
+
+    spin(0.4, -270);
+    delay(1000);
+    
+    delay(1500);
+
+    spin(0.2, 90);
+    delay(1000);
+
+    spin(0.2, -90);
+    delay(1000);
+
+    spin(0.2, 180);
+    delay(1000);
+
+    spin(0.2, -180);
+    delay(1000);
+
+    spin(0.2, 270);
+    delay(1000);
+
+    spin(0.2, -270);
+    delay(1000);
+
+    delay(1500);
+
+    spin(0.8, 90);
+    delay(1000);
+
+    spin(0.8, -90);
+    delay(1000);
+
+    spin(0.8, 180);
+    delay(1000);
+
+    spin(0.8, -180);
+    delay(1000);
+
+    spin(0.8, 270);
+    delay(1000);
+
+    spin(0.8, -270);
+    delay(1000);
   }
 
   if(ROBUS_IsBumper(RIGHT)){
 
-    tourner(0.4, 10., 90);
+    // tourner(0.4, 0.4, 20, 10., 90);
+    // avancer(0., 0, 0.4, 0);
+    // delay(500);
+
+    // tourner(0.4, 0.4, 20, -10., 90);
+    // avancer(0., 0, 0.1, 0);
+    // delay(500);
+
+    // tourner(-0.4, -0.4, 20, 10., 90);
+    // avancer(0., 0, -0.4, 0);
+    // delay(500);
+
+    // tourner(-0.4, -0.4, 20, -10., 90);
+    // avancer(0., 0, -0.1, 0);
+    // delay(500);
+
+    // tourner(0.4, 0.4, 20, 10., 180);
+    // avancer(0., 0, 0.4, 0);
+    // delay(500);
+
+    // tourner(0.4, 0.4, 20, -10., 180);
+    // avancer(0., 0, 0.1, 0);
+    // delay(500);
+
+    // tourner(-0.4, -0.4, 20, 10., 180);
+    // avancer(0., 0, -0.4, 0);
+    // delay(500);
+
+    // tourner(-0.4, -0.4, 20, -10., 180);
+    // avancer(0., 0, -0.1, 0);
+    // delay(500);
+
+    //
+    tourner(0.4, 0.4, 20, 10., 90);
     avancer(0., 0, 0.4, 0);
     delay(500);
-    tourner(0.4, -10., 90);
+
+    tourner(0.4, 0.4, 20, -10., 90);
     avancer(0., 0, 0.1, 0);
     delay(500);
 
-    tourner(-0.4, 10., 90);
+    tourner(-0.4, -0.4, 20, 10., 90);
     avancer(0., 0, -0.4, 0);
     delay(500);
-    tourner(-0.4, -10., 90);
+
+    tourner(-0.4, -0.4, 20, -10., 90);
     avancer(0., 0, -0.1, 0);
     delay(500);
 
-    tourner(0.4, 10., 180);
+    tourner(0.4, 0.4, 20, 10., 180);
     avancer(0., 0, 0.4, 0);
     delay(500);
-    tourner(0.4, -10., 180);
+
+    tourner(0.4, 0.4, 20, -10., 180);
     avancer(0., 0, 0.1, 0);
     delay(500);
 
-    tourner(-0.4, 10., 180);
+    tourner(-0.4, -0.4, 20, 10., 180);
     avancer(0., 0, -0.4, 0);
     delay(500);
-    tourner(-0.4, -10., 180);
+    
+    tourner(-0.4, -0.4, 20, -10., 180);
     avancer(0., 0, -0.1, 0);
     delay(500);
 
-    // avancer(100., 40, 0., 0.95);
-    // avancer(-200., 100, 0.95, -0.95);
-    // avancer(100., 100, -0.95, 0.95);
-    // avancer(4000., 100, 0.95, 0.);
+    delay(1500);
+
+    avancer(100., 40, 0., 0.95);
+    avancer(-200., 100, 0.95, -0.95);
+    avancer(100., 100, -0.95, 0.95);
+    avancer(4000., 100, 0.95, 0.);
   }
   if(ROBUS_IsBumper(FRONT))
 
