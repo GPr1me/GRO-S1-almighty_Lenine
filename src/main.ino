@@ -102,11 +102,11 @@ double clic_to_cm(long int nb_de_clics)
 //fonction doit gerer un changement de vitesse vers le positif et un changement de vitesse vers le negatif
 //FONCTION POUR GERER L'ACCELERATION
 //La fonction est faite pour le moteur gauche en tant que MOTOR_MASTER
-void ACC_MASTER(float vI, float vF, int nb_iterations)
+void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
 {
   //pas d'iterations, met les deux moteurs a la vitesse et adujste au besoin
   if(nb_iterations == 0){
-    slaveAdjust(vF, 0);
+    slaveAdjust(vF, ratio);
   }
   else{
 
@@ -124,7 +124,7 @@ void ACC_MASTER(float vI, float vF, int nb_iterations)
       for (float i = vI; i <= vF; i+=n)
       {
         //accelere avec adjustement
-        slaveAdjust(i, 0); //delay de 20 ms
+        slaveAdjust(i, ratio); //delay de 20 ms
       }
     }
     //si veut acc vers une vitesse pour avancer de reculons ou relentir de face
@@ -136,13 +136,13 @@ void ACC_MASTER(float vI, float vF, int nb_iterations)
       for (float i = vI; i >= vF; i+=n)
       {
         //accelere avec ajustement
-        slaveAdjust(i, 0); //delay 20 ms
+        slaveAdjust(i, ratio); //delay 20 ms
       }  
     }
     // en gros si la vitesse finale et initiale sont pareils. fait juste appliquer l'ajustement
     else
     {
-      slaveAdjust(vF, 0); //delay 20 ms
+      slaveAdjust(vF, ratio); //delay 20 ms
     }
   }
 }
@@ -237,7 +237,7 @@ void avancer(double distance, int iterations, float vI, float vF){
   //resets values for adjustement
   resetAdjust();
   //accelere/decelere jusqu'a vitesse finale
-  ACC_MASTER(vI, vF, iterations);
+  ACC_MASTER(vI, vF, iterations, 0.);
 
   //si doit avancer de reculons une fois atteint sa vitesse
   if(vF < 0){
@@ -245,7 +245,7 @@ void avancer(double distance, int iterations, float vI, float vF){
     //clics vont etre negatifs alors distance negative
     while(clic_to_cm( ENCODER_Read(LEFT) ) > distance){
       //continue a faire la correction
-      ACC_MASTER(vF, vF, iterations);  
+      ACC_MASTER(vF, vF, iterations, 0.);  
     }
   }
 
@@ -255,7 +255,7 @@ void avancer(double distance, int iterations, float vI, float vF){
     //clics vont etre positifs alors distance positive
     while(clic_to_cm( ENCODER_Read(LEFT) ) < distance){
       //continue a faire la correction
-      ACC_MASTER(vF, vF, iterations);  
+      ACC_MASTER(vF, vF, iterations, 0.);  
     }
   }
   //si vitesse finale est de 0. Ignore la distance. Donc, relentit pendant les iterations jusqu'a l'arret
@@ -267,26 +267,27 @@ void avancer(double distance, int iterations, float vI, float vF){
 //test avec 0.4v et 0.2r (ok) decalage negligable
 //test avec 0.4v et 10r: (ok) decalage negligable
 //test parcours: trajet semble plus constant! (fait pas le parcours doe haha. code lenin a 0.7 sur staline)
-void tourner(float v, float rayon, double angle){
+void tourner(float vI, float vF, int iterations, float rayon, double angle){
   //cas avec vitesse negative
-  if(v < 0){
+  if(vF < 0){
     //valeurs mises a 0 pour ajustement
     resetAdjust();
-    //applique l'ajustement afin de tourner dans le bon sens
-    slaveAdjust(v, ratio_de_virage(rayon));
+
+    //accelere/decelere jusqu'a vitesse finale
+    ACC_MASTER(vI, vF, iterations, ratio_de_virage(rayon));
 
     //distance si tourne a droite
     if(rayon < 0){
       while(angle_to_cm(angle, -rayon) > -clic_to_cm(ENCODER_Read(RIGHT)) ){
         //applique l'ajustement a faire pour faire tourner les roues pour qu'elles parcourent les bonnes distances
-        slaveAdjust(v, ratio_de_virage(rayon));
+        slaveAdjust(vF, ratio_de_virage(rayon));
       }
     }
     //distance si tourne a gauche
     else{
-      while(angle_to_cm(angle, rayon) > -clic_to_cm(ENCODER_Read(LEFT))){
+      while(angle_to_cm(angle, rayon) > -clic_to_cm(ENCODER_Read(LEFT)) ){
         //applique l'ajustement a faire pour faire tourner les roues pour qu'elles parcourent les bonnes distances
-        slaveAdjust(v, ratio_de_virage(rayon));
+        slaveAdjust(vF, ratio_de_virage(rayon));
       }  
     }
   }
@@ -295,19 +296,23 @@ void tourner(float v, float rayon, double angle){
   else{
     //valeurs mises a 0 pour ajustement
     resetAdjust();
-    //applique l'ajustement afin de tourner dans le bon sens
-    slaveAdjust(v, ratio_de_virage(rayon));
+
+    //accelere/decelere jusqu'a vitesse finale
+    ACC_MASTER(vI, vF, iterations, ratio_de_virage(rayon));
+
+    // //applique l'ajustement afin de tourner dans le bon sens
+    // slaveAdjust(v, ratio_de_virage(rayon));
     
     //distance si tourne a gauche
     if(rayon < 0){
       while(angle_to_cm(angle, -rayon) > clic_to_cm(ENCODER_Read(RIGHT)) ){
-        slaveAdjust(v, ratio_de_virage(rayon));
+        slaveAdjust(vF, ratio_de_virage(rayon));
       }
     }
     //distance si tourne a droite
     else{
       while(angle_to_cm(angle, rayon) > clic_to_cm(ENCODER_Read(LEFT))){
-        slaveAdjust(v, ratio_de_virage(rayon));
+        slaveAdjust(vF, ratio_de_virage(rayon));
       }  
     }
   }
