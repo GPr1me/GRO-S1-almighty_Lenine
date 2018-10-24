@@ -29,6 +29,8 @@ float erreurTotal;
 long int oldL;
 long int oldR;
 
+
+unsigned long lastMillis1 = 0;        //will store last time error was updated
 const float DELAY = 20.0; //selon test effectues par l'equipe. 20 assez de precision. semble ok
 const float KI = 0.0007;//0.0005 ok
 const float KP = 0.00001;//0.00001 ok 
@@ -109,7 +111,7 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
     slaveAdjust(vF, ratio);
   }
   else{
-
+    lastMillis1 = millis();
     //Puisque j'ai défini mon n comme étant vitesse finale - initiale, il va savoir tout seul
     //s'il faut qu'il incremente ou qu'il decremente 
     //si veut acc vers une vitesse pour avancer de face ou relentir de reculons
@@ -120,10 +122,18 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
       // ici le n est diviser par 10. pour qu'il se rende à la vitesse finale en 10 loop
       // si j'avais mis un n comme 0.05 ou qq chose comme ça, vu que les vitesses changent 
       // tout le temps, le n se serait jamais rendu pile sur la vitesse souhaitée.
-      for (float i = vI; i <= vF; i+=n)
+      
+      for (float i = vI; i <= vF;)
       {
+        unsigned long newMillis = millis();
+        if(newMillis - lastMillis1 > DELAY ){
+          //accelere avec adjustement
+          slaveAdjust(i, ratio);
+          lastMillis1 = newMillis;
+          i+=n;
+        }
         //accelere avec adjustement
-        slaveAdjust(i, ratio); //delay de 20 ms
+        // slaveAdjust(i, ratio); //delay de 20 ms
       }
     }
     //si veut acc vers une vitesse pour avancer de reculons ou relentir de face
@@ -132,16 +142,23 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
       //nombre negatif a enlever
       float n = (vF - vI) / nb_iterations;
 
-      for (float i = vI; i >= vF; i+=n)
+      for (float i = vI; i >= vF;)
       {
+        unsigned long newMillis = millis();
+        if(newMillis - lastMillis1 > DELAY ){
+          //accelere avec ajustement
+          slaveAdjust(i, ratio);
+          lastMillis1 = newMillis;
+          i+=n;
+        }
         //accelere avec ajustement
-        slaveAdjust(i, ratio); //delay 20 ms
+        // slaveAdjust(i, ratio); //delay 20 ms
       }  
     }
     // en gros si la vitesse finale et initiale sont pareils. fait juste appliquer l'ajustement
     else
     {
-      slaveAdjust(vF, ratio); //delay 20 ms
+      slaveAdjust(vF, ratio); 
     }
   }
 }
@@ -168,12 +185,9 @@ void slaveAdjust(float master, float ratio)
   //assure que les deux roues tournent a meme vitesse avec ajustement
   if(ratio > 0){
     
-    MOTOR_SetSpeed(LEFT, master + correction);
-    MOTOR_SetSpeed(RIGHT, (master/ ratio) );
-    oldR = ENCODER_Read(RIGHT);
-    oldL = ENCODER_Read(LEFT);
     // devrait laisser le temps de lire environ 67 coches
-    delay(DELAY);  
+    // delay(DELAY);
+
     // garde l'erreur trouve pour cette lecture
     erreur = ( (ENCODER_Read(RIGHT) - oldR) - (ENCODER_Read(LEFT) - oldL) / ratio ); //ancien test * -ratio sur left
     erreurTotal = ( ENCODER_Read(RIGHT) - ENCODER_Read(LEFT) / ratio ); //ancien test * -ratio sur LEFT
@@ -184,19 +198,25 @@ void slaveAdjust(float master, float ratio)
     // Serial.println(correction);
     correction += KI * erreur + KP * erreurTotal;
     // Serial.println(correction);
+    
 
+    //new placement start of correction
+    MOTOR_SetSpeed(LEFT, master + correction);
+    MOTOR_SetSpeed(RIGHT, (master/ ratio) );
+    oldR = ENCODER_Read(RIGHT);
+    oldL = ENCODER_Read(LEFT);
+
+  
+    
   }
   //ratio - tourne a gauche alors relentie gauche
   //master set a gauche vu que roue la plus lente
   //assure que les deux roues tournent a meme vitesse avec ajustement
   else if(ratio < 0){
-    
-    MOTOR_SetSpeed(LEFT, (master/ -ratio));
-    MOTOR_SetSpeed(RIGHT, master + correction);
-    oldR = ENCODER_Read(RIGHT);
-    oldL = ENCODER_Read(LEFT);
+     
     //devrait laisser le temps de lire environ 67 coches
-    delay(DELAY); //100 ok, 50 perds de la precision en longue distance 
+    // delay(DELAY); //100 ok, 50 perds de la precision en longue distance 
+    
     //garde l'erreur trouve pour cette lecture
     erreur = ( (ENCODER_Read(LEFT) - oldL) - (ENCODER_Read(RIGHT) - oldR) / -ratio ); //ancien test * -ratio sur left
     erreurTotal = ( ENCODER_Read(LEFT) - ENCODER_Read(RIGHT) / -ratio ); //ancien test * -ratio sur LEFT
@@ -208,15 +228,17 @@ void slaveAdjust(float master, float ratio)
     correction += KI * erreur + KP * erreurTotal;
     // Serial.println(correction);
 
+    //new placement for correction
+    MOTOR_SetSpeed(LEFT, (master/ -ratio));
+    MOTOR_SetSpeed(RIGHT, master + correction);
+    oldR = ENCODER_Read(RIGHT);
+    oldL = ENCODER_Read(LEFT);
+
   }
   //ligne droite avec master set a gauche
   else{
-    MOTOR_SetSpeed(LEFT, master);
-    MOTOR_SetSpeed(RIGHT, master + correction);
-    oldL = ENCODER_Read(LEFT);
-    oldR = ENCODER_Read(RIGHT);
     //devrait laisser le temps de lire environ 67 coches
-    delay(DELAY); //50 ok, 20 perds de la precision en longue distance mais courte distance plus de verifications 
+    // delay(DELAY); //50 ok, 20 perds de la precision en longue distance mais courte distance plus de verifications 
     //garde l'erreur trouve pour cette lecture
     erreur = ((ENCODER_Read(LEFT) - oldL) - (ENCODER_Read(RIGHT) - oldR));
     erreurTotal = (ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
@@ -227,6 +249,13 @@ void slaveAdjust(float master, float ratio)
     // Serial.println(correction);
     correction += KI * erreur + KP * erreurTotal;
     // Serial.println(correction);
+
+    //new placement for correction
+    MOTOR_SetSpeed(LEFT, master);
+    MOTOR_SetSpeed(RIGHT, master + correction);
+    oldL = ENCODER_Read(LEFT);
+    oldR = ENCODER_Read(RIGHT);
+    
   }
 }
 //corrects for spins with master as left
@@ -241,7 +270,7 @@ void adjustSpin(float master){
     //-
     oldR = ENCODER_Read(RIGHT);
 
-    delay(DELAY);
+    // delay(DELAY);
 
     erreur = (ENCODER_Read(LEFT) - oldL - (oldR - ENCODER_Read(RIGHT)));
     erreurTotal = (ENCODER_Read(LEFT) + ENCODER_Read(RIGHT));
@@ -255,7 +284,7 @@ void adjustSpin(float master){
     //+
     oldR = ENCODER_Read(RIGHT);
 
-    delay(DELAY);
+    // delay(DELAY);
 
     erreur = (oldL - ENCODER_Read(LEFT) - (ENCODER_Read(RIGHT) - oldR));
     erreurTotal = (-ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
@@ -270,14 +299,21 @@ void avancer(double distance, int iterations, float vI, float vF){
   resetAdjust();
   //accelere/decelere jusqu'a vitesse finale
   ACC_MASTER(vI, vF, iterations, 0.);
-
+  lastMillis1 = millis();
+  unsigned long newMillis;
   //si doit avancer de reculons une fois atteint sa vitesse
   if(vF < 0){
     //boucle pour atteindre distance desiree
     //clics vont etre negatifs alors distance negative
     while(clic_to_cm( ENCODER_Read(LEFT) ) > distance){
+      newMillis = millis();
+      if(newMillis - lastMillis1 > DELAY ){
+        slaveAdjust(vF, 0.);
+        lastMillis1 = newMillis;
+      }
+      
       //continue a faire la correction
-      slaveAdjust(vF, 0.);  
+      // slaveAdjust(vF, 0.);  
     }
   }
 
@@ -286,8 +322,14 @@ void avancer(double distance, int iterations, float vI, float vF){
     //boucle pour atteindre la distance desiree
     //clics vont etre positifs alors distance positive
     while(clic_to_cm( ENCODER_Read(LEFT) ) < distance){
+      newMillis = millis();
+      if(newMillis - lastMillis1 > DELAY ){
+        slaveAdjust(vF, 0.);
+        lastMillis1 = newMillis;
+      }
+
       //continue a faire la correction
-      slaveAdjust(vF, 0.);  
+      // slaveAdjust(vF, 0.);  
     }
   }
   //si vitesse finale est de 0. Ignore la distance. Donc, relentit pendant les iterations jusqu'a l'arret
@@ -300,6 +342,7 @@ void avancer(double distance, int iterations, float vI, float vF){
 //test avec 0.4v et 10r: (ok) decalage negligable
 //test parcours: trajet semble plus constant! (fait pas le parcours doe haha. code lenin a 0.7 sur staline)
 void tourner(float vI, float vF, int iterations, float rayon, double angle){
+  unsigned long newMillis;
   //cas avec vitesse negative
   if(vF < 0){
     //valeurs mises a 0 pour ajustement
@@ -307,19 +350,30 @@ void tourner(float vI, float vF, int iterations, float rayon, double angle){
 
     //accelere/decelere jusqu'a vitesse finale
     ACC_MASTER(vI, vF, iterations, ratio_de_virage(rayon));
-
+    lastMillis1 = millis();
     //distance si tourne a droite
     if(rayon < 0){
       while(angle_to_cm(angle, -rayon) > -clic_to_cm(ENCODER_Read(RIGHT)) ){
+        newMillis = millis();
+        if(newMillis - lastMillis1 > DELAY ){
+          slaveAdjust(vF, ratio_de_virage(rayon));
+          lastMillis1 = newMillis;
+        }
         //applique l'ajustement a faire pour faire tourner les roues pour qu'elles parcourent les bonnes distances
-        slaveAdjust(vF, ratio_de_virage(rayon));
+        // slaveAdjust(vF, ratio_de_virage(rayon));
       }
     }
     //distance si tourne a gauche
     else{
       while(angle_to_cm(angle, rayon) > -clic_to_cm(ENCODER_Read(LEFT)) ){
+        newMillis = millis();
+        if(newMillis - lastMillis1 > DELAY ){
+          slaveAdjust(vF, ratio_de_virage(rayon));
+          lastMillis1 = newMillis;
+        }
+
         //applique l'ajustement a faire pour faire tourner les roues pour qu'elles parcourent les bonnes distances
-        slaveAdjust(vF, ratio_de_virage(rayon));
+        // slaveAdjust(vF, ratio_de_virage(rayon));
       }  
     }
   }
@@ -338,13 +392,23 @@ void tourner(float vI, float vF, int iterations, float rayon, double angle){
     //distance si tourne a gauche
     if(rayon < 0){
       while(angle_to_cm(angle, -rayon) > clic_to_cm(ENCODER_Read(RIGHT)) ){
-        slaveAdjust(vF, ratio_de_virage(rayon));
+        newMillis = millis();
+        if(newMillis - lastMillis1 > DELAY ){
+          slaveAdjust(vF, ratio_de_virage(rayon));
+          lastMillis1 = newMillis;
+        }
+        // slaveAdjust(vF, ratio_de_virage(rayon));
       }
     }
     //distance si tourne a droite
     else{
       while(angle_to_cm(angle, rayon) > clic_to_cm(ENCODER_Read(LEFT))){
-        slaveAdjust(vF, ratio_de_virage(rayon));
+        newMillis = millis();
+        if(newMillis - lastMillis1 > DELAY ){
+          slaveAdjust(vF, ratio_de_virage(rayon));
+          lastMillis1 = newMillis;
+        }
+        // slaveAdjust(vF, ratio_de_virage(rayon));
       }  
     }
   }
@@ -357,6 +421,8 @@ void tourner(float vI, float vF, int iterations, float rayon, double angle){
 void spin(float v, double angle){
   //angle + distance +, angle - distance -
   double distance = angle_to_cm(angle, (distance_entre_les_roues - (0.005 * 12) ) / -2.); 
+  lastMillis1 = millis();
+  unsigned long newMillis;
   //spin a droite
   if(angle > 0){
     //valeurs mises a 0 pour ajustement
@@ -368,7 +434,11 @@ void spin(float v, double angle){
     //wait till master reaches the distance
     //since corrected same distance
     while(distance > clic_to_cm(ENCODER_Read(LEFT))){
-      adjustSpin(v);  
+      newMillis = millis();
+      if(newMillis - lastMillis1 > DELAY ){
+        adjustSpin(v);
+        lastMillis1 = newMillis;
+      }    
     }    
     MOTOR_SetSpeed(LEFT, 0);
     MOTOR_SetSpeed(RIGHT, 0);
@@ -381,7 +451,11 @@ void spin(float v, double angle){
     adjustSpin(-v);
     //wait till one reaches distance
     while(-distance > clic_to_cm(ENCODER_Read(RIGHT))){
-      adjustSpin(-v);
+      newMillis = millis();
+      if(newMillis - lastMillis1 > DELAY ){
+        adjustSpin(v);
+        lastMillis1 = newMillis;
+      }
     }
     MOTOR_SetSpeed(LEFT, 0);
     MOTOR_SetSpeed(RIGHT, 0);
@@ -510,8 +584,11 @@ void loop() { //test pour l'avance
   //odd enough but since they are over by the same amount they balance out and it goes back to initial position hehe
   //surely means that by adding a slightly smaller angle than actually desired angle can be reached
   if(ROBUS_IsBumper(LEFT)){
-    resetAdjust();
+    // resetAdjust();
     delay(500);
+    avancer(0, 50 , 0, 0.4);
+    avancer(200, 0, 0.4, 0.4);
+
     // //rayon + a gauche de reculons
     // tourner(-0.6, -0.6, 20, 3., 180); //(ok)
     // avancer(0, 0, -0.6, 0);
@@ -533,100 +610,100 @@ void loop() { //test pour l'avance
     // avancer(0, 0, -0.6, 0);
     // delay(500);
 
-    spin(0.4, 90);
-    delay(1000);
+    // spin(0.4, 90);
+    // delay(1000);
 
-    spin(0.4, -90);
-    delay(1000);
+    // spin(0.4, -90);
+    // delay(1000);
 
-    spin(0.4, 180);
-    delay(1000);
+    // spin(0.4, 180);
+    // delay(1000);
 
-    spin(0.4, -180);
-    delay(1000);
+    // spin(0.4, -180);
+    // delay(1000);
 
-    spin(0.4, 270);
-    delay(1000);
+    // spin(0.4, 270);
+    // delay(1000);
 
-    spin(0.4, -270);
-    delay(1000);
+    // spin(0.4, -270);
+    // delay(1000);
     
-    delay(1500);
+    // delay(1500);
 
-    spin(0.2, 90);
-    delay(1000);
+    // spin(0.2, 90);
+    // delay(1000);
 
-    spin(0.2, -90);
-    delay(1000);
+    // spin(0.2, -90);
+    // delay(1000);
 
-    spin(0.2, 180);
-    delay(1000);
+    // spin(0.2, 180);
+    // delay(1000);
 
-    spin(0.2, -180);
-    delay(1000);
+    // spin(0.2, -180);
+    // delay(1000);
 
-    spin(0.2, 270);
-    delay(1000);
+    // spin(0.2, 270);
+    // delay(1000);
 
-    spin(0.2, -270);
-    delay(1000);
+    // spin(0.2, -270);
+    // delay(1000);
 
-    delay(1500);
+    // delay(1500);
 
-    spin(0.8, 90);
-    delay(1000);
+    // spin(0.8, 90);
+    // delay(1000);
 
-    spin(0.8, -90);
-    delay(1000);
+    // spin(0.8, -90);
+    // delay(1000);
 
-    spin(0.8, 180);
-    delay(1000);
+    // spin(0.8, 180);
+    // delay(1000);
 
-    spin(0.8, -180);
-    delay(1000);
+    // spin(0.8, -180);
+    // delay(1000);
 
-    spin(0.8, 270);
-    delay(1000);
+    // spin(0.8, 270);
+    // delay(1000);
 
-    spin(0.8, -270);
-    delay(1000);
+    // spin(0.8, -270);
+    // delay(1000);
   }
 
   if(ROBUS_IsBumper(RIGHT)){
 
-    // tourner(0.4, 0.4, 20, 10., 90);
-    // avancer(0., 0, 0.4, 0);
-    // delay(500);
+    tourner(0.4, 0.4, 20, 10., 90);
+    avancer(0., 0, 0.4, 0);
+    delay(500);
 
-    // tourner(0.4, 0.4, 20, -10., 90);
-    // avancer(0., 0, 0.1, 0);
-    // delay(500);
+    tourner(0.4, 0.4, 20, -10., 90);
+    avancer(0., 0, 0.1, 0);
+    delay(500);
 
-    // tourner(-0.4, -0.4, 20, 10., 90);
-    // avancer(0., 0, -0.4, 0);
-    // delay(500);
+    tourner(-0.4, -0.4, 20, 10., 90);
+    avancer(0., 0, -0.4, 0);
+    delay(500);
 
-    // tourner(-0.4, -0.4, 20, -10., 90);
-    // avancer(0., 0, -0.1, 0);
-    // delay(500);
+    tourner(-0.4, -0.4, 20, -10., 90);
+    avancer(0., 0, -0.1, 0);
+    delay(500);
 
-    // tourner(0.4, 0.4, 20, 10., 180);
-    // avancer(0., 0, 0.4, 0);
-    // delay(500);
+    tourner(0.4, 0.4, 20, 10., 180);
+    avancer(0., 0, 0.4, 0);
+    delay(500);
 
-    // tourner(0.4, 0.4, 20, -10., 180);
-    // avancer(0., 0, 0.1, 0);
-    // delay(500);
+    tourner(0.4, 0.4, 20, -10., 180);
+    avancer(0., 0, 0.1, 0);
+    delay(500);
 
-    // tourner(-0.4, -0.4, 20, 10., 180);
-    // avancer(0., 0, -0.4, 0);
-    // delay(500);
+    tourner(-0.4, -0.4, 20, 10., 180);
+    avancer(0., 0, -0.4, 0);
+    delay(500);
 
-    // tourner(-0.4, -0.4, 20, -10., 180);
-    // avancer(0., 0, -0.1, 0);
-    // delay(500);
+    tourner(-0.4, -0.4, 20, -10., 180);
+    avancer(0., 0, -0.1, 0);
+    delay(500);
 
-    //
+    
     tourner(0.4, 0.4, 20, 10., 90);
     avancer(0., 0, 0.4, 0);
     delay(500);
@@ -661,7 +738,7 @@ void loop() { //test pour l'avance
 
     delay(1500);
 
-    avancer(100., 40, 0., 0.95);
+    avancer(100., 100, 0., 0.95);
     avancer(-200., 100, 0.95, -0.95);
     avancer(100., 100, -0.95, 0.95);
     avancer(4000., 100, 0.95, 0.);
