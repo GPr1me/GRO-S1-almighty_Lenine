@@ -262,33 +262,49 @@ void slaveAdjust(float master, float ratio)
 //+ value spin right 
 //- value spin left
 void adjustSpin(float master){
-  MOTOR_SetSpeed(LEFT, master); //+
-  MOTOR_SetSpeed(RIGHT, - (master + correction)); //-
+
   if(master > 0){
-    //+
-    oldL = ENCODER_Read(LEFT);
-    //-
-    oldR = ENCODER_Read(RIGHT);
+    // MOTOR_SetSpeed(LEFT, master); //+
+    // MOTOR_SetSpeed(RIGHT, - (master + correction)); //-
+    // //+
+    // oldL = ENCODER_Read(LEFT);
+    // //-
+    // oldR = ENCODER_Read(RIGHT);
 
     // delay(DELAY);
 
     erreur = (ENCODER_Read(LEFT) - oldL - (oldR - ENCODER_Read(RIGHT)));
     erreurTotal = (ENCODER_Read(LEFT) + ENCODER_Read(RIGHT));
     correction += KI * erreur + KP * erreurTotal;
+
+    //new placement for correction
+    MOTOR_SetSpeed(LEFT, master); //+
+    MOTOR_SetSpeed(RIGHT, - (master + correction)); //-
+    //+
+    oldL = ENCODER_Read(LEFT);
+    //-
+    oldR = ENCODER_Read(RIGHT);
   }
   else{
-    MOTOR_SetSpeed(LEFT, master); //-
-    MOTOR_SetSpeed(RIGHT, -(master - correction));//+
-    //-
-    oldL = ENCODER_Read(LEFT);
-    //+
-    oldR = ENCODER_Read(RIGHT);
+    // MOTOR_SetSpeed(LEFT, master); //-
+    // MOTOR_SetSpeed(RIGHT, -(master - correction));//+
+    // //-
+    // oldL = ENCODER_Read(LEFT);
+    // //+
+    // oldR = ENCODER_Read(RIGHT);
 
     // delay(DELAY);
 
     erreur = (oldL - ENCODER_Read(LEFT) - (ENCODER_Read(RIGHT) - oldR));
     erreurTotal = (-ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
     correction += KI * erreur + KP * erreurTotal;
+    //new placement for correction
+    MOTOR_SetSpeed(LEFT, master); //-
+    MOTOR_SetSpeed(RIGHT, -(master - correction));//+
+    //-
+    oldL = ENCODER_Read(LEFT);
+    //+
+    oldR = ENCODER_Read(RIGHT);
   }
 }
 
@@ -453,7 +469,7 @@ void spin(float v, double angle){
     while(-distance > clic_to_cm(ENCODER_Read(RIGHT))){
       newMillis = millis();
       if(newMillis - lastMillis1 > DELAY ){
-        adjustSpin(v);
+        adjustSpin(-v);
         lastMillis1 = newMillis;
       }
     }
@@ -585,9 +601,9 @@ void loop() { //test pour l'avance
   //surely means that by adding a slightly smaller angle than actually desired angle can be reached
   if(ROBUS_IsBumper(LEFT)){
     // resetAdjust();
-    delay(500);
-    avancer(0, 50 , 0, 0.4);
-    avancer(200, 0, 0.4, 0.4);
+    // delay(500);
+    // avancer(0, 50 , 0, 0.4);
+    // avancer(200, 0, 0.4, 0.4);
 
     // //rayon + a gauche de reculons
     // tourner(-0.6, -0.6, 20, 3., 180); //(ok)
@@ -610,63 +626,63 @@ void loop() { //test pour l'avance
     // avancer(0, 0, -0.6, 0);
     // delay(500);
 
-    // spin(0.4, 90);
-    // delay(1000);
+    spin(0.4, 90);
+    delay(1000);
 
-    // spin(0.4, -90);
-    // delay(1000);
+    spin(0.4, -90);
+    delay(1000);
 
-    // spin(0.4, 180);
-    // delay(1000);
+    spin(0.4, 180);
+    delay(1000);
 
-    // spin(0.4, -180);
-    // delay(1000);
+    spin(0.4, -180);
+    delay(1000);
 
-    // spin(0.4, 270);
-    // delay(1000);
+    spin(0.4, 270);
+    delay(1000);
 
-    // spin(0.4, -270);
-    // delay(1000);
+    spin(0.4, -270);
+    delay(1000);
     
-    // delay(1500);
+    delay(1500);
 
-    // spin(0.2, 90);
-    // delay(1000);
+    spin(0.2, 90);
+    delay(1000);
 
-    // spin(0.2, -90);
-    // delay(1000);
+    spin(0.2, -90);
+    delay(1000);
 
-    // spin(0.2, 180);
-    // delay(1000);
+    spin(0.2, 180);
+    delay(1000);
 
-    // spin(0.2, -180);
-    // delay(1000);
+    spin(0.2, -180);
+    delay(1000);
 
-    // spin(0.2, 270);
-    // delay(1000);
+    spin(0.2, 270);
+    delay(1000);
 
-    // spin(0.2, -270);
-    // delay(1000);
+    spin(0.2, -270);
+    delay(1000);
 
-    // delay(1500);
+    delay(1500);
 
-    // spin(0.8, 90);
-    // delay(1000);
+    spin(0.8, 90);
+    delay(1000);
 
-    // spin(0.8, -90);
-    // delay(1000);
+    spin(0.8, -90);
+    delay(1000);
 
-    // spin(0.8, 180);
-    // delay(1000);
+    spin(0.8, 180);
+    delay(1000);
 
-    // spin(0.8, -180);
-    // delay(1000);
+    spin(0.8, -180);
+    delay(1000);
 
-    // spin(0.8, 270);
-    // delay(1000);
+    spin(0.8, 270);
+    delay(1000);
 
-    // spin(0.8, -270);
-    // delay(1000);
+    spin(0.8, -270);
+    delay(1000);
   }
 
   if(ROBUS_IsBumper(RIGHT)){
