@@ -12,6 +12,7 @@ Inclure les librairies de functions que vous voulez utiliser
 
 #include <LibRobus.h> // Essentielle pour utiliser RobUS
 #include <Stream.h>
+#include <math.h>
 
 
 /* ****************************************************************************
@@ -34,12 +35,14 @@ unsigned long lastMillis1 = 0;        //will store last time error was updated
 const float DELAY = 20.0; //selon test effectues par l'equipe. 20 assez de precision. semble ok
 const float KI = 0.0007;//0.0005 ok
 const float KP = 0.00001;//0.00001 ok 
+const float KR = 0.2;
 //try KP: 0.0001 trop grand, 0.001 pire, 0.01 nope, 0.000001 better hahaha, 0.00001, 0.0005
 //try KI: 0.000002 trop grand, 0.00002 pire, 0.0002 nope, 0.00000002 lol, 0.0000002, 0.00001
 // DISTANCE_PAR_CLIC
 //const int TEMPS_PAUSE
 const int MOTOR_MASTER = 0;
 const int MOTOR_SLAVE = 1;
+const int distanceMur = 15;
 const float distance_entre_les_roues = 19.05;
 const int clics_par_tour = 3200;
 const double circonference = (2. * 38 / 10 * PI);
@@ -258,6 +261,32 @@ void slaveAdjust(float master, float ratio)
     
   }
 }
+float adjustInfrarouge()
+{
+  float corr;
+  float diffinfrarouge= infraToCm(ROBUS_ReadIR(0))-distanceMur;
+  Serial.println(diffinfrarouge);
+  corr = KR * diffinfrarouge;
+  return corr;
+}
+float spinInfra(float angleprecedent, int sens)
+{
+  Serial.println(angleprecedent);
+  spin(0.1, -angleprecedent);
+  float anglepresent = adjustInfrarouge();
+  if (sens==1)
+    {
+      spin(0.1 , anglepresent);
+    }
+  else if (sens==-1)
+    {
+      anglepresent *= -1;
+      spin(0.1 , anglepresent);
+    }
+  MOTOR_SetSpeed(LEFT, 0);
+  MOTOR_SetSpeed(RIGHT, 0);
+  return anglepresent;
+}
 //corrects for spins with master as left
 //+ value spin right 
 //- value spin left
@@ -291,7 +320,19 @@ void adjustSpin(float master){
     correction += KI * erreur + KP * erreurTotal;
   }
 }
-
+float infraToCm(int infra)
+{
+  float cm = 0;
+  if (infra >= 176)
+  {
+    cm = 15414*pow((infra), -1.19);
+  }
+  else if (infra<176)
+  {
+    cm = 2975.7*pow((infra), -0.803);
+  }
+  return cm;
+}
 //distance en cm a atteindre. Positive si avance, negative si recule
 void avancer(double distance, int iterations, float vI, float vF){
   
@@ -453,7 +494,7 @@ void spin(float v, double angle){
     while(-distance > clic_to_cm(ENCODER_Read(RIGHT))){
       newMillis = millis();
       if(newMillis - lastMillis1 > DELAY ){
-        adjustSpin(v);
+        adjustSpin(-v);
         lastMillis1 = newMillis;
       }
     }
@@ -472,3 +513,217 @@ Fonctions d'initialisation (setup)
 // -> Se fait appeler au debut du programme
 // -> Se fait appeler seulement un fois
 // -> Generalement on y initilise les varibbles globales
+
+void setup(){
+  BoardInit();
+  Serial.begin(9600);
+  correction = 0;
+  oldL = 0;
+  oldR = 0;
+}
+
+
+/* **************************************************************************
+Fonctions de boucle infini (loop())
+************************************************************************** */
+// -> Se fait appeler perpetuellement suite au "setup"
+
+
+
+void loop() { //test pour l'avance
+  // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
+  delay(10);// Delais pour décharger le CPU
+  MOTOR_SetSpeed(LEFT, 0);
+  MOTOR_SetSpeed(RIGHT, 0);
+  if(ROBUS_IsBumper(REAR)){
+
+    avancer(186, 20, 0, 0.8);
+
+    avancer(0, 6, 0.8, 0.6);
+    
+    tourner(0.6, 0.6, 20, -3.0, 90);
+    
+    tourner(0.6, 0.6, 20, 18, 180);
+
+    tourner(0.6, 0.6, 20, -3.0, 52);
+
+    avancer(0, 6, 0.6, 0.7);
+    
+    avancer(40, 5, 0.7, 0.7);
+
+    avancer(0, 6, 0.7, 0.4);
+    
+    tourner(0.4, 0.4, 20, -3.0, 68);
+
+    avancer(0, 12, 0.4, 0.7);
+    
+    avancer(15, 5, 0.7, 0.7);
+
+    avancer(0, 6, 0.7, 0.6);
+    
+    tourner(0.6, 0.6, 20, 12, 42);
+
+    avancer(0, 6, 0.6, 0.7);
+
+    avancer(18, 5, 0.7, 0.7);
+
+    avancer(0, 6, 0.7, 0.6);
+
+    tourner(0.6, 0.6, 20, 12, 12);
+
+    avancer(0, 6, 0.6, 0.7);
+
+    avancer(58, 5, 0.7, 0.7);
+
+    avancer(0, 15, 0.7, 0);
+    
+    // FIN ALLÉ
+    delay(200);
+    
+    avancer(-55, 20, 0, -0.7); // Premiere ligne retour
+
+    avancer(0, 10, -0.7, -0.4); // Deceleration
+
+    tourner(-0.4, -0.4, 20, 12.0, 22); // Premier tournant retour
+
+    avancer(0, 10, -0.4, -0.7); // accel ligne 2
+    
+    avancer(-6, 5, -0.7, -0.7); // ligne 2
+
+    avancer(0, 10, -0.7, -0.4); // decel ligne 2
+
+    tourner(-0.4, -0.4, 20, 12.0, 53); // tournant pour ligne 3
+
+    avancer(0, 10, -0.4, -0.7); // accel ligne 3
+
+    avancer(-29.5, 10, -0.7, -0.7); // ligne 3
+
+    avancer(0, 10, -0.7, -0.4); // decel ligne 3
+ 
+    tourner(-0.4, -0.4, 20, -3.0, 95); // tournant 90
+
+    avancer(0, 10, -0.4, -0.7); // accel ligne 4
+
+    avancer(-1.5, 5, -0.7, -0.7); // ligne 4
+
+    avancer(0, 10, -0.7, -0.4); // decel ligne 4
+
+    tourner(-0.4, -0.4, 20, 3.0, 62); // tournant pour ligne 5
+
+    tourner(-0.4, -0.4, 20, -8.0, 92); // tournant pour ligne 6
+
+    tourner(-0.4, -0.4, 20, 10.0, 90); //tournant pour U turn 1/2
+
+    tourner(-0.4, -0.4, 20, 10.0, 102); //tournant pour U turn 1/2
+
+    tourner(-0.4, -0.4, 20, -28.0, 78); //tournant vers ligne finale
+
+    avancer(-190, 12, -0.4, -0.9); //accel final stretch
+
+    avancer(0, 10, -0.9, 0); //decelleration du champion
+
+
+  }
+  //odd enough but since they are over by the same amount they balance out and it goes back to initial position hehe
+  //surely means that by adding a slightly smaller angle than actually desired angle can be reached
+  if(ROBUS_IsBumper(LEFT)){
+  }
+
+  if(ROBUS_IsBumper(RIGHT)){
+
+    // tourner(0.4, 0.4, 20, 10., 90);
+    // avancer(0., 0, 0.4, 0);
+    // delay(500);
+
+    // tourner(0.4, 0.4, 20, -10., 90);
+    // avancer(0., 0, 0.1, 0);
+    // delay(500);
+
+    // tourner(-0.4, -0.4, 20, 10., 90);
+    // avancer(0., 0, -0.4, 0);
+    // delay(500);
+
+    // tourner(-0.4, -0.4, 20, -10., 90);
+    // avancer(0., 0, -0.1, 0);
+    // delay(500);
+
+    // tourner(0.4, 0.4, 20, 10., 180);
+    // avancer(0., 0, 0.4, 0);
+    // delay(500);
+
+    // tourner(0.4, 0.4, 20, -10., 180);
+    // avancer(0., 0, 0.1, 0);
+    // delay(500);
+
+    // tourner(-0.4, -0.4, 20, 10., 180);
+    // avancer(0., 0, -0.4, 0);
+    // delay(500);
+
+    // tourner(-0.4, -0.4, 20, -10., 180);
+    // avancer(0., 0, -0.1, 0);
+    // delay(500);
+
+    //
+    tourner(0.4, 0.4, 20, 10., 90);
+    avancer(0., 0, 0.4, 0);
+    delay(500);
+
+    tourner(0.4, 0.4, 20, -10., 90);
+    avancer(0., 0, 0.1, 0);
+    delay(500);
+
+    tourner(-0.4, -0.4, 20, 10., 90);
+    avancer(0., 0, -0.4, 0);
+    delay(500);
+
+    tourner(-0.4, -0.4, 20, -10., 90);
+    avancer(0., 0, -0.1, 0);
+    delay(500);
+
+    tourner(0.4, 0.4, 20, 10., 180);
+    avancer(0., 0, 0.4, 0);
+    delay(500);
+
+    tourner(0.4, 0.4, 20, -10., 180);
+    avancer(0., 0, 0.1, 0);
+    delay(500);
+
+    tourner(-0.4, -0.4, 20, 10., 180);
+    avancer(0., 0, -0.4, 0);
+    delay(500);
+    
+    tourner(-0.4, -0.4, 20, -10., 180);
+    avancer(0., 0, -0.1, 0);
+    delay(500);
+
+    delay(1500);
+
+    avancer(100., 40, 0., 0.95);
+    avancer(-200., 100, 0.95, -0.95);
+    avancer(100., 100, -0.95, 0.95);
+    avancer(4000., 100, 0.95, 0.);
+  }
+
+  if(ROBUS_IsBumper(FRONT))
+  { 
+    float anglepresent=0;
+    for (int i=1; i<=15; i++)
+    {
+      avancer(0, 50, 0, .4);
+      avancer(20, 0, .4, .4);
+      avancer(0, 50, .4, 0);
+      delay(200);
+      avancer(0,0,0,0);
+      anglepresent= spinInfra(anglepresent, 1);
+      avancer(0, 50, 0, -.4);
+      avancer(-20, 0, -.4, -.4);
+      avancer(0, 50, -.4, 0); 
+      delay(200);
+      avancer(0,0,0,0);
+      anglepresent= spinInfra(anglepresent, -1);
+      /*Serial.print ("lecture no");
+      Serial.println (i);
+      Serial.println (infraToCm(ROBUS_ReadIR(0)));*/
+    }
+  }
+}
