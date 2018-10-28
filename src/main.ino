@@ -12,6 +12,7 @@ Inclure les librairies de functions que vous voulez utiliser
 
 #include <LibRobus.h> // Essentielle pour utiliser RobUS
 #include <Stream.h>
+#include <QTRSensors.h>
 
 
 /* ****************************************************************************
@@ -53,6 +54,8 @@ const double circonference = (2. * 38 / 10 * PI);
 //variables pour si il entend le sifflet
 boolean sifflet = false;
 const float ITERATIONSIFFLET = 20.;
+
+
 
 
 /* ****************************************************************************
