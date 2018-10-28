@@ -49,7 +49,16 @@ const double circonference = (2. * 38 / 10 * PI);
 //3200 coches par tour de roue
 //LEFT 0, RIGHT 1, FRONT 2, REAR 3
 //constante clics/cm;
-
+//variables et constante pour ecoute sifflet
+boolean check = false;
+unsigned long timer = 0;
+boolean sifflet = false;
+//délai entre les deux checks du micro
+const float DELAY2 = 240; //peut surement etre plus petit
+//changer le treshold si des sons aléatoire sont entendus
+int treshold = 385;
+//pin output pour 5khz
+int pin_5khz = 8;
 
 /* ****************************************************************************
 Vos propres fonctions sont creees ici
@@ -135,11 +144,14 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
           lastMillis1 = newMillis;
           i+=n;
           
-          /*if (sifflet);
+          if (sifflet);
           {
-            StopSifflet;
+            MOTOR_SetSpeed(RIGHT, 0);
+            MOTOR_SetSpeed(LEFT, 0);
+            delay(10000);
+            sifflet = false;
           }
-          if (Lava)
+          /*if (Lava)
           {
             GTFOLava;
           }*/
@@ -162,11 +174,14 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
           slaveAdjust(i, ratio);
           lastMillis1 = newMillis;
           i+=n;
-          /*if (sifflet);
+          if (sifflet);
           {
-            StopSifflet;
+            MOTOR_SetSpeed(RIGHT, 0);
+            MOTOR_SetSpeed(LEFT, 0);
+            delay(10000);
+            sifflet = false;
           }
-          if (Lava)
+          /*if (Lava)
           {
             GTFOLava;
           }*/
@@ -400,11 +415,14 @@ void avancer(double distance, int iterations, float vI, float vF ,int fonction){
             clicL = ENCODER_Read(LEFT);
             Attacc(infraToCm(ROBUS_ReadIR(1), 1));
           }
-          /*if (sifflet);
+          if (sifflet);
           {
-            StopSifflet;
+            MOTOR_SetSpeed(RIGHT, 0);
+            MOTOR_SetSpeed(LEFT, 0);
+            delay(10000);
+            sifflet = false;
           }
-          if (Lava)
+          /*if (Lava)
           {
             GTFOLava;
           }*/
@@ -430,11 +448,14 @@ void avancer(double distance, int iterations, float vI, float vF ,int fonction){
             clicL = ENCODER_Read(LEFT);
             Attacc(infraToCm(ROBUS_ReadIR(1), 1));
           }
-          /*if (sifflet);
+          if (sifflet);
           {
-            StopSifflet;
+            MOTOR_SetSpeed(RIGHT, 0);
+            MOTOR_SetSpeed(LEFT, 0);
+            delay(10000);
+            sifflet = false;
           }
-          if (Lava)
+          /*if (Lava)
           {
             GTFOLava;
           }*/
@@ -597,6 +618,17 @@ void spin(float v, double angle){
         if(newMillis - lastMillis1 > DELAY ){
           adjustSpin(v);
           lastMillis1 = newMillis;
+          if (sifflet);
+          {
+            MOTOR_SetSpeed(RIGHT, 0);
+            MOTOR_SetSpeed(LEFT, 0);
+            delay(10000);
+            sifflet = false;
+          }
+          /*if (Lava)
+          {
+            GTFOLava;
+          }*/
         }    
       }    
       MOTOR_SetSpeed(LEFT, 0);
@@ -614,6 +646,17 @@ void spin(float v, double angle){
         if(newMillis - lastMillis1 > DELAY ){
           adjustSpin(-v);
           lastMillis1 = newMillis;
+          if (sifflet);
+          {
+            MOTOR_SetSpeed(RIGHT, 0);
+            MOTOR_SetSpeed(LEFT, 0);
+            delay(10000);
+            sifflet = false;
+          }
+          /*if (Lava)
+          {
+            GTFOLava;
+          }*/
         }
       }
       MOTOR_SetSpeed(LEFT, 0);
@@ -623,7 +666,39 @@ void spin(float v, double angle){
   }
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
 //la plus basse soit sur MOTOR_MASTER ou MOTOR_SLAVE.
+void ecouteSifflet(){
+  //check temps actuel
+  unsigned long newMillis = millis();
+  
+  //check delay
+  if((newMillis - timer) >= DELAY2){
+    //update le timer si delay passe
+    timer = newMillis;
+  
+    //check once 
+    if(!check && analogRead(pin_5khz) > treshold){
+      //Serial.println("1 triggered at ");
+      //Serial.println(analogRead(pin_5khz));
+      //Serial.println("!");
+      //Serial.println();
+      check = true;
+    }
+    //check again
+    else if(check && analogRead(pin_5khz) > treshold){
+      //Serial.println("2 triggered at ");
+      //Serial.println(analogRead(pin_5khz));
+      //Serial.println("!");
+      sifflet = true;
+      check=false;
+    }
+    //if the checks fail either random noise or no whistle
+    else{
+      check=false;
+      sifflet = false;
+    }
 
+  }
+}
 void Attacc(float distance_cible)
 {
   spin(0.4, 90);
