@@ -426,16 +426,17 @@ void loop()
 
       
 
-      // Si tous les senseurs ont une très faible réflectance, alors prendre  
-      // un action appropriée pour cette situation.  
-  if (sensors[0] > 750 && sensors[1] > 750 && sensors[2] > 750 && sensors[3] > 750 && sensors[4] > 750 && sensors[5] > 750 && sensors[6] > 750 && sensors[7] > 750)
-      {    
-        // Faire une action. Cela peu signifier que l'on est à la fin
-        // de la course ou peut être tombé de la table, auquel cas, nous    
-        // nous devrions arrêter de bouger, se retourner, aller à la    
-        // recherche de la ligne.    
-        return; 
-      }
+  // Si tous les senseurs ont une très faible réflectance, alors prendre  
+  // un action appropriée pour cette situation.
+  //robot est perdue dans le blanc  
+  if (sensors[0] < 50 && sensors[1] < 50 && sensors[2] < 50 && sensors[3] < 50 && sensors[4] < 50 && sensors[5] < 50 &&
+   sensors[6] < 50 && sensors[7] < 50)
+  {    
+    MOTOR_SetSpeed(LEFT, 0.1);
+    MOTOR_SetSpeed(RIGHT, );
+  }
+  else{
+
       // Calculer l' "erreur" par rapport à la position de la ligne.  
       // Nous allons faire en sorte que l'erreur = 0 lorsque la ligne est   
       // placée sous le milieu du senseur (parce que c'est notre but).  
@@ -448,28 +449,56 @@ void loop()
       int error = position - 3500;
       // Serial.println(error);
       // Serial.println();
-      if (error < -500)
-      { 
-        //ligne sur la gauche    
-        // tourner à droite   +
-        // -> arrêter moteur gauche   
-        MOTOR_SetSpeed(0, 0.2);
-        MOTOR_SetSpeed(1,0.1);
-  
-      }     
-      if (error > 500) { 
-        // ligne sur la droite    
-        // tourner à gauche    
-        // -> arrêter le moteur droit   
-        MOTOR_SetSpeed(1, 0.2);
-        MOTOR_SetSpeed(0,0.1); 
-      }  
-      if(error == 0){
-        MOTOR_SetSpeed(1, 0.2);
-        MOTOR_SetSpeed(0,0.2);
+      if(-3500 == error){
+        MOTOR_SetSpeed(LEFT,0.25);
+        MOTOR_SetSpeed(RIGHT,0);
       }
-      // Fixer la vitesse des moteurs en utilisant   
-      // les valeurs de leftMotorSpeed et rightMotorSpeed
-    }  
+
+      //si decale beaucoup a gauche
+      else if(-3500 < error && error <= -1500){
+        MOTOR_SetSpeed(LEFT,  0.25);
+        MOTOR_SetSpeed(RIGHT, 0.10);
+      }
+
+      //decale un peu a gauche
+      else if(-1500 < error && error <= -500){
+        MOTOR_SetSpeed(LEFT,  0.25);
+        MOTOR_SetSpeed(RIGHT, 0.20);
+      }
+
+      //check HERE
+      else if (-500 < error && error <= -10)
+      { 
+        MOTOR_SetSpeed(LEFT, 0.25);
+        MOTOR_SetSpeed(RIGHT, 0.245);
   
-}
+      }
+
+      else if(-10 < error && error < 10){
+        MOTOR_SetSpeed(LEFT, 0.25);
+        MOTOR_SetSpeed(RIGHT, 0.25);
+      }    
+
+      else if (10 <= error && error < 500){ 
+        MOTOR_SetSpeed(LEFT, 0.245);
+        MOTOR_SetSpeed(RIGHT,0.25); 
+      }  
+
+      else if(500<=error && error<1500){
+        MOTOR_SetSpeed(LEFT, 0.20);
+        MOTOR_SetSpeed(RIGHT,0.25);
+      }
+
+      else if(1500<=error && error<3500){
+        MOTOR_SetSpeed(LEFT, 0.10);
+        MOTOR_SetSpeed(RIGHT, 0.25);
+
+      }   
+
+       else if(error == 3500){
+        MOTOR_SetSpeed(LEFT,  0.25);
+        MOTOR_SetSpeed(RIGHT, 0);
+      }
+    }  
+  }
+} 
