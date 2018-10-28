@@ -51,8 +51,7 @@ const double circonference = (2. * 38 / 10 * PI);
 //constante clics/cm;
 
 //variables pour si il entend le sifflet
-boolean sifflet = false
-;
+boolean sifflet = false;
 const float ITERATIONSIFFLET = 20.;
 
 
