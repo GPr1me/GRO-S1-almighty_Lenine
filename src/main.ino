@@ -30,9 +30,9 @@ float erreurTotal;
 long int oldL;
 long int oldR;
 
-
 unsigned long lastMillis1 = 0;        //will store last time error was updated
 unsigned long lastMillis2 = 0; //will store time for whistle pause without exterior timer
+unsigned long lastMillis3 = 0; //will store time for black zone detection
 unsigned long deltaT = 0; //will store time that is lost during a whistle break
 
 const float DELAY = 20.0; //selon test effectues par l'equipe. 20 assez de precision. semble ok
@@ -55,16 +55,29 @@ const double circonference = (2. * 38 / 10 * PI);
 boolean sifflet = false;
 const float ITERATIONSIFFLET = 20.;
 
+//variable pour si dans zone zone noire 
+boolean checkZone = false;
+const float DELAY2 = 2000;
+boolean inZone = false;
+const int NOIR = 500;
+
+//variables et constante pour ecoute sifflet
+boolean check = false;
+unsigned long lastMillis4 = 0;
+//délai entre les deux checks du micro
+const float DELAY3 = 240; //peut surement etre plus petit
+//changer le treshold si des sons aléatoire sont entendus
+int treshold = 385;
+//pin output pour 5khz
+int pin_5khz = 8;
 
 
+QTRSensorsAnalog qtr((unsigned char[]) {0, 1, 2, 3, 4, 5, 6, 7}, (unsigned char) 8, (unsigned char) 4,
+ (unsigned char) QTR_NO_EMITTER_PIN);
 
 /* ****************************************************************************
 Vos propres fonctions sont creees ici
 **************************************************************************** */
-
-void maFonction(){
-  // code
-}
 
 //FONCTION POUR CALCULER LE RATIO DE VIRAGE
 float ratio_de_virage(float rayon)
@@ -811,6 +824,76 @@ void entendSiffletSpin(float v){
   }
 }
 
+void ecouteSifflet(){
+  //check temps actuel
+  unsigned long newMillis = millis();
+  
+  //check delay
+  if((newMillis - lastMillis4) >= DELAY3){
+    //update le timer si delay passe
+    lastMillis4 = newMillis;
+  
+    //check once 
+    if(!check && analogRead(pin_5khz) > treshold){
+      //Serial.println("1 triggered at ");
+      //Serial.println(analogRead(pin_5khz));
+      //Serial.println("!");
+      //Serial.println();
+      check = true;
+    }
+    //check again
+    else if(check && analogRead(pin_5khz) > treshold){
+      //Serial.println("2 triggered at ");
+      //Serial.println(analogRead(pin_5khz));
+      //Serial.println("!");
+      sifflet = true;
+      check = false;
+    }
+    //if the checks fail either random noise or no whistle
+    else{
+      check = false;
+      sifflet = false;
+    }
+
+  }
+}
+
+//set inZone a vrai si dans la zone de vue
+void zoneNoire(){
+  unsigned long newMillis = millis();
+  unsigned int sensors[8];
+  qtr.read(sensors);
+
+  //verifie si sur une zone noire
+  if(sensors[0] > NOIR && sensors[1] > NOIR && sensors[2] > NOIR && sensors[3] > NOIR && sensors[4] > NOIR && sensors[5] > NOIR && 
+    sensors[6] > NOIR && sensors[7] > NOIR && !checkZone){
+    //start un timer
+    lastMillis3 = newMillis;  
+    checkZone = true;
+  }
+  else if(newMillis - lastMillis3 > DELAY2){
+    //encore dans zone noire apres 2 seconde
+    if(sensors[0] > 500 && sensors[1] > 500 && sensors[2] > 500 && sensors[3] > 500 && sensors[4] > 500 && sensors[5] > 500 && 
+    sensors[6] > 500 && sensors[7] > 500 && checkZone){
+      inZone = true;
+      checkZone = false;
+    }
+    else{
+      checkZone = false;
+      inZone = false;  
+    }
+  }
+  else{
+    inZone = false;
+  }
+
+}
+
+void panic(){
+  avancer(-30, 10, 0, -0.95);
+  spin(0.4, 135);
+}
+
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
 //la plus basse soit sur MOTOR_MASTER ou MOTOR_SLAVE.
 
@@ -840,260 +923,267 @@ void loop() { //test pour l'avance
   delay(10);// Delais pour décharger le CPU
   MOTOR_SetSpeed(LEFT, 0);
   MOTOR_SetSpeed(RIGHT, 0);
+
+  //doit commencer l'octogone
   if(ROBUS_IsBumper(REAR)){
-
-    avancer(186, 20, 0, 0.8);
-
-    avancer(0, 6, 0.8, 0.6);
-    
-    tourner(0.6, 0.6, 20, -3.0, 90);
-    
-    tourner(0.6, 0.6, 20, 18, 180);
-
-    tourner(0.6, 0.6, 20, -3.0, 52);
-
-    avancer(0, 6, 0.6, 0.7);
-    
-    avancer(40, 5, 0.7, 0.7);
-
-    avancer(0, 6, 0.7, 0.4);
-    
-    tourner(0.4, 0.4, 20, -3.0, 68);
-
-    avancer(0, 12, 0.4, 0.7);
-    
-    avancer(15, 5, 0.7, 0.7);
-
-    avancer(0, 6, 0.7, 0.6);
-    
-    tourner(0.6, 0.6, 20, 12, 42);
-
-    avancer(0, 6, 0.6, 0.7);
-
-    avancer(18, 5, 0.7, 0.7);
-
-    avancer(0, 6, 0.7, 0.6);
-
-    tourner(0.6, 0.6, 20, 12, 12);
-
-    avancer(0, 6, 0.6, 0.7);
-
-    avancer(58, 5, 0.7, 0.7);
-
-    avancer(0, 15, 0.7, 0);
-    
-    // FIN ALLÉ
-    delay(200);
-    
-    avancer(-55, 20, 0, -0.7); // Premiere ligne retour
-
-    avancer(0, 10, -0.7, -0.4); // Deceleration
-
-    tourner(-0.4, -0.4, 20, 12.0, 22); // Premier tournant retour
-
-    avancer(0, 10, -0.4, -0.7); // accel ligne 2
-    
-    avancer(-6, 5, -0.7, -0.7); // ligne 2
-
-    avancer(0, 10, -0.7, -0.4); // decel ligne 2
-
-    tourner(-0.4, -0.4, 20, 12.0, 53); // tournant pour ligne 3
-
-    avancer(0, 10, -0.4, -0.7); // accel ligne 3
-
-    avancer(-29.5, 10, -0.7, -0.7); // ligne 3
-
-    avancer(0, 10, -0.7, -0.4); // decel ligne 3
- 
-    tourner(-0.4, -0.4, 20, -3.0, 95); // tournant 90
-
-    avancer(0, 10, -0.4, -0.7); // accel ligne 4
-
-    avancer(-1.5, 5, -0.7, -0.7); // ligne 4
-
-    avancer(0, 10, -0.7, -0.4); // decel ligne 4
-
-    tourner(-0.4, -0.4, 20, 3.0, 62); // tournant pour ligne 5
-
-    tourner(-0.4, -0.4, 20, -8.0, 92); // tournant pour ligne 6
-
-    tourner(-0.4, -0.4, 20, 10.0, 90); //tournant pour U turn 1/2
-
-    tourner(-0.4, -0.4, 20, 10.0, 102); //tournant pour U turn 1/2
-
-    tourner(-0.4, -0.4, 20, -28.0, 78); //tournant vers ligne finale
-
-    avancer(-190, 12, -0.4, -0.9); //accel final stretch
-
-    avancer(0, 10, -0.9, 0); //decelleration du champion
-
+  delay(5000);  
 
   }
-  //odd enough but since they are over by the same amount they balance out and it goes back to initial position hehe
-  //surely means that by adding a slightly smaller angle than actually desired angle can be reached
-  if(ROBUS_IsBumper(LEFT)){
-    // resetAdjust();
-    // delay(500);
-    // avancer(0, 50 , 0, 0.4);
-    // avancer(200, 0, 0.4, 0.4);
 
-    // //rayon + a gauche de reculons
-    // tourner(-0.6, -0.6, 20, 3., 180); //(ok)
-    // avancer(0, 0, -0.6, 0);
-    // delay(500);
-    // tourner(-0.6, -0.6, 20, 3., 90); //(over)
-    // avancer(0, 0, -0.6, 0);
-    // delay(500);
-    // tourner(-0.6, -0.6, 20, 3., 90); //(over)
-    // avancer(0, 0, -0.6, 0);
-    // delay(500);
-    // //rayon - a droite de reculons
-    // tourner(-0.6, -0.6, 20, -3., 180); //(over)
-    // avancer(0, 0, -0.6, 0);
-    // delay(500);
-    // tourner(-0.6, -0.6, 20, -3., 90); //(over)
-    // avancer(0, 0, -0.6, 0);
-    // delay(500);
-    // tourner(-0.6, -0.6, 20, -3., 90); //(over)
-    // avancer(0, 0, -0.6, 0);
-    // delay(500);
-
-    spin(0.4, 90);
-    delay(1000);
-
-    spin(0.4, -90);
-    delay(1000);
-
-    spin(0.4, 180);
-    delay(1000);
-
-    spin(0.4, -180);
-    delay(1000);
-
-    spin(0.4, 270);
-    delay(1000);
-
-    spin(0.4, -270);
-    delay(1000);
-    
-    delay(1500);
-
-    spin(0.2, 90);
-    delay(1000);
-
-    spin(0.2, -90);
-    delay(1000);
-
-    spin(0.2, 180);
-    delay(1000);
-
-    spin(0.2, -180);
-    delay(1000);
-
-    spin(0.2, 270);
-    delay(1000);
-
-    spin(0.2, -270);
-    delay(1000);
-
-    delay(1500);
-
-    spin(0.8, 90);
-    delay(1000);
-
-    spin(0.8, -90);
-    delay(1000);
-
-    spin(0.8, 180);
-    delay(1000);
-
-    spin(0.8, -180);
-    delay(1000);
-
-    spin(0.8, 270);
-    delay(1000);
-
-    spin(0.8, -270);
-    delay(1000);
-  }
-
-  if(ROBUS_IsBumper(RIGHT)){
-
-    tourner(0.4, 0.4, 20, 10., 90);
-    avancer(0., 0, 0.4, 0);
-    delay(500);
-
-    tourner(0.4, 0.4, 20, -10., 90);
-    avancer(0., 0, 0.1, 0);
-    delay(500);
-
-    tourner(-0.4, -0.4, 20, 10., 90);
-    avancer(0., 0, -0.4, 0);
-    delay(500);
-
-    tourner(-0.4, -0.4, 20, -10., 90);
-    avancer(0., 0, -0.1, 0);
-    delay(500);
-
-    tourner(0.4, 0.4, 20, 10., 180);
-    avancer(0., 0, 0.4, 0);
-    delay(500);
-
-    tourner(0.4, 0.4, 20, -10., 180);
-    avancer(0., 0, 0.1, 0);
-    delay(500);
-
-    tourner(-0.4, -0.4, 20, 10., 180);
-    avancer(0., 0, -0.4, 0);
-    delay(500);
-
-    tourner(-0.4, -0.4, 20, -10., 180);
-    avancer(0., 0, -0.1, 0);
-    delay(500);
-
-    
-    tourner(0.4, 0.4, 20, 10., 90);
-    avancer(0., 0, 0.4, 0);
-    delay(500);
-
-    tourner(0.4, 0.4, 20, -10., 90);
-    avancer(0., 0, 0.1, 0);
-    delay(500);
-
-    tourner(-0.4, -0.4, 20, 10., 90);
-    avancer(0., 0, -0.4, 0);
-    delay(500);
-
-    tourner(-0.4, -0.4, 20, -10., 90);
-    avancer(0., 0, -0.1, 0);
-    delay(500);
-
-    tourner(0.4, 0.4, 20, 10., 180);
-    avancer(0., 0, 0.4, 0);
-    delay(500);
-
-    tourner(0.4, 0.4, 20, -10., 180);
-    avancer(0., 0, 0.1, 0);
-    delay(500);
-
-    tourner(-0.4, -0.4, 20, 10., 180);
-    avancer(0., 0, -0.4, 0);
-    delay(500);
-    
-    tourner(-0.4, -0.4, 20, -10., 180);
-    avancer(0., 0, -0.1, 0);
-    delay(500);
-
-    delay(1500);
-
-    avancer(100., 100, 0., 0.95);
-    avancer(-200., 100, 0.95, -0.95);
-    avancer(100., 100, -0.95, 0.95);
-    avancer(4000., 100, 0.95, 0.);
-  }
-  if(ROBUS_IsBumper(FRONT)){ 
-    avancer(180, 50, 0, 0.9999);  
-    avancer(420, 50, 0.9999, 0);
-  }
 }
 
+// if(ROBUS_IsBumper(REAR)){
+
+//     avancer(186, 20, 0, 0.8);
+
+//     avancer(0, 6, 0.8, 0.6);
+    
+//     tourner(0.6, 0.6, 20, -3.0, 90);
+    
+//     tourner(0.6, 0.6, 20, 18, 180);
+
+//     tourner(0.6, 0.6, 20, -3.0, 52);
+
+//     avancer(0, 6, 0.6, 0.7);
+    
+//     avancer(40, 5, 0.7, 0.7);
+
+//     avancer(0, 6, 0.7, 0.4);
+    
+//     tourner(0.4, 0.4, 20, -3.0, 68);
+
+//     avancer(0, 12, 0.4, 0.7);
+    
+//     avancer(15, 5, 0.7, 0.7);
+
+//     avancer(0, 6, 0.7, 0.6);
+    
+//     tourner(0.6, 0.6, 20, 12, 42);
+
+//     avancer(0, 6, 0.6, 0.7);
+
+//     avancer(18, 5, 0.7, 0.7);
+
+//     avancer(0, 6, 0.7, 0.6);
+
+//     tourner(0.6, 0.6, 20, 12, 12);
+
+//     avancer(0, 6, 0.6, 0.7);
+
+//     avancer(58, 5, 0.7, 0.7);
+
+//     avancer(0, 15, 0.7, 0);
+    
+//     // FIN ALLÉ
+//     delay(200);
+    
+//     avancer(-55, 20, 0, -0.7); // Premiere ligne retour
+
+//     avancer(0, 10, -0.7, -0.4); // Deceleration
+
+//     tourner(-0.4, -0.4, 20, 12.0, 22); // Premier tournant retour
+
+//     avancer(0, 10, -0.4, -0.7); // accel ligne 2
+    
+//     avancer(-6, 5, -0.7, -0.7); // ligne 2
+
+//     avancer(0, 10, -0.7, -0.4); // decel ligne 2
+
+//     tourner(-0.4, -0.4, 20, 12.0, 53); // tournant pour ligne 3
+
+//     avancer(0, 10, -0.4, -0.7); // accel ligne 3
+
+//     avancer(-29.5, 10, -0.7, -0.7); // ligne 3
+
+//     avancer(0, 10, -0.7, -0.4); // decel ligne 3
+ 
+//     tourner(-0.4, -0.4, 20, -3.0, 95); // tournant 90
+
+//     avancer(0, 10, -0.4, -0.7); // accel ligne 4
+
+//     avancer(-1.5, 5, -0.7, -0.7); // ligne 4
+
+//     avancer(0, 10, -0.7, -0.4); // decel ligne 4
+
+//     tourner(-0.4, -0.4, 20, 3.0, 62); // tournant pour ligne 5
+
+//     tourner(-0.4, -0.4, 20, -8.0, 92); // tournant pour ligne 6
+
+//     tourner(-0.4, -0.4, 20, 10.0, 90); //tournant pour U turn 1/2
+
+//     tourner(-0.4, -0.4, 20, 10.0, 102); //tournant pour U turn 1/2
+
+//     tourner(-0.4, -0.4, 20, -28.0, 78); //tournant vers ligne finale
+
+//     avancer(-190, 12, -0.4, -0.9); //accel final stretch
+
+//     avancer(0, 10, -0.9, 0); //decelleration du champion
+
+
+//   }
+//   //odd enough but since they are over by the same amount they balance out and it goes back to initial position hehe
+//   //surely means that by adding a slightly smaller angle than actually desired angle can be reached
+//   if(ROBUS_IsBumper(LEFT)){
+//     // resetAdjust();
+//     // delay(500);
+//     // avancer(0, 50 , 0, 0.4);
+//     // avancer(200, 0, 0.4, 0.4);
+
+//     // //rayon + a gauche de reculons
+//     // tourner(-0.6, -0.6, 20, 3., 180); //(ok)
+//     // avancer(0, 0, -0.6, 0);
+//     // delay(500);
+//     // tourner(-0.6, -0.6, 20, 3., 90); //(over)
+//     // avancer(0, 0, -0.6, 0);
+//     // delay(500);
+//     // tourner(-0.6, -0.6, 20, 3., 90); //(over)
+//     // avancer(0, 0, -0.6, 0);
+//     // delay(500);
+//     // //rayon - a droite de reculons
+//     // tourner(-0.6, -0.6, 20, -3., 180); //(over)
+//     // avancer(0, 0, -0.6, 0);
+//     // delay(500);
+//     // tourner(-0.6, -0.6, 20, -3., 90); //(over)
+//     // avancer(0, 0, -0.6, 0);
+//     // delay(500);
+//     // tourner(-0.6, -0.6, 20, -3., 90); //(over)
+//     // avancer(0, 0, -0.6, 0);
+//     // delay(500);
+
+//     spin(0.4, 90);
+//     delay(1000);
+
+//     spin(0.4, -90);
+//     delay(1000);
+
+//     spin(0.4, 180);
+//     delay(1000);
+
+//     spin(0.4, -180);
+//     delay(1000);
+
+//     spin(0.4, 270);
+//     delay(1000);
+
+//     spin(0.4, -270);
+//     delay(1000);
+    
+//     delay(1500);
+
+//     spin(0.2, 90);
+//     delay(1000);
+
+//     spin(0.2, -90);
+//     delay(1000);
+
+//     spin(0.2, 180);
+//     delay(1000);
+
+//     spin(0.2, -180);
+//     delay(1000);
+
+//     spin(0.2, 270);
+//     delay(1000);
+
+//     spin(0.2, -270);
+//     delay(1000);
+
+//     delay(1500);
+
+//     spin(0.8, 90);
+//     delay(1000);
+
+//     spin(0.8, -90);
+//     delay(1000);
+
+//     spin(0.8, 180);
+//     delay(1000);
+
+//     spin(0.8, -180);
+//     delay(1000);
+
+//     spin(0.8, 270);
+//     delay(1000);
+
+//     spin(0.8, -270);
+//     delay(1000);
+//   }
+
+//   if(ROBUS_IsBumper(RIGHT)){
+
+//     tourner(0.4, 0.4, 20, 10., 90);
+//     avancer(0., 0, 0.4, 0);
+//     delay(500);
+
+//     tourner(0.4, 0.4, 20, -10., 90);
+//     avancer(0., 0, 0.1, 0);
+//     delay(500);
+
+//     tourner(-0.4, -0.4, 20, 10., 90);
+//     avancer(0., 0, -0.4, 0);
+//     delay(500);
+
+//     tourner(-0.4, -0.4, 20, -10., 90);
+//     avancer(0., 0, -0.1, 0);
+//     delay(500);
+
+//     tourner(0.4, 0.4, 20, 10., 180);
+//     avancer(0., 0, 0.4, 0);
+//     delay(500);
+
+//     tourner(0.4, 0.4, 20, -10., 180);
+//     avancer(0., 0, 0.1, 0);
+//     delay(500);
+
+//     tourner(-0.4, -0.4, 20, 10., 180);
+//     avancer(0., 0, -0.4, 0);
+//     delay(500);
+
+//     tourner(-0.4, -0.4, 20, -10., 180);
+//     avancer(0., 0, -0.1, 0);
+//     delay(500);
+
+    
+//     tourner(0.4, 0.4, 20, 10., 90);
+//     avancer(0., 0, 0.4, 0);
+//     delay(500);
+
+//     tourner(0.4, 0.4, 20, -10., 90);
+//     avancer(0., 0, 0.1, 0);
+//     delay(500);
+
+//     tourner(-0.4, -0.4, 20, 10., 90);
+//     avancer(0., 0, -0.4, 0);
+//     delay(500);
+
+//     tourner(-0.4, -0.4, 20, -10., 90);
+//     avancer(0., 0, -0.1, 0);
+//     delay(500);
+
+//     tourner(0.4, 0.4, 20, 10., 180);
+//     avancer(0., 0, 0.4, 0);
+//     delay(500);
+
+//     tourner(0.4, 0.4, 20, -10., 180);
+//     avancer(0., 0, 0.1, 0);
+//     delay(500);
+
+//     tourner(-0.4, -0.4, 20, 10., 180);
+//     avancer(0., 0, -0.4, 0);
+//     delay(500);
+    
+//     tourner(-0.4, -0.4, 20, -10., 180);
+//     avancer(0., 0, -0.1, 0);
+//     delay(500);
+
+//     delay(1500);
+
+//     avancer(100., 100, 0., 0.95);
+//     avancer(-200., 100, 0.95, -0.95);
+//     avancer(100., 100, -0.95, 0.95);
+//     avancer(4000., 100, 0.95, 0.);
+//   }
+//   if(ROBUS_IsBumper(FRONT)){ 
+//     avancer(180, 50, 0, 0.9999);  
+//     avancer(420, 50, 0.9999, 0);
+//   }
