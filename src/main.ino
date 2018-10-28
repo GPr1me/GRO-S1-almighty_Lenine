@@ -31,6 +31,9 @@ long int oldR;
 
 
 unsigned long lastMillis1 = 0;        //will store last time error was updated
+unsigned long lastMillis2 = 0; //will store time for whistle pause without exterior timer
+unsigned long deltaT = 0; //will store time that is lost during a whistle break
+
 const float DELAY = 20.0; //selon test effectues par l'equipe. 20 assez de precision. semble ok
 const float KI = 0.0007;//0.0005 ok
 const float KP = 0.00001;//0.00001 ok 
@@ -46,6 +49,11 @@ const double circonference = (2. * 38 / 10 * PI);
 //3200 coches par tour de roue
 //LEFT 0, RIGHT 1, FRONT 2, REAR 3
 //constante clics/cm;
+
+//variables pour si il entend le sifflet
+boolean sifflet = false
+;
+const float ITERATIONSIFFLET = 20.;
 
 
 /* ****************************************************************************
@@ -104,13 +112,24 @@ double clic_to_cm(long int nb_de_clics)
 //fonction doit gerer un changement de vitesse vers le positif et un changement de vitesse vers le negatif
 //FONCTION POUR GERER L'ACCELERATION
 //La fonction est faite pour le moteur gauche en tant que MOTOR_MASTER
+//nouveau:
+//reagis au sifflet et fait arreter le code si il entend le sifflet
 void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
 {
+  
   //pas d'iterations, met les deux moteurs a la vitesse et adujste au besoin
   if(nb_iterations == 0){
+    //si entend un sifflet pendant son execution
+    if(sifflet){
+      //garde temps ecoule pour le timer 
+      deltaT = 0;
+      entendSifflet(vI, ratio);
+      sifflet = false;
+    }
     slaveAdjust(vF, ratio);
   }
   else{
+    unsigned long newMillis;
     lastMillis1 = millis();
     //Puisque j'ai défini mon n comme étant vitesse finale - initiale, il va savoir tout seul
     //s'il faut qu'il incremente ou qu'il decremente 
@@ -125,7 +144,17 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
       
       for (float i = vI; i <= vF;)
       {
-        unsigned long newMillis = millis();
+        
+        //si entend un sifflet pendant son execution
+        if(sifflet){
+          //garde temps ecoule pour le timer 
+          deltaT = newMillis - lastMillis1;
+          entendSifflet(i, ratio);
+          sifflet = false;
+        }
+
+        newMillis = millis();
+
         if(newMillis - lastMillis1 > DELAY ){
           //accelere avec adjustement
           slaveAdjust(i, ratio);
@@ -144,7 +173,15 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
 
       for (float i = vI; i >= vF;)
       {
-        unsigned long newMillis = millis();
+        //si entend un sifflet pendant son execution
+        if(sifflet){
+          //garde temps ecoule pour le timer 
+          deltaT = newMillis - lastMillis1;
+          entendSifflet(i, ratio);
+          sifflet = false;
+        }
+
+        newMillis = millis();
         if(newMillis - lastMillis1 > DELAY ){
           //accelere avec ajustement
           slaveAdjust(i, ratio);
@@ -158,9 +195,17 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
     // en gros si la vitesse finale et initiale sont pareils. fait juste appliquer l'ajustement
     else
     {
+      //si entend un sifflet pendant son execution
+      if(sifflet){
+        //garde temps ecoule pour le timer 
+        deltaT = newMillis - lastMillis1;
+        entendSifflet(vF, ratio);
+        sifflet = false;
+      }
       slaveAdjust(vF, ratio); 
     }
   }
+
 }
 
 //reset values for adjustement from turns to straight lines and vice-versa
@@ -309,6 +354,8 @@ void adjustSpin(float master){
 }
 
 //distance en cm a atteindre. Positive si avance, negative si recule
+//nouveau:
+//reagit au sifflet et fait arreter le code si il entend le sifflet
 void avancer(double distance, int iterations, float vI, float vF){
   
   //resets values for adjustement
@@ -322,6 +369,14 @@ void avancer(double distance, int iterations, float vI, float vF){
     //boucle pour atteindre distance desiree
     //clics vont etre negatifs alors distance negative
     while(clic_to_cm( ENCODER_Read(LEFT) ) > distance){
+      //si entend un sifflet pendant son execution
+      if(sifflet){
+        //garde temps ecoule pour le timer 
+        deltaT = newMillis - lastMillis1;
+        entendSifflet(vF, 0.);
+        sifflet = false;
+      }
+
       newMillis = millis();
       if(newMillis - lastMillis1 > DELAY ){
         slaveAdjust(vF, 0.);
@@ -338,6 +393,14 @@ void avancer(double distance, int iterations, float vI, float vF){
     //boucle pour atteindre la distance desiree
     //clics vont etre positifs alors distance positive
     while(clic_to_cm( ENCODER_Read(LEFT) ) < distance){
+      //si entend un sifflet pendant son execution
+      if(sifflet){
+        //garde temps ecoule pour le timer 
+        deltaT = newMillis - lastMillis1;
+        entendSifflet(vF, 0.);
+        sifflet = false;
+      }
+
       newMillis = millis();
       if(newMillis - lastMillis1 > DELAY ){
         slaveAdjust(vF, 0.);
@@ -357,22 +420,34 @@ void avancer(double distance, int iterations, float vI, float vF){
 //test avec 0.4v et 0.2r (ok) decalage negligable
 //test avec 0.4v et 10r: (ok) decalage negligable
 //test parcours: trajet semble plus constant! (fait pas le parcours doe haha. code lenin a 0.7 sur staline)
+//nouveau:
+//reagit au sifflet et arrete lorsqu'il l'entend
 void tourner(float vI, float vF, int iterations, float rayon, double angle){
   unsigned long newMillis;
+  float ratio = ratio_de_virage(rayon);
   //cas avec vitesse negative
   if(vF < 0){
     //valeurs mises a 0 pour ajustement
     resetAdjust();
 
     //accelere/decelere jusqu'a vitesse finale
-    ACC_MASTER(vI, vF, iterations, ratio_de_virage(rayon));
-    lastMillis1 = millis();
+    ACC_MASTER(vI, vF, iterations, ratio);
     //distance si tourne a droite
     if(rayon < 0){
+      lastMillis1 = millis();
       while(angle_to_cm(angle, -rayon) > -clic_to_cm(ENCODER_Read(RIGHT)) ){
+
+        //si entend un sifflet pendant son execution
+        if(sifflet){
+          //garde temps ecoule pour le timer 
+          deltaT = newMillis - lastMillis1;
+          entendSifflet(vF, ratio);
+          sifflet = false;
+        }
+
         newMillis = millis();
         if(newMillis - lastMillis1 > DELAY ){
-          slaveAdjust(vF, ratio_de_virage(rayon));
+          slaveAdjust(vF, ratio);
           lastMillis1 = newMillis;
         }
         //applique l'ajustement a faire pour faire tourner les roues pour qu'elles parcourent les bonnes distances
@@ -381,10 +456,20 @@ void tourner(float vI, float vF, int iterations, float rayon, double angle){
     }
     //distance si tourne a gauche
     else{
+      lastMillis1 = millis();
       while(angle_to_cm(angle, rayon) > -clic_to_cm(ENCODER_Read(LEFT)) ){
+
+        //si entend un sifflet pendant son execution
+        if(sifflet){
+          //garde temps ecoule pour le timer 
+          deltaT = newMillis - lastMillis1;
+          entendSifflet(vF, ratio);
+          sifflet = false;
+        }
+
         newMillis = millis();
         if(newMillis - lastMillis1 > DELAY ){
-          slaveAdjust(vF, ratio_de_virage(rayon));
+          slaveAdjust(vF, ratio);
           lastMillis1 = newMillis;
         }
 
@@ -400,7 +485,7 @@ void tourner(float vI, float vF, int iterations, float rayon, double angle){
     resetAdjust();
 
     //accelere/decelere jusqu'a vitesse finale
-    ACC_MASTER(vI, vF, iterations, ratio_de_virage(rayon));
+    ACC_MASTER(vI, vF, iterations, ratio);
 
     // //applique l'ajustement afin de tourner dans le bon sens
     // slaveAdjust(v, ratio_de_virage(rayon));
@@ -408,9 +493,18 @@ void tourner(float vI, float vF, int iterations, float rayon, double angle){
     //distance si tourne a gauche
     if(rayon < 0){
       while(angle_to_cm(angle, -rayon) > clic_to_cm(ENCODER_Read(RIGHT)) ){
+
+        //si entend un sifflet pendant son execution
+        if(sifflet){
+          //garde temps ecoule pour le timer 
+          deltaT = newMillis - lastMillis1;
+          entendSifflet(vF, ratio);
+          sifflet = false;
+        }
+
         newMillis = millis();
         if(newMillis - lastMillis1 > DELAY ){
-          slaveAdjust(vF, ratio_de_virage(rayon));
+          slaveAdjust(vF, ratio);
           lastMillis1 = newMillis;
         }
         // slaveAdjust(vF, ratio_de_virage(rayon));
@@ -419,9 +513,18 @@ void tourner(float vI, float vF, int iterations, float rayon, double angle){
     //distance si tourne a droite
     else{
       while(angle_to_cm(angle, rayon) > clic_to_cm(ENCODER_Read(LEFT))){
+
+        //si entend un sifflet pendant son execution
+        if(sifflet){
+          //garde temps ecoule pour le timer 
+          deltaT = newMillis - lastMillis1;
+          entendSifflet(vF, ratio);
+          sifflet = false;
+        }
+
         newMillis = millis();
         if(newMillis - lastMillis1 > DELAY ){
-          slaveAdjust(vF, ratio_de_virage(rayon));
+          slaveAdjust(vF, ratio);
           lastMillis1 = newMillis;
         }
         // slaveAdjust(vF, ratio_de_virage(rayon));
@@ -434,22 +537,48 @@ void tourner(float vI, float vF, int iterations, float rayon, double angle){
 //contient nouveau PID
 //angle + a droite, angle - a gauche
 //vitesse de 0.4 assez vite
+
+//nouveau:
+//reagit au sifflet et arrete le robot quand il entend le sifflet
 void spin(float v, double angle){
   //angle + distance +, angle - distance -
   double distance = angle_to_cm(angle, (distance_entre_les_roues - (0.005 * 12) ) / -2.); 
-  lastMillis1 = millis();
   unsigned long newMillis;
   //spin a droite
   if(angle > 0){
+    
+    //si entend un sifflet a l'arret
+    if(sifflet){
+      entendSiffletSpin(0);
+    }
+
+    //timer pour ajustement
+    lastMillis1 = millis();
+
     //valeurs mises a 0 pour ajustement
     resetAdjust();
-    
+    //commence a tourner
+    MOTOR_SetSpeed(LEFT, v);
+    MOTOR_SetSpeed(RIGHT, -v);
+
     //ajuste pendant les tours
     adjustSpin(v);
     
     //wait till master reaches the distance
     //since corrected same distance
     while(distance > clic_to_cm(ENCODER_Read(LEFT))){
+      
+      //si entend un sifflet en tournant a droite
+      if(sifflet){
+        newMillis = millis();
+
+        //garde temps ecoule pour le timer 
+        deltaT = newMillis - lastMillis1;
+
+        entendSiffletSpin(v);
+
+      }
+
       newMillis = millis();
       if(newMillis - lastMillis1 > DELAY ){
         adjustSpin(v);
@@ -461,12 +590,35 @@ void spin(float v, double angle){
   }
   //spin a gauche avec angle -
   else{
+
+    //si entend un sifflet a l'arret
+    if(sifflet){
+      entendSiffletSpin(0);
+    }
+
+    //timer pour ajustement
+    lastMillis1 = millis();
+
     //valeurs mises a 0 pour ajustement
     resetAdjust();
+    //commence a tourner
+    MOTOR_SetSpeed(LEFT, -v);
+    MOTOR_SetSpeed(RIGHT, v);
 
     adjustSpin(-v);
     //wait till one reaches distance
     while(-distance > clic_to_cm(ENCODER_Read(RIGHT))){
+
+      //si entend un sifflet pendant en tournant a gauche
+      if(sifflet){
+        newMillis = millis();
+
+        //garde temps ecoule pour le timer 
+        deltaT = newMillis - lastMillis1;
+
+        entendSiffletSpin(-v);
+      }
+
       newMillis = millis();
       if(newMillis - lastMillis1 > DELAY ){
         adjustSpin(-v);
@@ -477,6 +629,184 @@ void spin(float v, double angle){
     MOTOR_SetSpeed(RIGHT, 0);
   }
 
+}
+
+//code a executer si il entend un sifflet
+void entendSifflet(float v, float ratio){
+  
+  //sauvegarde le temps actuel
+  unsigned long newMillis;
+  
+  //commence le timer de 10 secondes
+  lastMillis2 = millis();
+  
+  //va arreter le robot le plus vite possible et attendre 10 secondes avant de le reaccelerer
+  if (v < 0)
+  {
+    
+    //nombre positif a ajouter
+    float n = (0 - v) / ITERATIONSIFFLET;//50 pour 1 seconde
+    // ici le n est diviser par 10. pour qu'il se rende à la vitesse finale en 10 loop
+    // si j'avais mis un n comme 0.05 ou qq chose comme ça, vu que les vitesses changent 
+    // tout le temps, le n se serait jamais rendu pile sur la vitesse souhaitée.
+    
+    //timer utilise pour les accelerations/decelerations
+    lastMillis1 = millis();
+
+    for (float i = v; i <= 0;)
+    {
+      newMillis = millis();
+      
+      if(newMillis - lastMillis1 > DELAY ){
+        //decelere avec adjustement
+        slaveAdjust(i, ratio);
+        lastMillis1 = newMillis;
+        i+=n;
+      }
+    }
+    
+    //attends 10 secondes
+    while(10000 > millis() - lastMillis2){}
+
+    //restart timer for acceleration
+    lastMillis1 = millis();
+
+    for (float i = 0; i >= v;)
+    {
+      newMillis = millis();
+      
+      if(newMillis - lastMillis1 > DELAY ){
+        //decelere avec adjustement
+        slaveAdjust(i, ratio);
+        lastMillis1 = newMillis;
+        i-=n;
+      }
+    }
+
+    //reset le temps a la valeur avant d'entendre le sifflet
+    lastMillis1 = millis() - deltaT;
+
+  }
+  else if (v > 0)
+  {
+    //nombre negatif a enlever
+    float n = (0 - v) / ITERATIONSIFFLET;
+
+    //timer utilise pour les accelerations/decelerations
+    lastMillis1 = millis();
+
+    for (float i = v; i >= 0;)
+    {
+      newMillis = millis();
+      if(newMillis - lastMillis1 > DELAY ){
+        //decelere avec ajustement
+        slaveAdjust(i, ratio);
+        lastMillis1 = newMillis;
+        i+=n;
+      }
+    }
+
+    //attends 10 secondes
+    while(10000 > millis() - lastMillis2){}
+
+    //timer utilise pour les accelerations/decelerations
+    lastMillis1 = millis();
+
+    for (float i = 0; i <= v;)
+    {
+      newMillis = millis();
+      if(newMillis - lastMillis1 > DELAY ){
+        //decelere avec ajustement
+        slaveAdjust(i, ratio);
+        lastMillis1 = newMillis;
+        i-=n;
+      }
+    }
+
+    //reset le temps a la valeur avant d'entendre le sifflet
+    lastMillis1 = millis() - deltaT;
+
+  }
+  //si a l'arret lors du coup de sifflet
+  else{
+    //arrete le robot si il est en mouvement
+    MOTOR_SetSpeed(LEFT, 0.);
+    MOTOR_SetSpeed(RIGHT, 0.);
+    //attends 10 secondes
+    while(10000 > millis() - lastMillis2){}
+
+    //reset le temps a la valeur avant d'entendre le sifflet
+    lastMillis1 = millis() - deltaT;
+
+  }
+
+}
+
+//cod.e a executer si il entend un sifflet pendant qu'il spin
+void entendSiffletSpin(float v){
+
+  //sauvegarde le temps actuel
+  unsigned long newMillis;
+  
+  //commence le timer de 10 secondes
+  lastMillis2 = millis();
+
+  //si entend un sifflet en tournant a droite
+  if(v > 0){
+    
+    //commence timer de 10 secondes
+    lastMillis2 = newMillis;
+    
+    //arrete le robot
+    MOTOR_SetSpeed(LEFT, 0.);
+    MOTOR_SetSpeed(RIGHT, 0.);
+
+    //attend 10 secondes
+    while(10000 > millis() - lastMillis2){}
+    
+    //reset le timer comme avant le sifflet
+    lastMillis1 = millis() - deltaT;
+
+    //remet le robot en marche
+    adjustSpin(v);
+    sifflet = false;
+  }
+
+  //si entend un sifflet pendant en tournant a gauche
+  else if(v < 0){
+    
+    //commence timer de 10 secondes
+    lastMillis2 = newMillis;
+    
+    //arrete le robot
+    MOTOR_SetSpeed(LEFT, 0.);
+    MOTOR_SetSpeed(RIGHT, 0.);
+
+    //attend 10 secondes
+    while(10000 > millis() - lastMillis2){}
+    
+    //reset le timer comme avant le sifflet
+    lastMillis1 = millis() - deltaT;
+
+    //remet le robot en marche
+    adjustSpin(-v);
+    sifflet = false;
+  }
+
+  //si entend un sifflet a l'arret
+  else{
+    //arrete le robot
+    MOTOR_SetSpeed(LEFT, 0.);
+    MOTOR_SetSpeed(RIGHT, 0.);
+    
+    //commence timer de 10 secondes
+    lastMillis2 = millis();
+
+    //attend 10 secondes
+    while(10000 > millis() - lastMillis2){}
+    
+    sifflet = false;
+  }
 }
 
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
@@ -759,9 +1089,7 @@ void loop() { //test pour l'avance
     avancer(100., 100, -0.95, 0.95);
     avancer(4000., 100, 0.95, 0.);
   }
-  if(ROBUS_IsBumper(FRONT))
-
-  { 
+  if(ROBUS_IsBumper(FRONT)){ 
     avancer(180, 50, 0, 0.9999);  
     avancer(420, 50, 0.9999, 0);
   }
