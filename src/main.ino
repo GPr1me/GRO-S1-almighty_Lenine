@@ -134,6 +134,15 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
           slaveAdjust(i, ratio);
           lastMillis1 = newMillis;
           i+=n;
+          
+          /*if (sifflet);
+          {
+            StopSifflet;
+          }
+          if (Lava)
+          {
+            GTFOLava;
+          }*/
         }
         //accelere avec adjustement
         // slaveAdjust(i, ratio); //delay de 20 ms
@@ -153,6 +162,14 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
           slaveAdjust(i, ratio);
           lastMillis1 = newMillis;
           i+=n;
+          /*if (sifflet);
+          {
+            StopSifflet;
+          }
+          if (Lava)
+          {
+            GTFOLava;
+          }*/
         }
         //accelere avec ajustement
         // slaveAdjust(i, ratio); //delay 20 ms
@@ -264,7 +281,7 @@ void slaveAdjust(float master, float ratio)
 float adjustInfrarouge()
 {
   float corr;
-  float diffinfrarouge= infraToCm(ROBUS_ReadIR(0))-distanceMur;
+  float diffinfrarouge= infraToCm(ROBUS_ReadIR(0), 0)-distanceMur;
   Serial.println(diffinfrarouge);
   corr = KR * diffinfrarouge;
   return corr;
@@ -291,89 +308,190 @@ float spinInfra(float angleprecedent, int sens)
 //+ value spin right 
 //- value spin left
 void adjustSpin(float master){
-  MOTOR_SetSpeed(LEFT, master); //+
-  MOTOR_SetSpeed(RIGHT, - (master + correction)); //-
+  
   if(master > 0){
-    //+
-    oldL = ENCODER_Read(LEFT);
-    //-
-    oldR = ENCODER_Read(RIGHT);
+    // MOTOR_SetSpeed(LEFT, master); //+
+    // MOTOR_SetSpeed(RIGHT, - (master + correction)); //-
+    // //+
+    // oldL = ENCODER_Read(LEFT);
+    // //-
+    // oldR = ENCODER_Read(RIGHT);
 
     // delay(DELAY);
-
     erreur = (ENCODER_Read(LEFT) - oldL - (oldR - ENCODER_Read(RIGHT)));
     erreurTotal = (ENCODER_Read(LEFT) + ENCODER_Read(RIGHT));
     correction += KI * erreur + KP * erreurTotal;
+
+    //nouveau emplacement pour adujst
+    MOTOR_SetSpeed(LEFT, master); //+
+    MOTOR_SetSpeed(RIGHT, - (master + correction)); //-
+    //+
+    oldL = ENCODER_Read(LEFT);
+    //-
+    oldR = ENCODER_Read(RIGHT);
   }
   else{
-    MOTOR_SetSpeed(LEFT, master); //-
-    MOTOR_SetSpeed(RIGHT, -(master - correction));//+
-    //-
-    oldL = ENCODER_Read(LEFT);
-    //+
-    oldR = ENCODER_Read(RIGHT);
+    // MOTOR_SetSpeed(LEFT, master); //-
+    // MOTOR_SetSpeed(RIGHT, -(master - correction));//+
+    // //-
+    // oldL = ENCODER_Read(LEFT);
+    // //+
+    // oldR = ENCODER_Read(RIGHT);
 
     // delay(DELAY);
 
     erreur = (oldL - ENCODER_Read(LEFT) - (ENCODER_Read(RIGHT) - oldR));
     erreurTotal = (-ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
     correction += KI * erreur + KP * erreurTotal;
+
+    //nouveau emplacement pour ajustement
+    MOTOR_SetSpeed(LEFT, master); //-
+    MOTOR_SetSpeed(RIGHT, -(master - correction));//+
+    //-
+    oldL = ENCODER_Read(LEFT);
+    //+
+    oldR = ENCODER_Read(RIGHT);
   }
 }
-float infraToCm(int infra)
+float infraToCm(int infra, int capteur)
 {
   float cm = 0;
-  if (infra >= 176)
+  if (capteur == 0)
   {
-    cm = 15414*pow((infra), -1.19);
+    if (infra >= 176)
+    {
+      cm = 15414*pow((infra), -1.19);
+    }
+    else if (infra<176)
+    {
+      cm = 2975.7*pow((infra), -0.803);
+    }
   }
-  else if (infra<176)
+  else if (capteur == 1)
   {
-    cm = 2975.7*pow((infra), -0.803);
+    cm = 2731.1*pow((infra), -0.785);
   }
   return cm;
 }
 //distance en cm a atteindre. Positive si avance, negative si recule
-void avancer(double distance, int iterations, float vI, float vF){
-  
-  //resets values for adjustement
-  resetAdjust();
-  //accelere/decelere jusqu'a vitesse finale
-  ACC_MASTER(vI, vF, iterations, 0.);
-  lastMillis1 = millis();
-  unsigned long newMillis;
-  //si doit avancer de reculons une fois atteint sa vitesse
-  if(vF < 0){
-    //boucle pour atteindre distance desiree
-    //clics vont etre negatifs alors distance negative
-    while(clic_to_cm( ENCODER_Read(LEFT) ) > distance){
-      newMillis = millis();
-      if(newMillis - lastMillis1 > DELAY ){
-        slaveAdjust(vF, 0.);
-        lastMillis1 = newMillis;
+void avancer(double distance, int iterations, float vI, float vF ,int fonction){ // si fonction == 0 -> protecc et si fonction == 1 -> attacc
+  if (fonction == 0)
+  {
+    //resets values for adjustement
+    resetAdjust();
+    int clicNb_Left = 0;
+    int clicL = 0;
+    //accelere/decelere jusqu'a vitesse finale
+    ACC_MASTER(vI, vF, iterations, 0.);
+    lastMillis1 = millis();
+    unsigned long newMillis;
+    //si doit avancer de reculons une fois atteint sa vitesse
+    if(vF < 0){
+      //boucle pour atteindre distance desiree
+      //clics vont etre negatifs alors distance negative
+      while(clic_to_cm( clicNb_Left) > distance){
+        newMillis = millis();
+        if(newMillis - lastMillis1 > DELAY )
+        {
+          slaveAdjust(vF, 0.);
+          lastMillis1 = newMillis;
+          if ((infraToCm(ROBUS_ReadIR(1), 1)) < 80 && infraToCm(ROBUS_ReadIR(1), 1)>10)
+          {
+            clicL = ENCODER_Read(LEFT);
+            Attacc(infraToCm(ROBUS_ReadIR(1), 1));
+          }
+          /*if (sifflet);
+          {
+            StopSifflet;
+          }
+          if (Lava)
+          {
+            GTFOLava;
+          }*/
+          clicNb_Left = ENCODER_Read(LEFT) + clicL;
+        }
+        
+        //continue a faire la correction
+        // slaveAdjust(vF, 0.);  
       }
-      
-      //continue a faire la correction
-      // slaveAdjust(vF, 0.);  
     }
-  }
 
-  //si doit avancer de face a la fin une fois atteint sa vitesse
-  else if(vF > 0){
-    //boucle pour atteindre la distance desiree
-    //clics vont etre positifs alors distance positive
-    while(clic_to_cm( ENCODER_Read(LEFT) ) < distance){
-      newMillis = millis();
-      if(newMillis - lastMillis1 > DELAY ){
-        slaveAdjust(vF, 0.);
-        lastMillis1 = newMillis;
+    //si doit avancer de face a la fin une fois atteint sa vitesse
+    else if(vF > 0){
+      //boucle pour atteindre la distance desiree
+      //clics vont etre positifs alors distance positive
+      while(clic_to_cm( clicNb_Left) < distance){
+        newMillis = millis();
+        if(newMillis - lastMillis1 > DELAY ){
+          slaveAdjust(vF, 0.);
+          lastMillis1 = newMillis;
+          if ((infraToCm(ROBUS_ReadIR(1), 1)) < 80 && infraToCm(ROBUS_ReadIR(1), 1)>10)
+          {
+            clicL = ENCODER_Read(LEFT);
+            Attacc(infraToCm(ROBUS_ReadIR(1), 1));
+          }
+          /*if (sifflet);
+          {
+            StopSifflet;
+          }
+          if (Lava)
+          {
+            GTFOLava;
+          }*/
+          clicNb_Left = ENCODER_Read(LEFT) + clicL;
+        }
+
+        //continue a faire la correction
+        // slaveAdjust(vF, 0.);  
       }
-
-      //continue a faire la correction
-      // slaveAdjust(vF, 0.);  
     }
+    //si vitesse finale est de 0. Ignore la distance. Donc, relentit pendant les iterations jusqu'a l'arret
   }
-  //si vitesse finale est de 0. Ignore la distance. Donc, relentit pendant les iterations jusqu'a l'arret
+  else if (fonction == 1)
+  {
+    //resets values for adjustement
+    resetAdjust();
+    int clicNb_Start = ENCODER_Read(LEFT);
+
+    //accelere/decelere jusqu'a vitesse finale
+    ACC_MASTER(vI, vF, iterations, 0.);
+    lastMillis1 = millis();
+    unsigned long newMillis;
+    //si doit avancer de reculons une fois atteint sa vitesse
+    if(vF < 0){
+      //boucle pour atteindre distance desiree
+      //clics vont etre negatifs alors distance negative
+      while(clic_to_cm( ENCODER_Read(LEFT))  > distance){
+        newMillis = millis();
+        if(newMillis - lastMillis1 > DELAY )
+        {
+          slaveAdjust(vF, 0.);
+          lastMillis1 = newMillis;
+        }
+        
+        //continue a faire la correction
+        // slaveAdjust(vF, 0.);  
+      }
+    }
+
+    //si doit avancer de face a la fin une fois atteint sa vitesse
+    else if(vF > 0){
+      //boucle pour atteindre la distance desiree
+      //clics vont etre positifs alors distance positive
+      while(clic_to_cm(ENCODER_Read(LEFT)) < distance){
+        newMillis = millis();
+        if(newMillis - lastMillis1 > DELAY ){
+          slaveAdjust(vF, 0.);
+          lastMillis1 = newMillis;
+        }
+
+        //continue a faire la correction
+        // slaveAdjust(vF, 0.);  
+      }
+    }
+    resetAdjust();
+    //si vitesse finale est de 0. Ignore la distance. Donc, relentit pendant les iterations jusqu'a l'arret
+  }
 }
 
 //v: vitesse a laquelle tourner 
@@ -465,47 +583,71 @@ void spin(float v, double angle){
   lastMillis1 = millis();
   unsigned long newMillis;
   //spin a droite
-  if(angle > 0){
-    //valeurs mises a 0 pour ajustement
-    resetAdjust();
-    
-    //ajuste pendant les tours
-    adjustSpin(v);
-    
-    //wait till master reaches the distance
-    //since corrected same distance
-    while(distance > clic_to_cm(ENCODER_Read(LEFT))){
-      newMillis = millis();
-      if(newMillis - lastMillis1 > DELAY ){
-        adjustSpin(v);
-        lastMillis1 = newMillis;
+    if(angle > 0){
+      //valeurs mises a 0 pour ajustement
+      resetAdjust();
+      
+      //ajuste pendant les tours
+      adjustSpin(v);
+      
+      //wait till master reaches the distance
+      //since corrected same distance
+      while(distance > clic_to_cm(ENCODER_Read(LEFT))){
+        newMillis = millis();
+        if(newMillis - lastMillis1 > DELAY ){
+          adjustSpin(v);
+          lastMillis1 = newMillis;
+        }    
       }    
-    }    
-    MOTOR_SetSpeed(LEFT, 0);
-    MOTOR_SetSpeed(RIGHT, 0);
-  }
-  //spin a gauche avec angle -
-  else{
-    //valeurs mises a 0 pour ajustement
-    resetAdjust();
-
-    adjustSpin(-v);
-    //wait till one reaches distance
-    while(-distance > clic_to_cm(ENCODER_Read(RIGHT))){
-      newMillis = millis();
-      if(newMillis - lastMillis1 > DELAY ){
-        adjustSpin(-v);
-        lastMillis1 = newMillis;
-      }
+      MOTOR_SetSpeed(LEFT, 0);
+      MOTOR_SetSpeed(RIGHT, 0);
     }
-    MOTOR_SetSpeed(LEFT, 0);
-    MOTOR_SetSpeed(RIGHT, 0);
+    //spin a gauche avec angle -
+    else{
+      //valeurs mises a 0 pour ajustement
+      resetAdjust();
+
+      adjustSpin(-v);
+      //wait till one reaches distance
+      while(-distance > clic_to_cm(ENCODER_Read(RIGHT))){
+        newMillis = millis();
+        if(newMillis - lastMillis1 > DELAY ){
+          adjustSpin(-v);
+          lastMillis1 = newMillis;
+        }
+      }
+      MOTOR_SetSpeed(LEFT, 0);
+      MOTOR_SetSpeed(RIGHT, 0);
+      resetAdjust();
+    }
   }
-
-}
-
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
 //la plus basse soit sur MOTOR_MASTER ou MOTOR_SLAVE.
+
+void Attacc(float distance_cible)
+{
+  spin(0.4, 90);
+  avancer(0,10, 0, 0.7, 1);
+  avancer(distance_cible, 0, 0.7, 0.7, 1);
+  avancer(0,10, 0.7, 0, 1);
+  avancer(-distance_cible, 0, -0.7, -0.7, 1);
+  avancer(0,10, 0, -0.7, 1);
+  avancer(0,10, -0.7, 0, 1);
+  spin(0.4, -90);
+}
+void Protecc(void)
+{
+  float anglepresent=0;
+  while (!ROBUS_IsBumper(RIGHT))
+  {
+    avancer(20, 0, .2, .2, 0);
+    delay(200);
+    anglepresent= spinInfra(anglepresent, 1);
+    avancer(-20, 0, -.2, -.2, 0);
+    delay(200);
+    anglepresent= spinInfra(anglepresent, -1);
+  }
+}
 
 /* ****************************************************************************
 Fonctions d'initialisation (setup)
@@ -537,7 +679,7 @@ void loop() { //test pour l'avance
   MOTOR_SetSpeed(RIGHT, 0);
   if(ROBUS_IsBumper(REAR)){
 
-    avancer(186, 20, 0, 0.8);
+    /*avancer(186, 20, 0, 0.8);
 
     avancer(0, 6, 0.8, 0.6);
     
@@ -622,7 +764,7 @@ void loop() { //test pour l'avance
 
     avancer(0, 10, -0.9, 0); //decelleration du champion
 
-
+  */
   }
   //odd enough but since they are over by the same amount they balance out and it goes back to initial position hehe
   //surely means that by adding a slightly smaller angle than actually desired angle can be reached
@@ -664,7 +806,7 @@ void loop() { //test pour l'avance
     // delay(500);
 
     //
-    tourner(0.4, 0.4, 20, 10., 90);
+    /*tourner(0.4, 0.4, 20, 10., 90);
     avancer(0., 0, 0.4, 0);
     delay(500);
 
@@ -701,29 +843,14 @@ void loop() { //test pour l'avance
     avancer(100., 40, 0., 0.95);
     avancer(-200., 100, 0.95, -0.95);
     avancer(100., 100, -0.95, 0.95);
-    avancer(4000., 100, 0.95, 0.);
+    avancer(4000., 100, 0.95, 0.);*/
   }
 
   if(ROBUS_IsBumper(FRONT))
   { 
-    float anglepresent=0;
-    for (int i=1; i<=15; i++)
-    {
-      avancer(0, 50, 0, .4);
-      avancer(20, 0, .4, .4);
-      avancer(0, 50, .4, 0);
-      delay(200);
-      avancer(0,0,0,0);
-      anglepresent= spinInfra(anglepresent, 1);
-      avancer(0, 50, 0, -.4);
-      avancer(-20, 0, -.4, -.4);
-      avancer(0, 50, -.4, 0); 
-      delay(200);
-      avancer(0,0,0,0);
-      anglepresent= spinInfra(anglepresent, -1);
-      /*Serial.print ("lecture no");
-      Serial.println (i);
-      Serial.println (infraToCm(ROBUS_ReadIR(0)));*/
-    }
+    
+    Protecc();
+    
+    
   }
 }
