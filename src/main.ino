@@ -47,6 +47,17 @@ const double circonference = (2. * 38 / 10 * PI);
 //LEFT 0, RIGHT 1, FRONT 2, REAR 3
 //constante clics/cm;
 
+//variables et constante pour ecoute sifflet
+boolean check = false;
+unsigned long timer = 0;
+boolean sifflet = false;
+//délai entre les deux checks du micro
+const float DELAY2 = 240; //peut surement etre plus petit
+//changer le treshold si des sons aléatoire sont entendus
+int treshold = 385;
+//pin output pour 5khz
+int pin_5khz = 8;
+
 
 /* ****************************************************************************
 Vos propres fonctions sont creees ici
@@ -479,6 +490,40 @@ void spin(float v, double angle){
 
 }
 
+void ecouteSifflet(){
+  //check temps actuel
+  unsigned long newMillis = millis();
+  
+  //check delay
+  if((newMillis - timer) >= DELAY2){
+    //update le timer si delay passe
+    timer = newMillis;
+  
+    //check once 
+    if(!check && analogRead(pin_5khz) > treshold){
+      //Serial.println("1 triggered at ");
+      //Serial.println(analogRead(pin_5khz));
+      //Serial.println("!");
+      //Serial.println();
+      check = true;
+    }
+    //check again
+    else if(check && analogRead(pin_5khz) > treshold){
+      //Serial.println("2 triggered at ");
+      //Serial.println(analogRead(pin_5khz));
+      //Serial.println("!");
+      sifflet = true;
+      check=false;
+    }
+    //if the checks fail either random noise or no whistle
+    else{
+      check=false;
+      sifflet = false;
+    }
+
+  }
+}
+
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
 //la plus basse soit sur MOTOR_MASTER ou MOTOR_SLAVE.
 
@@ -503,52 +548,21 @@ Fonctions de boucle infini (loop())
 **************************************************************************** */
 // -> Se fait appeler perpetuellement suite au "setup"
 
-void loop() { //test pour l'avance
+void loop() {
   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
   delay(10);// Delais pour décharger le CPU
   MOTOR_SetSpeed(LEFT, 0);
   MOTOR_SetSpeed(RIGHT, 0);
- /* if(ROBUS_IsBumper(REAR)){
-    Serial.println("0");
-    Serial.println(analogRead(0));
-    Serial.println("1");
-    Serial.println(analogRead(1));
-    Serial.println("2");
-    Serial.println(analogRead(2));
-    Serial.println("3");
-    Serial.println(analogRead(3));
-    Serial.println("4");
-    Serial.println(analogRead(4));
-    Serial.println("5");
-    Serial.println(analogRead(5));
-    Serial.println("6");
-    Serial.println(analogRead(6));
-    Serial.println("7");
-    Serial.println(analogRead(7));
-    Serial.println("8");
-    Serial.println(analogRead(8));
-    Serial.println("9");
-    Serial.println(analogRead(9));
-    Serial.println("10");
-    Serial.println(analogRead(10));
-    Serial.println("11");
-    Serial.println(analogRead(11));
-    Serial.println("12");
-    Serial.println(analogRead(12));
-    Serial.println("13");
-    Serial.println(analogRead(13));
-    Serial.println("14");
-    Serial.println(analogRead(14));
-    Serial.println("15");
-    Serial.println(analogRead(15));
-    delay(1000);}
   }
-  */
-if(analogRead(8) > 385){
-   Serial.println("triggered at ");
-   Serial.println(analogRead(1));
-   Serial.println("!");
-   delay(240);
- }
+  
+  //tests du micro
+  if(!sifflet) 
+  {
+    ecouteSifflet();
+  }
+  if (sifflet){
+    delay(10000);
+    sifflet = false;
+  }
 }
 
