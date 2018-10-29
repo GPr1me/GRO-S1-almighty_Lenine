@@ -30,8 +30,7 @@ float erreurTotal;
 long int oldL;
 long int oldR;
 
-
-unsigned long lastMillis1 = 0;        //will store last time error was updated
+unsigned long lastMillis1 = 0; //will store last time error was updated
 const float DELAY = 20.0; //selon test effectues par l'equipe. 20 assez de precision. semble ok
 const float KI = 0.0007;//0.0005 ok
 const float KP = 0.00001;//0.00001 ok 
@@ -49,16 +48,19 @@ const double circonference = (2. * 38 / 10 * PI);
 //3200 coches par tour de roue
 //LEFT 0, RIGHT 1, FRONT 2, REAR 3
 //constante clics/cm;
+
+unsigned long lastMillis1 = 0; //will store last time error was updated
+
 //variables et constante pour ecoute sifflet
 boolean check = false;
 unsigned long timer = 0;
-boolean sifflet = false;
 //délai entre les deux checks du micro
 const float DELAY2 = 240; //peut surement etre plus petit
 //changer le treshold si des sons aléatoire sont entendus
 int treshold = 385;
 //pin output pour 5khz
 int pin_5khz = 8;
+unsigned long newMillis;
 
 /* ****************************************************************************
 Vos propres fonctions sont creees ici
@@ -118,6 +120,7 @@ double clic_to_cm(long int nb_de_clics)
 //La fonction est faite pour le moteur gauche en tant que MOTOR_MASTER
 void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
 {
+  
   //pas d'iterations, met les deux moteurs a la vitesse et adujste au besoin
   if(nb_iterations == 0){
     slaveAdjust(vF, ratio);
@@ -137,19 +140,20 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
       
       for (float i = vI; i <= vF;)
       {
-        unsigned long newMillis = millis();
+        
+        newMillis = millis();
         if(newMillis - lastMillis1 > DELAY ){
           //accelere avec adjustement
           slaveAdjust(i, ratio);
           lastMillis1 = newMillis;
           i+=n;
           
-          if (sifflet);
+          if (ecouteSifflet())
           {
             MOTOR_SetSpeed(RIGHT, 0);
             MOTOR_SetSpeed(LEFT, 0);
             delay(10000);
-            sifflet = false;
+            slaveAdjust(i , ratio);
           }
           /*if (Lava)
           {
@@ -168,18 +172,18 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
 
       for (float i = vI; i >= vF;)
       {
-        unsigned long newMillis = millis();
+        newMillis = millis();
         if(newMillis - lastMillis1 > DELAY ){
           //accelere avec ajustement
           slaveAdjust(i, ratio);
           lastMillis1 = newMillis;
           i+=n;
-          if (sifflet);
+          if (ecouteSifflet())
           {
             MOTOR_SetSpeed(RIGHT, 0);
             MOTOR_SetSpeed(LEFT, 0);
             delay(10000);
-            sifflet = false;
+            slaveAdjust(i, ratio);
           }
           /*if (Lava)
           {
@@ -306,11 +310,11 @@ float spinInfra(float angleprecedent, int sens)
   Serial.println(angleprecedent);
   spin(0.1, -angleprecedent);
   float anglepresent = adjustInfrarouge();
-  if (sens==1)
+  if (sens == 1)
     {
       spin(0.1 , anglepresent);
     }
-  else if (sens==-1)
+  else if (sens == -1)
     {
       anglepresent *= -1;
       spin(0.1 , anglepresent);
@@ -390,6 +394,13 @@ float infraToCm(int infra, int capteur)
 }
 //distance en cm a atteindre. Positive si avance, negative si recule
 void avancer(double distance, int iterations, float vI, float vF ,int fonction){ // si fonction == 0 -> protecc et si fonction == 1 -> attacc
+  if (ecouteSifflet())
+  {
+    MOTOR_SetSpeed(RIGHT, 0);
+    MOTOR_SetSpeed(LEFT, 0);
+    delay(10000);
+    
+  }
   if (fonction == 0)
   {
     //resets values for adjustement
@@ -402,9 +413,17 @@ void avancer(double distance, int iterations, float vI, float vF ,int fonction){
     unsigned long newMillis;
     //si doit avancer de reculons une fois atteint sa vitesse
     if(vF < 0){
+      if (ecouteSifflet())
+      {
+        MOTOR_SetSpeed(RIGHT, 0);
+        MOTOR_SetSpeed(LEFT, 0);
+        delay(10000);
+        
+      }
       //boucle pour atteindre distance desiree
       //clics vont etre negatifs alors distance negative
       while(clic_to_cm( clicNb_Left) > distance){
+        
         newMillis = millis();
         if(newMillis - lastMillis1 > DELAY )
         {
@@ -415,12 +434,12 @@ void avancer(double distance, int iterations, float vI, float vF ,int fonction){
             clicL = ENCODER_Read(LEFT);
             Attacc(infraToCm(ROBUS_ReadIR(1), 1));
           }
-          if (sifflet);
+          if (ecouteSifflet())
           {
             MOTOR_SetSpeed(RIGHT, 0);
             MOTOR_SetSpeed(LEFT, 0);
             delay(10000);
-            sifflet = false;
+
           }
           /*if (Lava)
           {
@@ -436,11 +455,20 @@ void avancer(double distance, int iterations, float vI, float vF ,int fonction){
 
     //si doit avancer de face a la fin une fois atteint sa vitesse
     else if(vF > 0){
+      if (ecouteSifflet())
+      {
+        MOTOR_SetSpeed(RIGHT, 0);
+        MOTOR_SetSpeed(LEFT, 0);
+        delay(10000);
+        
+      }
+
       //boucle pour atteindre la distance desiree
       //clics vont etre positifs alors distance positive
       while(clic_to_cm( clicNb_Left) < distance){
         newMillis = millis();
         if(newMillis - lastMillis1 > DELAY ){
+          
           slaveAdjust(vF, 0.);
           lastMillis1 = newMillis;
           if ((infraToCm(ROBUS_ReadIR(1), 1)) < 80 && infraToCm(ROBUS_ReadIR(1), 1)>10)
@@ -448,12 +476,12 @@ void avancer(double distance, int iterations, float vI, float vF ,int fonction){
             clicL = ENCODER_Read(LEFT);
             Attacc(infraToCm(ROBUS_ReadIR(1), 1));
           }
-          if (sifflet);
+          if (ecouteSifflet())
           {
             MOTOR_SetSpeed(RIGHT, 0);
             MOTOR_SetSpeed(LEFT, 0);
             delay(10000);
-            sifflet = false;
+            slaveAdjust(vF, 0.);
           }
           /*if (Lava)
           {
@@ -480,14 +508,31 @@ void avancer(double distance, int iterations, float vI, float vF ,int fonction){
     unsigned long newMillis;
     //si doit avancer de reculons une fois atteint sa vitesse
     if(vF < 0){
+      if (ecouteSifflet())
+      {
+        MOTOR_SetSpeed(RIGHT, 0);
+        MOTOR_SetSpeed(LEFT, 0);
+        delay(10000);
+    
+      }
+
       //boucle pour atteindre distance desiree
       //clics vont etre negatifs alors distance negative
       while(clic_to_cm( ENCODER_Read(LEFT))  > distance){
+        
         newMillis = millis();
         if(newMillis - lastMillis1 > DELAY )
         {
           slaveAdjust(vF, 0.);
           lastMillis1 = newMillis;
+        }
+        if (ecouteSifflet())
+        {
+          MOTOR_SetSpeed(RIGHT, 0);
+          MOTOR_SetSpeed(LEFT, 0);
+          delay(10000);
+          slaveAdjust(vF, 0.);
+          
         }
         
         //continue a faire la correction
@@ -497,6 +542,14 @@ void avancer(double distance, int iterations, float vI, float vF ,int fonction){
 
     //si doit avancer de face a la fin une fois atteint sa vitesse
     else if(vF > 0){
+      if (ecouteSifflet())
+      {
+        MOTOR_SetSpeed(RIGHT, 0);
+        MOTOR_SetSpeed(LEFT, 0);
+        delay(10000);
+        
+      }
+
       //boucle pour atteindre la distance desiree
       //clics vont etre positifs alors distance positive
       while(clic_to_cm(ENCODER_Read(LEFT)) < distance){
@@ -504,6 +557,14 @@ void avancer(double distance, int iterations, float vI, float vF ,int fonction){
         if(newMillis - lastMillis1 > DELAY ){
           slaveAdjust(vF, 0.);
           lastMillis1 = newMillis;
+        }
+
+        if (ecouteSifflet())
+        {
+          MOTOR_SetSpeed(RIGHT, 0);
+          MOTOR_SetSpeed(LEFT, 0);
+          delay(10000);
+          slaveAdjust(vF, 0.);
         }
 
         //continue a faire la correction
@@ -599,12 +660,24 @@ void tourner(float vI, float vF, int iterations, float rayon, double angle){
 //angle + a droite, angle - a gauche
 //vitesse de 0.4 assez vite
 void spin(float v, double angle){
+  if (ecouteSifflet())
+  {
+    MOTOR_SetSpeed(RIGHT, 0);
+    MOTOR_SetSpeed(LEFT, 0);
+    delay(10000);
+  }
+
   //angle + distance +, angle - distance -
   double distance = angle_to_cm(angle, (distance_entre_les_roues - (0.005 * 12) ) / -2.); 
   lastMillis1 = millis();
-  unsigned long newMillis;
   //spin a droite
     if(angle > 0){
+      if (ecouteSifflet())
+      {
+        MOTOR_SetSpeed(RIGHT, 0);
+        MOTOR_SetSpeed(LEFT, 0);
+        delay(10000);
+      }
       //valeurs mises a 0 pour ajustement
       resetAdjust();
       
@@ -614,16 +687,17 @@ void spin(float v, double angle){
       //wait till master reaches the distance
       //since corrected same distance
       while(distance > clic_to_cm(ENCODER_Read(LEFT))){
+        
         newMillis = millis();
         if(newMillis - lastMillis1 > DELAY ){
           adjustSpin(v);
           lastMillis1 = newMillis;
-          if (sifflet);
+          if (ecouteSifflet())
           {
             MOTOR_SetSpeed(RIGHT, 0);
             MOTOR_SetSpeed(LEFT, 0);
             delay(10000);
-            sifflet = false;
+            adjustSpin(v);
           }
           /*if (Lava)
           {
@@ -636,6 +710,13 @@ void spin(float v, double angle){
     }
     //spin a gauche avec angle -
     else{
+      if(ecouteSifflet())
+      {
+        MOTOR_SetSpeed(RIGHT, 0);
+        MOTOR_SetSpeed(LEFT, 0);
+        delay(10000);
+      }
+
       //valeurs mises a 0 pour ajustement
       resetAdjust();
 
@@ -646,12 +727,12 @@ void spin(float v, double angle){
         if(newMillis - lastMillis1 > DELAY ){
           adjustSpin(-v);
           lastMillis1 = newMillis;
-          if (sifflet);
+          if (ecouteSifflet())
           {
             MOTOR_SetSpeed(RIGHT, 0);
             MOTOR_SetSpeed(LEFT, 0);
             delay(10000);
-            sifflet = false;
+            adjustSpin(-v);
           }
           /*if (Lava)
           {
@@ -663,12 +744,13 @@ void spin(float v, double angle){
       MOTOR_SetSpeed(RIGHT, 0);
       resetAdjust();
     }
-  }
+}
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
 //la plus basse soit sur MOTOR_MASTER ou MOTOR_SLAVE.
-void ecouteSifflet(){
+
+boolean ecouteSifflet(){
   //check temps actuel
-  unsigned long newMillis = millis();
+  newMillis = millis();
   
   //check delay
   if((newMillis - timer) >= DELAY2){
@@ -682,23 +764,24 @@ void ecouteSifflet(){
       //Serial.println("!");
       //Serial.println();
       check = true;
+      return false;
     }
     //check again
     else if(check && analogRead(pin_5khz) > treshold){
       //Serial.println("2 triggered at ");
       //Serial.println(analogRead(pin_5khz));
       //Serial.println("!");
-      sifflet = true;
+      
       check=false;
+      return true;
     }
     //if the checks fail either random noise or no whistle
-    else{
-      check=false;
-      sifflet = false;
-    }
-
+    check = false;
+    return false;
   }
+  return false;
 }
+
 void Attacc(float distance_cible)
 {
   spin(0.4, 90);
@@ -713,14 +796,17 @@ void Attacc(float distance_cible)
 void Protecc(void)
 {
   float anglepresent=0;
+  Serial.println("where");
   while (!ROBUS_IsBumper(RIGHT))
   {
+    Serial.println(" are");
     avancer(20, 0, .2, .2, 0);
-    delay(200);
+    // delay(200);
     anglepresent= spinInfra(anglepresent, 1);
     avancer(-20, 0, -.2, -.2, 0);
-    delay(200);
+    // delay(200);
     anglepresent= spinInfra(anglepresent, -1);
+
   }
 }
 
