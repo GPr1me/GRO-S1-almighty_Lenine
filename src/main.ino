@@ -71,11 +71,19 @@ int treshold = 385;
 //pin output pour 5khz
 int pin_5khz = 8;
 
+//pour voir si il est rendu dans une couleur
+boolean reach_color = false;
+boolean verifyColor = false;
+unsigned long lastMillis5 = 0;
+
 //number of pin for LED
 unsigned char ledPin = 22;
 
-ADJDS311 color(ledPin);
+//current time when needed
+unsigned long newMillis;
 
+//constructors
+ADJDS311 color(ledPin);
 QTRSensorsAnalog qtr((unsigned char[]) {0, 1, 2, 3, 4, 5, 6, 7}, (unsigned char) 8, (unsigned char) 4,
  (unsigned char) QTR_NO_EMITTER_PIN);
 
@@ -148,7 +156,6 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
     slaveAdjust(vF, ratio);
   }
   else{
-    unsigned long newMillis;
     lastMillis1 = millis();
     //Puisque j'ai défini mon n comme étant vitesse finale - initiale, il va savoir tout seul
     //s'il faut qu'il incremente ou qu'il decremente 
@@ -382,7 +389,6 @@ void avancer(double distance, int iterations, float vI, float vF){
   //accelere/decelere jusqu'a vitesse finale
   ACC_MASTER(vI, vF, iterations, 0.);
   lastMillis1 = millis();
-  unsigned long newMillis;
   //si doit avancer de reculons une fois atteint sa vitesse
   if(vF < 0){
     //boucle pour atteindre distance desiree
@@ -442,7 +448,6 @@ void avancer(double distance, int iterations, float vI, float vF){
 //nouveau:
 //reagit au sifflet et arrete lorsqu'il l'entend
 void tourner(float vI, float vF, int iterations, float rayon, double angle){
-  unsigned long newMillis;
   float ratio = ratio_de_virage(rayon);
   //cas avec vitesse negative
   if(vF < 0){
@@ -562,7 +567,6 @@ void tourner(float vI, float vF, int iterations, float rayon, double angle){
 void spin(float v, double angle){
   //angle + distance +, angle - distance -
   double distance = angle_to_cm(angle, (distance_entre_les_roues - (0.005 * 12) ) / -2.); 
-  unsigned long newMillis;
   //spin a droite
   if(angle > 0){
     
@@ -652,9 +656,6 @@ void spin(float v, double angle){
 
 //code a executer si il entend un sifflet
 void entendSifflet(float v, float ratio){
-  
-  //sauvegarde le temps actuel
-  unsigned long newMillis;
   
   //commence le timer de 10 secondes
   lastMillis2 = millis();
@@ -764,9 +765,6 @@ void entendSifflet(float v, float ratio){
 //code a executer si il entend un sifflet pendant qu'il spin
 void entendSiffletSpin(float v){
 
-  //sauvegarde le temps actuel
-  unsigned long newMillis;
-  
   //commence le timer de 10 secondes
   lastMillis2 = millis();
 
@@ -829,8 +827,6 @@ void entendSiffletSpin(float v){
 }
 
 void ecouteSifflet(){
-  //check temps actuel
-  unsigned long newMillis = millis();
   
   //check delay
   if((newMillis - lastMillis4) >= DELAY3){
@@ -865,7 +861,6 @@ void ecouteSifflet(){
 //set inZone a vrai si dans la zone de vue
 //CHECK THIS NOWOWPWWOWOWOWOWWOWOW
 void zoneNoire(){
-  unsigned long newMillis = millis();
   unsigned int sensors[8];
   qtr.read(sensors);
 
@@ -897,6 +892,91 @@ void zoneNoire(){
 void panic(){
   avancer(-30, 10, 0, -0.95);
   spin(0.4, 135);
+}
+#pragma region couleur
+boolean red(){
+  return color.readRed()<=1023 && color.readRed()>=900 && color.readGreen()<=700 && color.readGreen()>=450 && color.readBlue()<=425 && color.readBlue()>=200;
+}
+boolean green(){
+  return color.readRed()<=350 && color.readRed()>=125 && color.readGreen()<=350 && color.readGreen()>=125 && color.readBlue()<=350 && color.readBlue()>=125;
+}
+boolean blue(){
+  return color.readRed()<=350 && color.readRed()>=200 && color.readGreen()<=350 && color.readGreen()>=200 && color.readBlue()<=400 && color.readBlue()>=215;
+}
+boolean yellow(){
+  return color.readRed()<=1023 && color.readRed()>=950 && color.readGreen()<=1023 && color.readGreen()>=950 && color.readBlue()<=525 && color.readBlue()>=375;
+}
+boolean white(){
+  return color.readRed()>=950 && color.readBlue()>=950 && color.readGreen()>=950 && color.readClear()>=950;
+}
+#pragma endregion
+
+int colorObserved(){
+  newMillis = millis();
+
+  if(newMillis - lastMillis5 >= 5){
+    lastMillis5 = newMillis;
+    
+    //hasn't checked color
+    if(!verifyColor){
+  
+      unsigned short red = color.readRed();
+      unsigned short blue = color.readBlue();
+      unsigned short green = color.readGreen();
+      //case if red
+      if(red <= 1023 && red >= 900 && green <= 700 && green >= 450 && blue <= 425 && blue >= 200){
+        verifyColor = true;
+      }
+      //case if green
+      else if(red <= 350 && red >= 125 && green <= 350 && green >= 125 && blue <= 350 && blue >= 125){
+        verifyColor = true;
+      }
+      //case if blue
+      else if(red <= 350 && red >= 200 && green <= 350 && green >= 200 && blue <= 400 && blue >= 215){
+        verifyColor = true;
+      }
+      //case if yellow
+      else if(red <= 1023 && red >= 950 && green <= 1023 && green >= 950 && blue <= 525 && blue >= 375){
+        verifyColor = true;
+      }
+      //case if white
+      else if(red >= 950 && blue >= 950 && green >= 950 && color.readClear() >= 950){
+        verifyColor = true;
+      }
+      //something else 
+      verifyColor = false;
+      return -1;
+    }
+    else if(verifyColor){
+      verifyColor = false;
+      unsigned short red = color.readRed();
+      unsigned short blue = color.readBlue();
+      unsigned short green = color.readGreen();
+      //case if red
+      if(red <= 1023 && red >= 900 && green <= 700 && green >= 450 && blue <= 425 && blue >= 200){
+        return 0;
+      }
+      //case if green
+      else if(red <= 350 && red >= 125 && green <= 350 && green >= 125 && blue <= 350 && blue >= 125){
+        return 1;
+      }
+      //case if blue
+      else if(red <= 350 && red >= 200 && green <= 350 && green >= 200 && blue <= 400 && blue >= 215){
+        return 2;
+      }
+      //case if yellow
+      else if(red <= 1023 && red >= 950 && green <= 1023 && green >= 950 && blue <= 525 && blue >= 375){
+        return 3;
+      }
+      //case if white
+      else if(red >= 950 && blue >= 950 && green >= 950 && color.readClear() >= 950){
+        return 4;
+      }
+      //something else 
+      return -1;
+    }
+  }
+  
 }
 
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
@@ -932,26 +1012,151 @@ Fonctions de boucle infini (loop())
 void loop() { //test pour l'avance
   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
   delay(10);// Delais pour décharger le CPU
-  MOTOR_SetSpeed(LEFT, 0);
-  MOTOR_SetSpeed(RIGHT, 0);
+  // MOTOR_SetSpeed(LEFT, 0);
+  // MOTOR_SetSpeed(RIGHT, 0);
 
   //doit commencer l'octogone
   if(ROBUS_IsBumper(REAR)){
   delay(5000);  
 
   }
-  Serial.print("R: "); 
-  Serial.print(color.readRed());
-  Serial.print(", G: ");
-  Serial.print(color.readGreen());
-  Serial.print(", B: "); 
-  Serial.print(color.readBlue());
-  Serial.print(", C: ");
-  Serial.print(color.readClear());
-  Serial.println();
+  // Serial.print("R: "); 
+  // Serial.print(color.readRed());
+  // Serial.print(", G: ");
+  // Serial.print(color.readGreen());
+  // Serial.print(", B: "); 
+  // Serial.print(color.readBlue());
+  // Serial.print(", C: ");
+  // Serial.print(color.readClear());
+  // Serial.println();
   
-  delay(500);
+  // delay(500);
+  switch(colorObserved()){
+    //red
+    case 0:
+      //actions
+      //sample
+      spin(0.3, 90);
+      avancer(0, 0, 0.4, 0);
+    break;
 
+    //green
+    case 1:
+      //actions
+      //sample
+      avancer(0, 0, 0.4, 0);
+    break;
+
+    //blue
+    case 2: 
+      //actions
+      //sample
+      spin(0.3, 180);
+    break;
+
+    //yellow
+    case 3: 
+      //actions
+      MOTOR_SetSpeed(LEFT, -0.3);
+      MOTOR_SetSpeed(RIGHT, 0.3);
+    break;
+
+    //white
+    //au cas qu'on veuille gerer le blanc
+    // case 4:
+      //actions
+    
+
+    //detecte pas la couleur ou pas la bonne
+    //devrait donc suivre la ligne
+    default:
+      //sample 
+      // MOTOR_SetSpeed(0, 0.2);
+      // MOTOR_SetSpeed(1, 0.2);
+
+      unsigned int sensors[8];  
+      
+      // obtenir les valeurs calibrées du senseur (dans un tableau de senseur)  
+      // ainsi que la position de la ligne dans une gamme de valeur de  
+      // 0 à 2000, avec 1000 retournée pour la ligne au milieu du senseur.  
+      int position = qtr.readLine(sensors);
+      
+      qtr.read(sensors);
+
+      
+      // Si tous les senseurs ont une très faible réflectance, alors prendre  
+      // un action appropriée pour cette situation.
+      //robot est perdue dans le blanc  
+      // if (sensors[0] < 50 && sensors[1] < 50 && sensors[2] < 50 && sensors[3] < 50 && sensors[4] < 50 && sensors[5] < 50 &&
+      //   sensors[6] < 50 && sensors[7] < 50)
+      // {   
+
+
+      // }
+      // else{
+
+      // Calculer l' "erreur" par rapport à la position de la ligne.  
+      // Nous allons faire en sorte que l'erreur = 0 lorsque la ligne est   
+      // placée sous le milieu du senseur (parce que c'est notre but).  
+      // L'erreur aura une valeur entre -1000 et +1000.   
+      // Si nous avons le senseur 0 à gauche et le senseur 2 à droite alors  
+      // une lecture d'erreur de -1000 signifie que nous voyons la ligne   
+      //  sur la gauche par rapport au centre du senseur alors qu'une   
+      // lecture de +1000 signifie que la ligne est sur la droite   
+      // par rapport au centre.  
+      int error = position - 3500;
+      // Serial.println(error);
+      // Serial.println();
+
+      if(-3500 == error){
+        // Serial.println("Hi");
+        MOTOR_SetSpeed(LEFT,0.4);
+        MOTOR_SetSpeed(RIGHT,0.1);
+      }
+      //si decale beaucoup a gauche
+      else if(-3500 < error && error <= -1500){
+        MOTOR_SetSpeed(LEFT,  0.4);
+        MOTOR_SetSpeed(RIGHT, 0.28);
+      }
+      //decale un peu a gauche
+      else if(-1500 < error && error <= -500){
+        MOTOR_SetSpeed(LEFT,  0.4);
+        MOTOR_SetSpeed(RIGHT, 0.35);
+      }
+      //check HERE
+      else if (-500 < error && error <= -10)
+      { 
+        MOTOR_SetSpeed(LEFT, 0.4);
+        MOTOR_SetSpeed(RIGHT, 0.39);
+  
+      }
+      else if(-10 < error && error < 10){
+        MOTOR_SetSpeed(LEFT, 0.4);
+        MOTOR_SetSpeed(RIGHT, 0.4);
+      }    
+      else if (10 <= error && error < 500){ 
+        MOTOR_SetSpeed(LEFT, 0.39);
+        MOTOR_SetSpeed(RIGHT,0.4); 
+      }  
+      else if(500<=error && error<1500){
+        MOTOR_SetSpeed(LEFT, 0.35);
+        MOTOR_SetSpeed(RIGHT,0.4);
+      }
+      else if(1500<=error && error<3500){
+        MOTOR_SetSpeed(LEFT, 0.28);
+        MOTOR_SetSpeed(RIGHT, 0.4);
+      }   
+      else if(error == 3500){
+        // Serial.println("Hello");
+        MOTOR_SetSpeed(LEFT,  0.1);
+        MOTOR_SetSpeed(RIGHT, 0.4);
+      }
+      
+      // }
+
+  }
+
+  
 }
 
 // if(ROBUS_IsBumper(REAR)){
