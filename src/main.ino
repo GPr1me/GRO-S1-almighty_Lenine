@@ -49,8 +49,6 @@ const double circonference = (2. * 38 / 10 * PI);
 //LEFT 0, RIGHT 1, FRONT 2, REAR 3
 //constante clics/cm;
 
-unsigned long lastMillis1 = 0; //will store last time error was updated
-
 //variables et constante pour ecoute sifflet
 boolean check = false;
 unsigned long timer = 0;
@@ -372,9 +370,9 @@ void adjustSpin(float master){
     oldR = ENCODER_Read(RIGHT);
   }
 }
-float infraToCm(int infra, int capteur)
+double infraToCm(int infra, int capteur)
 {
-  float cm = 0;
+  double cm = 0;
   if (capteur == 0)
   {
     if (infra >= 176)
@@ -782,7 +780,7 @@ boolean ecouteSifflet(){
   return false;
 }
 
-void Attacc(float distance_cible)
+void Attacc(double distance_cible)
 {
   spin(0.4, 90);
   avancer(0,10, 0, 0.7, 1);
@@ -838,7 +836,7 @@ void loop() { //test pour l'avance
   delay(10);// Delais pour décharger le CPU
   MOTOR_SetSpeed(LEFT, 0);
   MOTOR_SetSpeed(RIGHT, 0);
-  if(ROBUS_IsBumper(REAR)){
+  if(ROBUS_IsBumper(FRONT)){
 
     /*avancer(186, 20, 0, 0.8);
 
@@ -1007,7 +1005,7 @@ void loop() { //test pour l'avance
     avancer(4000., 100, 0.95, 0.);*/
   }
 
-  if(ROBUS_IsBumper(FRONT))
+  if(ROBUS_IsBumper(REAR))
   { 
     
     Protecc();
