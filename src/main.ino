@@ -13,7 +13,7 @@ Inclure les librairies de functions que vous voulez utiliser
 #include <LibRobus.h> // Essentielle pour utiliser RobUS
 #include <Stream.h>
 #include <QTRSensors.h>
-
+#include <ADJDS311.h>
 
 /* ****************************************************************************
 Variables globales et defines
@@ -71,6 +71,10 @@ int treshold = 385;
 //pin output pour 5khz
 int pin_5khz = 8;
 
+//number of pin for LED
+unsigned char ledPin = 22;
+
+ADJDS311 color(ledPin);
 
 QTRSensorsAnalog qtr((unsigned char[]) {0, 1, 2, 3, 4, 5, 6, 7}, (unsigned char) 8, (unsigned char) 4,
  (unsigned char) QTR_NO_EMITTER_PIN);
@@ -757,7 +761,7 @@ void entendSifflet(float v, float ratio){
 
 }
 
-//cod.e a executer si il entend un sifflet pendant qu'il spin
+//code a executer si il entend un sifflet pendant qu'il spin
 void entendSiffletSpin(float v){
 
   //sauvegarde le temps actuel
@@ -859,6 +863,7 @@ void ecouteSifflet(){
 }
 
 //set inZone a vrai si dans la zone de vue
+//CHECK THIS NOWOWPWWOWOWOWOWWOWOW
 void zoneNoire(){
   unsigned long newMillis = millis();
   unsigned int sensors[8];
@@ -907,6 +912,12 @@ Fonctions d'initialisation (setup)
 void setup(){
   BoardInit();
   Serial.begin(9600);
+  color.init();
+  color.ledOn();
+  
+  //call this shit when on white
+  // color.calibrate();
+
   correction = 0;
   oldL = 0;
   oldR = 0;
@@ -929,6 +940,17 @@ void loop() { //test pour l'avance
   delay(5000);  
 
   }
+  Serial.print("R: "); 
+  Serial.print(color.readRed());
+  Serial.print(", G: ");
+  Serial.print(color.readGreen());
+  Serial.print(", B: "); 
+  Serial.print(color.readBlue());
+  Serial.print(", C: ");
+  Serial.print(color.readClear());
+  Serial.println();
+  
+  delay(500);
 
 }
 
