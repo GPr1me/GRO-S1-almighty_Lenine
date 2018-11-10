@@ -30,6 +30,14 @@ float erreurTotal;
 long int oldL;
 long int oldR;
 
+//valeur pour suiveur de ligne
+
+float vmax=0.8;
+float v1=0.4*vmax;
+float v2=0.6*vmax;
+float v3=0.8*vmax;
+float v4=0.97*vmax;
+
 unsigned long lastMillis1 = 0;        //will store last time error was updated
 unsigned long lastMillis2 = 0; //will store time for whistle pause without exterior timer
 unsigned long lastMillis3 = 0; //will store time for black zone detection
@@ -52,7 +60,6 @@ const double circonference = (2. * 38 / 10 * PI);
 //constante clics/cm;
 
 //variables pour si il entend le sifflet
-boolean sifflet = false;
 const float ITERATIONSIFFLET = 20.;
 
 //variable pour si dans zone zone noire 
@@ -65,11 +72,11 @@ const int NOIR = 500;
 boolean check = false;
 unsigned long lastMillis4 = 0;
 //délai entre les deux checks du micro
-const float DELAY3 = 240; //peut surement etre plus petit
+const float DELAY3 = 350; //peut surement etre plus petit
 //changer le treshold si des sons aléatoire sont entendus
-int treshold = 385;
+int treshold = 440; //415 //500 //
 //pin output pour 5khz
-int pin_5khz = 8;
+int pin_5khz = 8; 
 
 //pour voir si il est rendu dans une couleur
 boolean reach_color = false;
@@ -81,6 +88,26 @@ unsigned char ledPin = 22;
 
 //current time when needed
 unsigned long newMillis;
+
+//timer for the octogone
+unsigned long matchTime = 0;
+boolean startMatch = false;
+
+
+enum Couleurs
+{
+  Red,
+  Blue,
+  Green,
+  Yellow,
+  White,
+  Black,
+  None,
+};
+
+//dernier couleur;
+Couleurs lastColor = White;
+int iterations = 0;
 
 //constructors
 ADJDS311 color(ledPin);
@@ -147,11 +174,10 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
   //pas d'iterations, met les deux moteurs a la vitesse et adujste au besoin
   if(nb_iterations == 0){
     //si entend un sifflet pendant son execution
-    if(sifflet){
+    if(ecouteSifflet()){
       //garde temps ecoule pour le timer 
       deltaT = 0;
       entendSifflet(vI, ratio);
-      sifflet = false;
     }
     slaveAdjust(vF, ratio);
   }
@@ -172,16 +198,15 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
       {
         
         //si entend un sifflet pendant son execution
-        if(sifflet){
+        if(ecouteSifflet()){
           //garde temps ecoule pour le timer 
           deltaT = newMillis - lastMillis1;
           entendSifflet(i, ratio);
-          sifflet = false;
         }
 
         newMillis = millis();
 
-        if(newMillis - lastMillis1 > DELAY ){
+        if(newMillis - lastMillis1 >= DELAY ){
           //accelere avec adjustement
           slaveAdjust(i, ratio);
           lastMillis1 = newMillis;
@@ -200,15 +225,14 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
       for (float i = vI; i >= vF;)
       {
         //si entend un sifflet pendant son execution
-        if(sifflet){
+        if(ecouteSifflet()){
           //garde temps ecoule pour le timer 
           deltaT = newMillis - lastMillis1;
           entendSifflet(i, ratio);
-          sifflet = false;
         }
 
         newMillis = millis();
-        if(newMillis - lastMillis1 > DELAY ){
+        if(newMillis - lastMillis1 >= DELAY ){
           //accelere avec ajustement
           slaveAdjust(i, ratio);
           lastMillis1 = newMillis;
@@ -222,11 +246,10 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
     else
     {
       //si entend un sifflet pendant son execution
-      if(sifflet){
+      if(ecouteSifflet()){
         //garde temps ecoule pour le timer 
         deltaT = newMillis - lastMillis1;
         entendSifflet(vF, ratio);
-        sifflet = false;
       }
       slaveAdjust(vF, ratio); 
     }
@@ -249,7 +272,7 @@ void resetAdjust(){
 //ratio: - gauche, + droite
 void slaveAdjust(float master, float ratio)
 {
-  // Serial.println(ratio);
+  // // serial.println(ratio);
   
   //ratio + tourne a droite alors relentie la droite
   //master set a droite vu que roue la plus lente
@@ -262,13 +285,13 @@ void slaveAdjust(float master, float ratio)
     // garde l'erreur trouve pour cette lecture
     erreur = ( (ENCODER_Read(RIGHT) - oldR) - (ENCODER_Read(LEFT) - oldL) / ratio ); //ancien test * -ratio sur left
     erreurTotal = ( ENCODER_Read(RIGHT) - ENCODER_Read(LEFT) / ratio ); //ancien test * -ratio sur LEFT
-    // Serial.print(erreur);
-    // Serial.print("   ");  
-    // Serial.print(erreurTotal);
-    // Serial.print("   ");
-    // Serial.println(correction);
+    // // serial.print(erreur);
+    // // serial.print("   ");  
+    // // serial.print(erreurTotal);
+    // // serial.print("   ");
+    // // serial.println(correction);
     correction += KI * erreur + KP * erreurTotal;
-    // Serial.println(correction);
+    // // serial.println(correction);
     
 
     //new placement start of correction
@@ -291,13 +314,13 @@ void slaveAdjust(float master, float ratio)
     //garde l'erreur trouve pour cette lecture
     erreur = ( (ENCODER_Read(LEFT) - oldL) - (ENCODER_Read(RIGHT) - oldR) / -ratio ); //ancien test * -ratio sur left
     erreurTotal = ( ENCODER_Read(LEFT) - ENCODER_Read(RIGHT) / -ratio ); //ancien test * -ratio sur LEFT
-    // Serial.print(erreur);
-    // Serial.print("   ");  
-    // Serial.print(erreurTotal);
-    // Serial.print("   ");
-    // Serial.println(correction);
+    // // serial.print(erreur);
+    // // serial.print("   ");  
+    // // serial.print(erreurTotal);
+    // // serial.print("   ");
+    // // serial.println(correction);
     correction += KI * erreur + KP * erreurTotal;
-    // Serial.println(correction);
+    // // serial.println(correction);
 
     //new placement for correction
     MOTOR_SetSpeed(LEFT, (master/ -ratio));
@@ -313,13 +336,13 @@ void slaveAdjust(float master, float ratio)
     //garde l'erreur trouve pour cette lecture
     erreur = ((ENCODER_Read(LEFT) - oldL) - (ENCODER_Read(RIGHT) - oldR));
     erreurTotal = (ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
-    // Serial.print(erreur);
-    // Serial.print("   ");  
-    // Serial.print(erreurTotal);
-    // Serial.print("   ");
-    // Serial.println(correction);
+    // // serial.print(erreur);
+    // // serial.print("   ");  
+    // // serial.print(erreurTotal);
+    // // serial.print("   ");
+    // // serial.println(correction);
     correction += KI * erreur + KP * erreurTotal;
-    // Serial.println(correction);
+    // // serial.println(correction);
 
     //new placement for correction
     MOTOR_SetSpeed(LEFT, master);
@@ -395,15 +418,14 @@ void avancer(double distance, int iterations, float vI, float vF){
     //clics vont etre negatifs alors distance negative
     while(clic_to_cm( ENCODER_Read(LEFT) ) > distance){
       //si entend un sifflet pendant son execution
-      if(sifflet){
+      if(ecouteSifflet()){
         //garde temps ecoule pour le timer 
         deltaT = newMillis - lastMillis1;
         entendSifflet(vF, 0.);
-        sifflet = false;
       }
 
       newMillis = millis();
-      if(newMillis - lastMillis1 > DELAY ){
+      if(newMillis - lastMillis1 >= DELAY ){
         slaveAdjust(vF, 0.);
         lastMillis1 = newMillis;
       }
@@ -419,15 +441,14 @@ void avancer(double distance, int iterations, float vI, float vF){
     //clics vont etre positifs alors distance positive
     while(clic_to_cm( ENCODER_Read(LEFT) ) < distance){
       //si entend un sifflet pendant son execution
-      if(sifflet){
+      if(ecouteSifflet()){
         //garde temps ecoule pour le timer 
         deltaT = newMillis - lastMillis1;
         entendSifflet(vF, 0.);
-        sifflet = false;
       }
 
       newMillis = millis();
-      if(newMillis - lastMillis1 > DELAY ){
+      if(newMillis - lastMillis1 >= DELAY ){
         slaveAdjust(vF, 0.);
         lastMillis1 = newMillis;
       }
@@ -462,15 +483,14 @@ void tourner(float vI, float vF, int iterations, float rayon, double angle){
       while(angle_to_cm(angle, -rayon) > -clic_to_cm(ENCODER_Read(RIGHT)) ){
 
         //si entend un sifflet pendant son execution
-        if(sifflet){
+        if(ecouteSifflet()){
           //garde temps ecoule pour le timer 
           deltaT = newMillis - lastMillis1;
           entendSifflet(vF, ratio);
-          sifflet = false;
         }
 
         newMillis = millis();
-        if(newMillis - lastMillis1 > DELAY ){
+        if(newMillis - lastMillis1 >= DELAY ){
           slaveAdjust(vF, ratio);
           lastMillis1 = newMillis;
         }
@@ -484,15 +504,14 @@ void tourner(float vI, float vF, int iterations, float rayon, double angle){
       while(angle_to_cm(angle, rayon) > -clic_to_cm(ENCODER_Read(LEFT)) ){
 
         //si entend un sifflet pendant son execution
-        if(sifflet){
+        if(ecouteSifflet()){
           //garde temps ecoule pour le timer 
           deltaT = newMillis - lastMillis1;
           entendSifflet(vF, ratio);
-          sifflet = false;
         }
 
         newMillis = millis();
-        if(newMillis - lastMillis1 > DELAY ){
+        if(newMillis - lastMillis1 >= DELAY ){
           slaveAdjust(vF, ratio);
           lastMillis1 = newMillis;
         }
@@ -519,15 +538,14 @@ void tourner(float vI, float vF, int iterations, float rayon, double angle){
       while(angle_to_cm(angle, -rayon) > clic_to_cm(ENCODER_Read(RIGHT)) ){
 
         //si entend un sifflet pendant son execution
-        if(sifflet){
+        if(ecouteSifflet()){
           //garde temps ecoule pour le timer 
           deltaT = newMillis - lastMillis1;
           entendSifflet(vF, ratio);
-          sifflet = false;
         }
 
         newMillis = millis();
-        if(newMillis - lastMillis1 > DELAY ){
+        if(newMillis - lastMillis1 >= DELAY ){
           slaveAdjust(vF, ratio);
           lastMillis1 = newMillis;
         }
@@ -539,15 +557,14 @@ void tourner(float vI, float vF, int iterations, float rayon, double angle){
       while(angle_to_cm(angle, rayon) > clic_to_cm(ENCODER_Read(LEFT))){
 
         //si entend un sifflet pendant son execution
-        if(sifflet){
+        if(ecouteSifflet()){
           //garde temps ecoule pour le timer 
           deltaT = newMillis - lastMillis1;
           entendSifflet(vF, ratio);
-          sifflet = false;
         }
 
         newMillis = millis();
-        if(newMillis - lastMillis1 > DELAY ){
+        if(newMillis - lastMillis1 >= DELAY ){
           slaveAdjust(vF, ratio);
           lastMillis1 = newMillis;
         }
@@ -571,7 +588,7 @@ void spin(float v, double angle){
   if(angle > 0){
     
     //si entend un sifflet a l'arret
-    if(sifflet){
+    if(ecouteSifflet()){
       entendSiffletSpin(0);
     }
 
@@ -592,7 +609,7 @@ void spin(float v, double angle){
     while(distance > clic_to_cm(ENCODER_Read(LEFT))){
       
       //si entend un sifflet en tournant a droite
-      if(sifflet){
+      if(ecouteSifflet()){
         newMillis = millis();
 
         //garde temps ecoule pour le timer 
@@ -603,7 +620,7 @@ void spin(float v, double angle){
       }
 
       newMillis = millis();
-      if(newMillis - lastMillis1 > DELAY ){
+      if(newMillis - lastMillis1 >= DELAY ){
         adjustSpin(v);
         lastMillis1 = newMillis;
       }    
@@ -615,7 +632,7 @@ void spin(float v, double angle){
   else{
 
     //si entend un sifflet a l'arret
-    if(sifflet){
+    if(ecouteSifflet()){
       entendSiffletSpin(0);
     }
 
@@ -633,7 +650,7 @@ void spin(float v, double angle){
     while(-distance > clic_to_cm(ENCODER_Read(RIGHT))){
 
       //si entend un sifflet pendant en tournant a gauche
-      if(sifflet){
+      if(ecouteSifflet()){
         newMillis = millis();
 
         //garde temps ecoule pour le timer 
@@ -643,7 +660,7 @@ void spin(float v, double angle){
       }
 
       newMillis = millis();
-      if(newMillis - lastMillis1 > DELAY ){
+      if(newMillis - lastMillis1 >= DELAY ){
         adjustSpin(-v);
         lastMillis1 = newMillis;
       }
@@ -677,7 +694,7 @@ void entendSifflet(float v, float ratio){
     {
       newMillis = millis();
       
-      if(newMillis - lastMillis1 > DELAY ){
+      if(newMillis - lastMillis1 >= DELAY ){
         //decelere avec adjustement
         slaveAdjust(i, ratio);
         lastMillis1 = newMillis;
@@ -686,7 +703,7 @@ void entendSifflet(float v, float ratio){
     }
     
     //attends 10 secondes
-    while(10000 > millis() - lastMillis2){}
+    while(10000 >= millis() - lastMillis2){}
 
     //restart timer for acceleration
     lastMillis1 = millis();
@@ -695,7 +712,7 @@ void entendSifflet(float v, float ratio){
     {
       newMillis = millis();
       
-      if(newMillis - lastMillis1 > DELAY ){
+      if(newMillis - lastMillis1 >= DELAY ){
         //decelere avec adjustement
         slaveAdjust(i, ratio);
         lastMillis1 = newMillis;
@@ -705,7 +722,7 @@ void entendSifflet(float v, float ratio){
 
     //reset le temps a la valeur avant d'entendre le sifflet
     lastMillis1 = millis() - deltaT;
-
+    
   }
   else if (v > 0)
   {
@@ -718,7 +735,7 @@ void entendSifflet(float v, float ratio){
     for (float i = v; i >= 0;)
     {
       newMillis = millis();
-      if(newMillis - lastMillis1 > DELAY ){
+      if(newMillis - lastMillis1 >= DELAY ){
         //decelere avec ajustement
         slaveAdjust(i, ratio);
         lastMillis1 = newMillis;
@@ -727,7 +744,7 @@ void entendSifflet(float v, float ratio){
     }
 
     //attends 10 secondes
-    while(10000 > millis() - lastMillis2){}
+    while(10000 >= millis() - lastMillis2){}
 
     //timer utilise pour les accelerations/decelerations
     lastMillis1 = millis();
@@ -735,7 +752,7 @@ void entendSifflet(float v, float ratio){
     for (float i = 0; i <= v;)
     {
       newMillis = millis();
-      if(newMillis - lastMillis1 > DELAY ){
+      if(newMillis - lastMillis1 >= DELAY ){
         //decelere avec ajustement
         slaveAdjust(i, ratio);
         lastMillis1 = newMillis;
@@ -745,7 +762,7 @@ void entendSifflet(float v, float ratio){
 
     //reset le temps a la valeur avant d'entendre le sifflet
     lastMillis1 = millis() - deltaT;
-
+    
   }
   //si a l'arret lors du coup de sifflet
   else{
@@ -753,13 +770,13 @@ void entendSifflet(float v, float ratio){
     MOTOR_SetSpeed(LEFT, 0.);
     MOTOR_SetSpeed(RIGHT, 0.);
     //attends 10 secondes
-    while(10000 > millis() - lastMillis2){}
+    while(10000 >= millis() - lastMillis2){}
 
     //reset le temps a la valeur avant d'entendre le sifflet
     lastMillis1 = millis() - deltaT;
-
+    
   }
-
+  
 }
 
 //code a executer si il entend un sifflet pendant qu'il spin
@@ -779,14 +796,13 @@ void entendSiffletSpin(float v){
     MOTOR_SetSpeed(RIGHT, 0.);
 
     //attend 10 secondes
-    while(10000 > millis() - lastMillis2){}
+    while(10000 >= millis() - lastMillis2){}
     
     //reset le timer comme avant le sifflet
     lastMillis1 = millis() - deltaT;
 
     //remet le robot en marche
     adjustSpin(v);
-    sifflet = false;
   }
 
   //si entend un sifflet pendant en tournant a gauche
@@ -800,14 +816,13 @@ void entendSiffletSpin(float v){
     MOTOR_SetSpeed(RIGHT, 0.);
 
     //attend 10 secondes
-    while(10000 > millis() - lastMillis2){}
+    while(10000 >= millis() - lastMillis2){}
     
     //reset le timer comme avant le sifflet
     lastMillis1 = millis() - deltaT;
 
     //remet le robot en marche
     adjustSpin(-v);
-    sifflet = false;
   }
 
   //si entend un sifflet a l'arret
@@ -822,41 +837,73 @@ void entendSiffletSpin(float v){
     //attend 10 secondes
     while(10000 > millis() - lastMillis2){}
     
-    sifflet = false;
   }
 }
 
-void ecouteSifflet(){
-  
+boolean ecouteSifflet(){
+  newMillis = millis();
   //check delay
   if((newMillis - lastMillis4) >= DELAY3){
     //update le timer si delay passe
     lastMillis4 = newMillis;
   
     //check once 
-    if(!check && analogRead(pin_5khz) > treshold){
-      //Serial.println("1 triggered at ");
-      //Serial.println(analogRead(pin_5khz));
-      //Serial.println("!");
-      //Serial.println();
+    if(!check && analogRead(pin_5khz) >= treshold){
+      //// serial.println("1 triggered at ");
+      //// serial.println(analogRead(pin_5khz));
+      //// serial.println("!");
+      //// serial.println();
       check = true;
+      return false;
     }
     //check again
-    else if(check && analogRead(pin_5khz) > treshold){
-      //Serial.println("2 triggered at ");
-      //Serial.println(analogRead(pin_5khz));
-      //Serial.println("!");
-      sifflet = true;
+    else if(check && analogRead(pin_5khz) >= treshold){
+      //// serial.println("2 triggered at ");
+      //// serial.println(analogRead(pin_5khz));
+      //// serial.println("!");
       check = false;
+      return true;
     }
     //if the checks fail either random noise or no whistle
-    else{
-      check = false;
-      sifflet = false;
-    }
+    check = false;
+    return false;
+    
 
   }
+  return false;
 }
+
+// void ecouteSifflet(){
+//   newMillis = millis();
+//   //check delay
+//   if((newMillis - lastMillis4) >= DELAY3){
+//     //update le timer si delay passe
+//     lastMillis4 = newMillis;
+  
+//     //check once 
+//     if(!check && analogRead(pin_5khz) >= treshold){
+//       //// serial.println("1 triggered at ");
+//       //// serial.println(analogRead(pin_5khz));
+//       //// serial.println("!");
+//       //// serial.println();
+//       check = true;
+//     }
+//     //check again
+//     else if(check && analogRead(pin_5khz) >= treshold){
+//       //// serial.println("2 triggered at ");
+//       //// serial.println(analogRead(pin_5khz));
+//       //// serial.println("!");
+//       sifflet = true;
+//       check = false;
+//     }
+//     //if the checks fail either random noise or no whistle
+//     else{
+//       check = false;
+//       sifflet = false;
+//     }
+
+//   }
+// }
 
 //set inZone a vrai si dans la zone de vue
 //CHECK THIS NOWOWPWWOWOWOWOWWOWOW
@@ -894,24 +941,55 @@ void panic(){
   spin(0.4, 135);
 }
 #pragma region couleur
-boolean red(){
-  return color.readRed()<=1023 && color.readRed()>=900 && color.readGreen()<=700 && color.readGreen()>=450 && color.readBlue()<=425 && color.readBlue()>=200;
-}
-boolean green(){
-  return color.readRed()<=350 && color.readRed()>=125 && color.readGreen()<=350 && color.readGreen()>=125 && color.readBlue()<=350 && color.readBlue()>=125;
-}
-boolean blue(){
-  return color.readRed()<=350 && color.readRed()>=200 && color.readGreen()<=350 && color.readGreen()>=200 && color.readBlue()<=400 && color.readBlue()>=215;
-}
-boolean yellow(){
-  return color.readRed()<=1023 && color.readRed()>=950 && color.readGreen()<=1023 && color.readGreen()>=950 && color.readBlue()<=525 && color.readBlue()>=375;
-}
-boolean white(){
-  return color.readRed()>=950 && color.readBlue()>=950 && color.readGreen()>=950 && color.readClear()>=950;
-}
-#pragma endregion
 
-int colorObserved(){
+// boolean ReadColor(Couleurs Color)
+// {
+//   int red = color.readRed();
+//   int green = color.readGreen();
+//   int blue = color.readBlue();;
+//   int iteration = 3;
+
+//   bool test = false;
+
+//   switch(Color)
+//   {
+//     case Red:
+//       return red<=1023 && red>=900 && green<=700 && green>=450 && blue<=425 && blue>=200;
+//     case Green:
+//       return red<=350 && red>=200 && green<=350 && green>=200 && blue<=400 && blue>=215;
+//     case Blue:
+//       return red<=350 && red>=125 && green<=350 && green>=125 && blue<=350 && blue>=125;
+//     case Yellow:
+//     // test = red<=1023 && red>=950 && green<=1023 && green>=950 && blue<=525 && blue>=375;
+    
+//     // // serial.println("yellow : R:");
+//     // // serial.print(red);
+//     // // serial.print(" G: ");
+//     // // serial.print(green);
+//     // // serial.print(" B: ");
+//     // // serial.print(blue);
+//     // // serial.print(" resultat: ");
+//     // // serial.print(test);
+//     // return test;
+//       return red<=1023 && red>=950 && green<=1023 && green>=950 && blue<=525 && blue>=375;
+//     case White:
+//       return red>=875 && blue>=875 && green>=875 && color.readClear()>=875;
+//     case Black:
+//       return red <= 230 && blue <= 230 && green <= 230;
+//     default:
+//       return false;
+//   }
+// }
+
+void PrintColor(){
+  // serial.print("R: "); // serial.print(color.readRed());// serial.print(", ");
+  // serial.print("G: "); // serial.print(color.readGreen());// serial.print(", ");
+  // serial.print("B: "); // serial.print(color.readBlue());// serial.print(", ");
+  // serial.print("C: "); // serial.print(color.readClear());
+  // serial.println();
+}
+
+Couleurs colorObserved(){
   newMillis = millis();
 
   if(newMillis - lastMillis5 >= 5){
@@ -943,9 +1021,15 @@ int colorObserved(){
       else if(red >= 950 && blue >= 950 && green >= 950 && color.readClear() >= 950){
         verifyColor = true;
       }
-      //something else 
-      verifyColor = false;
-      return -1;
+      //case if black
+      else if(red <= 230 && blue <= 230 && green <= 230){
+        verifyColor = true;
+      }
+      else{
+        //something else 
+        verifyColor = false;
+      }
+      return lastColor;
     }
     else if(verifyColor){
       verifyColor = false;
@@ -954,30 +1038,41 @@ int colorObserved(){
       unsigned short green = color.readGreen();
       //case if red
       if(red <= 1023 && red >= 900 && green <= 700 && green >= 450 && blue <= 425 && blue >= 200){
-        return 0;
+          lastColor = Couleurs::Red;
+        return Couleurs::Red;
       }
       //case if green
       else if(red <= 350 && red >= 125 && green <= 350 && green >= 125 && blue <= 350 && blue >= 125){
-        return 1;
+        lastColor = Couleurs::Green;
+        return Couleurs::Green;
       }
       //case if blue
       else if(red <= 350 && red >= 200 && green <= 350 && green >= 200 && blue <= 400 && blue >= 215){
-        return 2;
+        lastColor = Couleurs::Blue;
+        return Couleurs::Blue;
       }
       //case if yellow
       else if(red <= 1023 && red >= 950 && green <= 1023 && green >= 950 && blue <= 525 && blue >= 375){
-        return 3;
+        lastColor = Couleurs::Yellow;
+        return Couleurs::Yellow;
       }
       //case if white
       else if(red >= 950 && blue >= 950 && green >= 950 && color.readClear() >= 950){
-        return 4;
+        lastColor = Couleurs::White;
+        return Couleurs::White;
       }
-      //something else 
-      return -1;
+      //case if black
+      else if(red <= 230 && blue <= 230 && green <= 230){
+        lastColor = Couleurs::Black;
+        return Couleurs::Black;
+      }
+      
     }
+    return lastColor;
   }
-  
+  return lastColor;
 }
+#pragma endregion 
 
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
 //la plus basse soit sur MOTOR_MASTER ou MOTOR_SLAVE.
@@ -991,7 +1086,7 @@ Fonctions d'initialisation (setup)
 
 void setup(){
   BoardInit();
-  Serial.begin(9600);
+  // serial.begin(9600);
   color.init();
   color.ledOn();
   
@@ -1009,155 +1104,557 @@ Fonctions de boucle infini (loop())
 **************************************************************************** */
 // -> Se fait appeler perpetuellement suite au "setup"
 
-void loop() { //test pour l'avance
-  // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
+unsigned long timer;
+unsigned long timer2;
+boolean checkInZone;
+
+void loop() 
+{
   delay(10);// Delais pour décharger le CPU
-  // MOTOR_SetSpeed(LEFT, 0);
-  // MOTOR_SetSpeed(RIGHT, 0);
+  unsigned long lastMillisMatch;
+  timer2 = millis();
+  MOTOR_SetSpeed(LEFT, 0);
+  MOTOR_SetSpeed(RIGHT, 0);
 
   //doit commencer l'octogone
   if(ROBUS_IsBumper(REAR)){
-  delay(5000);  
-
+    //attends 5 secondes et commence la match
+    delay(5000);
+    startMatch = true;
+    matchTime = millis();
+    lastMillisMatch = matchTime;
+    checkInZone = false;
+    lastMillis4 = 0;
   }
-  // Serial.print("R: "); 
-  // Serial.print(color.readRed());
-  // Serial.print(", G: ");
-  // Serial.print(color.readGreen());
-  // Serial.print(", B: "); 
-  // Serial.print(color.readBlue());
-  // Serial.print(", C: ");
-  // Serial.print(color.readClear());
-  // Serial.println();
   
-  // delay(500);
-  switch(colorObserved()){
-    //red
-    case 0:
-      //actions
-      //sample
-      spin(0.3, 90);
-      avancer(0, 0, 0.4, 0);
-    break;
+  // // serial.print("R: "); // serial.print(color.readRed());// serial.print(", ");
+  //   // serial.print("G: "); // serial.print(color.readGreen());// serial.print(", ");
+  //   // serial.print("B: "); // serial.print(color.readBlue());// serial.print(", ");
+  //   // serial.print("C: "); // serial.print(color.readClear());
+  //   // serial.println();
 
-    //green
-    case 1:
-      //actions
-      //sample
-      avancer(0, 0, 0.4, 0);
-    break;
+  while(startMatch){
+    //test pour l'avance
+    // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
+    float correction = 0;
 
-    //blue
-    case 2: 
-      //actions
-      //sample
-      spin(0.3, 180);
-    break;
+    // MOTOR_SetSpeed(LEFT, 0.9);
+    // MOTOR_SetSpeed(RIGHT, 0.9);
 
-    //yellow
-    case 3: 
-      //actions
-      MOTOR_SetSpeed(LEFT, -0.3);
-      MOTOR_SetSpeed(RIGHT, 0.3);
-    break;
-
-    //white
-    //au cas qu'on veuille gerer le blanc
-    // case 4:
-      //actions
+    /* MoveForward(0, 10, 0.7, 0);
     
-
-    //detecte pas la couleur ou pas la bonne
-    //devrait donc suivre la ligne
-    default:
-      //sample 
-      // MOTOR_SetSpeed(0, 0.2);
-      // MOTOR_SetSpeed(1, 0.2);
-
+    turnOnSelf(180, 0.5);
+    MoveForward(0, 10, 0, 0); */
+          
+    
+    unsigned long newMillis = millis();
+    if(newMillis - timer >= 1){
+      timer = newMillis;
       unsigned int sensors[8];  
-      
-      // obtenir les valeurs calibrées du senseur (dans un tableau de senseur)  
-      // ainsi que la position de la ligne dans une gamme de valeur de  
-      // 0 à 2000, avec 1000 retournée pour la ligne au milieu du senseur.  
-      int position = qtr.readLine(sensors);
-      
-      qtr.read(sensors);
+        
+        // obtenir les valeurs calibrées du senseur (dans un tableau de senseur)  
+        // ainsi que la position de la ligne dans une gamme de valeur de  
+        // 0 à 2000, avec 1000 retournée pour la ligne au milieu du senseur.  
+        int position = qtr.readLine(sensors);
+        
+        qtr.read(sensors);
 
-      
-      // Si tous les senseurs ont une très faible réflectance, alors prendre  
-      // un action appropriée pour cette situation.
-      //robot est perdue dans le blanc  
-      // if (sensors[0] < 50 && sensors[1] < 50 && sensors[2] < 50 && sensors[3] < 50 && sensors[4] < 50 && sensors[5] < 50 &&
-      //   sensors[6] < 50 && sensors[7] < 50)
-      // {   
+        // // serial.print(sensors[0]);
+        // // serial.print("  ");
+        // // serial.print(sensors[1]);
+        // // serial.print("  ");
+        // // serial.print(sensors[2]);
+        // // serial.print("  ");
+        // // serial.print(sensors[3]);
+        // // serial.print("  ");
+        // // serial.print(sensors[4]);
+        // // serial.print("  ");
+        // // serial.print(sensors[5]);
+        // // serial.print("  ");
+        // // serial.print(sensors[6]);
+        // // serial.print("  ");
+        // // serial.print(sensors[7]);
+        // // serial.println("  ");
+        // // serial.println("  ");
+          
 
-
-      // }
-      // else{
-
-      // Calculer l' "erreur" par rapport à la position de la ligne.  
-      // Nous allons faire en sorte que l'erreur = 0 lorsque la ligne est   
-      // placée sous le milieu du senseur (parce que c'est notre but).  
-      // L'erreur aura une valeur entre -1000 et +1000.   
-      // Si nous avons le senseur 0 à gauche et le senseur 2 à droite alors  
-      // une lecture d'erreur de -1000 signifie que nous voyons la ligne   
-      //  sur la gauche par rapport au centre du senseur alors qu'une   
-      // lecture de +1000 signifie que la ligne est sur la droite   
-      // par rapport au centre.  
-      int error = position - 3500;
-      // Serial.println(error);
-      // Serial.println();
-
-      if(-3500 == error){
-        // Serial.println("Hi");
-        MOTOR_SetSpeed(LEFT,0.4);
-        MOTOR_SetSpeed(RIGHT,0.1);
-      }
-      //si decale beaucoup a gauche
-      else if(-3500 < error && error <= -1500){
-        MOTOR_SetSpeed(LEFT,  0.4);
-        MOTOR_SetSpeed(RIGHT, 0.28);
-      }
-      //decale un peu a gauche
-      else if(-1500 < error && error <= -500){
-        MOTOR_SetSpeed(LEFT,  0.4);
-        MOTOR_SetSpeed(RIGHT, 0.35);
-      }
-      //check HERE
-      else if (-500 < error && error <= -10)
-      { 
-        MOTOR_SetSpeed(LEFT, 0.4);
-        MOTOR_SetSpeed(RIGHT, 0.39);
-  
-      }
-      else if(-10 < error && error < 10){
-        MOTOR_SetSpeed(LEFT, 0.4);
-        MOTOR_SetSpeed(RIGHT, 0.4);
-      }    
-      else if (10 <= error && error < 500){ 
-        MOTOR_SetSpeed(LEFT, 0.39);
-        MOTOR_SetSpeed(RIGHT,0.4); 
+    // Si tous les senseurs ont une très faible réflectance, alors prendre  
+    // un action appropriée pour cette situation.
+    //robot est perdue dans le blanc  
+    if (sensors[0] < 50 && sensors[1] < 50 && sensors[2] < 50 && sensors[3] < 50 && sensors[4] < 50 && sensors[5] < 50 &&
+    sensors[6] < 50 && sensors[7] < 50)
+    { 
+      //si entend un sifflet a l'arret
+      if(ecouteSifflet()){
+        entendSiffletSpin(0);
       }  
-      else if(500<=error && error<1500){
-        MOTOR_SetSpeed(LEFT, 0.35);
-        MOTOR_SetSpeed(RIGHT,0.4);
-      }
-      else if(1500<=error && error<3500){
-        MOTOR_SetSpeed(LEFT, 0.28);
-        MOTOR_SetSpeed(RIGHT, 0.4);
-      }   
-      else if(error == 3500){
-        // Serial.println("Hello");
-        MOTOR_SetSpeed(LEFT,  0.1);
-        MOTOR_SetSpeed(RIGHT, 0.4);
-      }
+      // // serial.println("arret moteurs");
+      // PrintColor();
       
-      // }
+      switch(colorObserved()){
+        //case white
+        case Couleurs::White:
+          // // serial.println("read white iterations: ");
 
-  }
+          //si entend un sifflet 
+          if(ecouteSifflet()){
+            entendSifflet(0.8, 0.);
+          }
+          // // serial.print(iterations);
+          if(iterations >= 3)
+          {
+            // // serial.println("Je dois être coincé, je recule");
+            avancer(-25, 10, 0, -0.5);
+            spin(0.5, -38);
+            
+            // // serial.println("iterations: ");
+            // // serial.print(iterations);
+            iterations = 0;
+          }
+          avancer(30, 8, 0, 0.8);
 
-  
+          //si entend un sifflet 
+          if(ecouteSifflet()){
+            entendSifflet(0.8, 0.);
+          }
+
+          iterations++;
+
+          break;
+        //case black
+        case Couleurs::Black:
+          // // serial.println("read black");
+        
+          //si entend un sifflet 
+          if(ecouteSifflet()){
+            entendSifflet(0.8, 0.);
+          }
+          // // serial.println("iterations: ");
+          // // serial.print(iterations);
+          if(iterations >= 3)
+          {
+            // // serial.println("Je dois être coincé, je recule");
+            avancer(-40, 10, 0, -0.5);
+            spin(0.5, -38);
+            iterations = 0;
+          }
+          avancer(30, 8, 0, 0.8);
+
+          //si entend un sifflet 
+          if(ecouteSifflet()){
+            entendSifflet(0.8, 0.);
+          }
+          iterations++;
+
+        break;
+        //every other case
+        default:
+          // // serial.println("What the fuck is going OOOOONNNN!!!");
+          //si entend un sifflet
+          if(ecouteSifflet()){
+            entendSifflet(0.8, 0.);
+          }
+          // // serial.println("iterations: ");
+          // // serial.print(iterations);
+          if(iterations >= 3)
+          {
+            // serial.println("Je dois être coincé, je recule");
+            spin(0.5, -150);
+            avancer(25, 10, 0, 0.4);
+            iterations = 0;
+          }
+          iterations++;
+          //si entend un sifflet 
+          if(ecouteSifflet()){
+            entendSifflet(0.8, 0.);
+          }
+          avancer(8, 2, 0, 0.8);
+          spin(0.5, 150);
+          avancer(-40, 10, 0, -0.8);
+      }
+    }  
+    else if(sensors[0] > 450 && sensors[1] > 450 && sensors[2] > 450 && sensors[3] > 450 && sensors[4] > 450 && sensors[5] > 450 &&
+    sensors[6] > 450 && sensors[7] > 450){
+      newMillis = millis();
+      //si entend un sifflet 
+      if(ecouteSifflet()){
+        entendSiffletSpin(0);
+      }
+      if(newMillis - timer2 >= 1000){
+        //update timer
+        timer2 = millis();
+        //premier check
+        if(!checkInZone){
+          checkInZone = true;  
+        }
+        else if(checkInZone){
+          checkInZone = false;
+          avancer(-10, 20, 0., -0.8);
+          //escape a gauche ou a droite
+          tourner(0., -0.8, 10, 30, 45);
+          tourner(0., -0.8, 10, -30, 45);
+        }
+      }  
+    }
+    else{
+
+        // Calculer l' "erreur" par rapport à la position de la ligne.  
+        // Nous allons faire en sorte que l'erreur = 0 lorsque la ligne est   
+        // placée sous le milieu du senseur (parce que c'est notre but).  
+        // L'erreur aura une valeur entre -1000 et +1000.   
+        // Si nous avons le senseur 0 à gauche et le senseur 2 à droite alors  
+        // une lecture d'erreur de -1000 signifie que nous voyons la ligne   
+        //  sur la gauche par rapport au centre du senseur alors qu'une   
+        // lecture de +1000 signifie que la ligne est sur la droite   
+        // par rapport au centre.  
+        int error = position - 3500;
+        // // serial.println(error);
+        // // serial.println();
+
+        if(-3500 == error){
+          //si entend un sifflet 
+          if(ecouteSifflet()){
+            entendSiffletSpin(0);
+          }
+          MOTOR_SetSpeed(LEFT,0.4);
+          MOTOR_SetSpeed(RIGHT,0.1);
+        }
+
+        //si decale beaucoup a gauche
+        else if(-3500 < error && error <= -1500){
+          //si entend un sifflet 
+          if(ecouteSifflet()){
+            entendSiffletSpin(0);
+          }
+          MOTOR_SetSpeed(LEFT,  0.4);
+          MOTOR_SetSpeed(RIGHT, 0.28);
+        }
+
+        //decale un peu a gauche
+        else if(-1500 < error && error <= -500){
+          //si entend un sifflet 
+          if(ecouteSifflet()){
+            entendSiffletSpin(0);
+          }
+          MOTOR_SetSpeed(LEFT,  0.4);
+          MOTOR_SetSpeed(RIGHT, 0.35);
+        }
+
+        //check HERE
+        else if (-500 < error && error <= -10)
+        { 
+          //si entend un sifflet 
+          if(ecouteSifflet()){
+            entendSiffletSpin(0);
+          }
+          MOTOR_SetSpeed(LEFT, 0.4);
+          MOTOR_SetSpeed(RIGHT, 0.39);
+    
+        }
+
+        else if(-10 < error && error < 10){
+          //si entend un sifflet 
+          if(ecouteSifflet()){
+            entendSiffletSpin(0);
+          }
+          MOTOR_SetSpeed(LEFT, 0.4);
+          MOTOR_SetSpeed(RIGHT, 0.4);
+        }    
+
+        else if (10 <= error && error < 500){ 
+          //si entend un sifflet 
+          if(ecouteSifflet()){
+            entendSiffletSpin(0);
+          }
+          MOTOR_SetSpeed(LEFT, 0.39);
+          MOTOR_SetSpeed(RIGHT,0.4); 
+        }  
+
+        else if(500<=error && error<1500){
+          //si entend un sifflet 
+          if(ecouteSifflet()){
+            entendSiffletSpin(0);
+          }
+          MOTOR_SetSpeed(LEFT, 0.35);
+          MOTOR_SetSpeed(RIGHT,0.4);
+        }
+
+        else if(1500<=error && error<3500){
+          //si entend un sifflet 
+          if(ecouteSifflet()){
+            entendSiffletSpin(0);
+          }
+          MOTOR_SetSpeed(LEFT, 0.28);
+          MOTOR_SetSpeed(RIGHT, 0.4);
+
+        }   
+
+        else if(error == 3500){
+          //si entend un sifflet 
+          if(ecouteSifflet()){
+            entendSiffletSpin(0);
+          }
+          MOTOR_SetSpeed(LEFT,  0.1);
+          MOTOR_SetSpeed(RIGHT, 0.4);
+        }
+        else{
+          //si entend un sifflet 
+          if(ecouteSifflet()){
+            entendSiffletSpin(0);
+          }
+          MOTOR_SetSpeed(LEFT,  0.5);
+          MOTOR_SetSpeed(RIGHT, 0.5);
+        }
+      }  
+    }
+    // matchTime = millis();
+    // //after 3 minutes end match
+    // if(matchTime - lastMillisMatch >= 180000){
+    //   startMatch = false;  
+    // } 
+  } 
 }
+
+// void loop() { //test pour l'avance
+//   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
+//   delay(10);// Delais pour décharger le CPU
+//   // MOTOR_SetSpeed(LEFT, 0);
+//   // MOTOR_SetSpeed(RIGHT, 0);
+//   unsigned long lastMillisMatch;
+
+//   //doit commencer l'octogone
+//   if(ROBUS_IsBumper(REAR)){
+//     // //attends 5 secondes et commence la match
+//     // delay(5000);
+//     // startMatch = true;
+//     // matchTime = millis();
+//     // lastMillisMatch = matchTime;
+//   }
+//   unsigned int sensors[8];  
+        
+//     // obtenir les valeurs calibrées du senseur (dans un tableau de senseur)  
+//     // ainsi que la position de la ligne dans une gamme de valeur de  
+//     // 0 à 2000, avec 1000 retournée pour la ligne au milieu du senseur.  
+//     int position = qtr.readLine(sensors);
+    
+//     qtr.read(sensors);
+
+    
+//     // Si tous les senseurs ont une très faible réflectance, alors prendre  
+//     // un action appropriée pour cette situation.
+//     //robot est perdue dans le blanc  
+//     // if (sensors[0] < 50 && sensors[1] < 50 && sensors[2] < 50 && sensors[3] < 50 && sensors[4] < 50 && sensors[5] < 50 &&
+//     //   sensors[6] < 50 && sensors[7] < 50)
+//     // {   
+
+
+//     // }
+//     // else{
+
+//     // Calculer l' "erreur" par rapport à la position de la ligne.  
+//     // Nous allons faire en sorte que l'erreur = 0 lorsque la ligne est   
+//     // placée sous le milieu du senseur (parce que c'est notre but).  
+//     // L'erreur aura une valeur entre -1000 et +1000.   
+//     // Si nous avons le senseur 0 à gauche et le senseur 2 à droite alors  
+//     // une lecture d'erreur de -1000 signifie que nous voyons la ligne   
+//     //  sur la gauche par rapport au centre du senseur alors qu'une   
+//     // lecture de +1000 signifie que la ligne est sur la droite   
+//     // par rapport au centre.  
+//     int error = position - 3500;
+//     // // serial.println(error);
+//     // // serial.println();
+
+//     if(-3500 == error){
+//       // // serial.println("Hi");
+//       MOTOR_SetSpeed(LEFT,vmax);
+//       MOTOR_SetSpeed(RIGHT,v1);
+//     }
+//     //si decale beaucoup a gauche
+//     else if(-3500 < error && error <= -1500){
+//       MOTOR_SetSpeed(LEFT,  vmax);
+//       MOTOR_SetSpeed(RIGHT, v2);
+//     }
+//     //decale un peu a gauche
+//     else if(-1500 < error && error <= -500){
+//       MOTOR_SetSpeed(LEFT,  vmax);
+//       MOTOR_SetSpeed(RIGHT, v3);
+//     }
+//     //check HERE
+//     else if (-500 < error && error <= -10)
+//     { 
+//       MOTOR_SetSpeed(LEFT, vmax);
+//       MOTOR_SetSpeed(RIGHT, v4);
+
+//     }
+//     else if(-10 < error && error < 10){
+//       newMillis = millis();
+//       if(newMillis - lastMillis1 >= DELAY ){
+//         slaveAdjust(vmax, 0.);
+//         lastMillis1 = newMillis;
+//       }
+//     }    
+//     else if (10 <= error && error < 500){ 
+//       MOTOR_SetSpeed(LEFT, v4);
+//       MOTOR_SetSpeed(RIGHT,vmax); 
+//     } 
+//     else if(500<=error && error<1500){
+//       MOTOR_SetSpeed(LEFT, v3);
+//       MOTOR_SetSpeed(RIGHT,vmax);
+//     }
+//     else if(1500<=error && error<3500){
+//       MOTOR_SetSpeed(LEFT, v2);
+//       MOTOR_SetSpeed(RIGHT, vmax);
+//     }   
+//     else if(error == 3500){
+//       // // serial.println("Hello");
+//       MOTOR_SetSpeed(LEFT,  v1);
+//       MOTOR_SetSpeed(RIGHT, vmax);
+//     }
+//   // // // serial.print("R: "); 
+//   // // // serial.print(color.readRed());
+//   // // // serial.print(", G: ");
+//   // // // serial.print(color.readGreen());
+//   // // // serial.print(", B: "); 
+//   // // // serial.print(color.readBlue());
+//   // // // serial.print(", C: ");
+//   // // // serial.print(color.readClear());
+//   // // // serial.println();
+  
+//   // // delay(500);
+//   // while(startMatch){
+
+//   //   switch(colorObserved()){
+//   //     //red
+//   //     case 0:
+//   //       //actions
+//   //       //sample
+//   //       spin(0.3, 90);
+//   //       avancer(0, 0, 0.4, 0);
+//   //     break;
+
+//   //     //green
+//   //     case 1:
+//   //       //actions
+//   //       //sample
+//   //       avancer(0, 0, 0.4, 0);
+//   //     break;
+
+//   //     //blue
+//   //     case 2: 
+//   //       //actions
+//   //       //sample
+//   //       spin(0.3, 180);
+//   //     break;
+
+//   //     //yellow
+//   //     case 3: 
+//   //       //actions
+//   //       MOTOR_SetSpeed(LEFT, -0.3);
+//   //       MOTOR_SetSpeed(RIGHT, 0.3);
+//   //     break;
+
+//   //     //white
+//   //     //au cas qu'on veuille gerer le blanc
+//   //     // case 4:
+//   //       //actions
+      
+
+//   //     //detecte pas la couleur ou pas la bonne
+//   //     //devrait donc suivre la ligne
+//   //     default:
+//   //       //sample 
+//   //       // MOTOR_SetSpeed(0, 0.2);
+//   //       // MOTOR_SetSpeed(1, 0.2);
+
+//   //       unsigned int sensors[8];  
+        
+//   //       // obtenir les valeurs calibrées du senseur (dans un tableau de senseur)  
+//   //       // ainsi que la position de la ligne dans une gamme de valeur de  
+//   //       // 0 à 2000, avec 1000 retournée pour la ligne au milieu du senseur.  
+//   //       int position = qtr.readLine(sensors);
+        
+//   //       qtr.read(sensors);
+
+        
+//   //       // Si tous les senseurs ont une très faible réflectance, alors prendre  
+//   //       // un action appropriée pour cette situation.
+//   //       //robot est perdue dans le blanc  
+//   //       // if (sensors[0] < 50 && sensors[1] < 50 && sensors[2] < 50 && sensors[3] < 50 && sensors[4] < 50 && sensors[5] < 50 &&
+//   //       //   sensors[6] < 50 && sensors[7] < 50)
+//   //       // {   
+
+
+//   //       // }
+//   //       // else{
+
+//   //       // Calculer l' "erreur" par rapport à la position de la ligne.  
+//   //       // Nous allons faire en sorte que l'erreur = 0 lorsque la ligne est   
+//   //       // placée sous le milieu du senseur (parce que c'est notre but).  
+//   //       // L'erreur aura une valeur entre -1000 et +1000.   
+//   //       // Si nous avons le senseur 0 à gauche et le senseur 2 à droite alors  
+//   //       // une lecture d'erreur de -1000 signifie que nous voyons la ligne   
+//   //       //  sur la gauche par rapport au centre du senseur alors qu'une   
+//   //       // lecture de +1000 signifie que la ligne est sur la droite   
+//   //       // par rapport au centre.  
+//   //       int error = position - 3500;
+//   //       // // serial.println(error);
+//   //       // // serial.println();
+
+//   //       if(-3500 == error){
+//   //         // // serial.println("Hi");
+//   //         MOTOR_SetSpeed(LEFT,0.4);
+//   //         MOTOR_SetSpeed(RIGHT,0.1);
+//   //       }
+//   //       //si decale beaucoup a gauche
+//   //       else if(-3500 < error && error <= -1500){
+//   //         MOTOR_SetSpeed(LEFT,  0.4);
+//   //         MOTOR_SetSpeed(RIGHT, 0.28);
+//   //       }
+//   //       //decale un peu a gauche
+//   //       else if(-1500 < error && error <= -500){
+//   //         MOTOR_SetSpeed(LEFT,  0.4);
+//   //         MOTOR_SetSpeed(RIGHT, 0.35);
+//   //       }
+//   //       //check HERE
+//   //       else if (-500 < error && error <= -10)
+//   //       { 
+//   //         MOTOR_SetSpeed(LEFT, 0.4);
+//   //         MOTOR_SetSpeed(RIGHT, 0.39);
+    
+//   //       }
+//   //       else if(-10 < error && error < 10){
+//   //         MOTOR_SetSpeed(LEFT, 0.4);
+//   //         MOTOR_SetSpeed(RIGHT, 0.4);
+//   //       }    
+//   //       else if (10 <= error && error < 500){ 
+//   //         MOTOR_SetSpeed(LEFT, 0.39);
+//   //         MOTOR_SetSpeed(RIGHT,0.4); 
+//   //       }  
+//   //       else if(500<=error && error<1500){
+//   //         MOTOR_SetSpeed(LEFT, 0.35);
+//   //         MOTOR_SetSpeed(RIGHT,0.4);
+//   //       }
+//   //       else if(1500<=error && error<3500){
+//   //         MOTOR_SetSpeed(LEFT, 0.28);
+//   //         MOTOR_SetSpeed(RIGHT, 0.4);
+//   //       }   
+//   //       else if(error == 3500){
+//   //         // // serial.println("Hello");
+//   //         MOTOR_SetSpeed(LEFT,  0.1);
+//   //         MOTOR_SetSpeed(RIGHT, 0.4);
+//   //       }
+        
+//   //       // }
+
+//   //   }
+//   // }
+//   // matchTime = millis();
+//   // //after 3 minutes end match
+//   // if(matchTime - lastMillisMatch >= 180000){
+//   //   startMatch = false;  
+//   // }
+  
+// }
 
 // if(ROBUS_IsBumper(REAR)){
 
