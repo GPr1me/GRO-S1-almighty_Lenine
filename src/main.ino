@@ -112,7 +112,7 @@ int iterations = 0;
 //constructors
 ADJDS311 color(ledPin);
 QTRSensorsAnalog qtr((unsigned char[]) {0, 1, 2, 3, 4, 5, 6, 7}, (unsigned char) 8, (unsigned char) 4,
- (unsigned char) QTR_NO_EMITTER_PIN);
+ (unsigned char) QTR_NO_EMITTER_PIN); 
 
 /* ****************************************************************************
 Vos propres fonctions sont creees ici
@@ -1086,14 +1086,11 @@ Fonctions d'initialisation (setup)
 
 void setup(){
   BoardInit();
-  // serial.begin(9600);
-  // color.init();
-  // color.ledOn();
-  
-  //call this shit when on white
-  // color.calibrate();
-  serial.begin(9600);
-  // serial1.begin(9600);
+  color.init();
+  color.ledOn();
+
+  //from HardwareSerial (communication through rx1 and tx1)
+  Serial1.begin(9600);
 }
 
 
@@ -1109,6 +1106,18 @@ boolean checkInZone;
 void loop() 
 {
   delay(10);// Delais pour décharger le CPU
-    
+  String c;
+  //the phone send -> robot receive
+  if (Serial1.available()) {
+    c = Serial1.read();
+    if(c == 0){
+      //do actions for Robus 
+
+
+      //when done 
+      //the robot send,phone receive
+      Serial1.print(c);
+    }
+  }
 }
 
