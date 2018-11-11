@@ -1103,6 +1103,8 @@ unsigned long timer;
 unsigned long timer2;
 boolean checkInZone;
 
+//de ce que je vois. Serial1 est le module bluetooth
+//il peut recevoir ou envoyer (serial read/print (recieve/transmit)) 
 void loop() 
 {
   delay(10);// Delais pour décharger le CPU
