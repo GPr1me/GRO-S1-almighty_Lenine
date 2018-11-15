@@ -829,7 +829,8 @@ Fonctions d'initialisation (setup)
 void setup(){
   BoardInit();
   Serial.begin(9600);
-  HM10Serial.begin(9600); //
+  Serial1.begin(9600);
+  // HM10Serial.begin(9600); //
   correction = 0;
   oldL = 0;
   oldR = 0;
@@ -841,13 +842,25 @@ Fonctions de boucle infini (loop())
 ************************************************************************** */
 // -> Se fait appeler perpetuellement suite au "setup"
 
-
+boolean next;
 
 void loop() { //test pour l'avance
   // SOFT_TIMER_Update(); // A decommenter pour utiliser des compteurs logiciels
-  delay(10);// Delais pour décharger le CPU
+  delay(100);// Delais pour décharger le CPU
+  // Serial1.println('echoe');
+  // Serial1.write('write');
+  // int bytesRead = Serial1.readBytes(sBuff, BUFF_LEN);
   
-  int bytesRead = Serial.readBytes(sBuff, BUFF_LEN);
-  
-  for(int i=0; i < bytesRead; i++) Serial.write(sBuff[i]);
+  // for(int i=0; i < bytesRead; i++) Serial1.write(sBuff[i]);
+  String str = "";
+  while(Serial1.available()){
+    str += Serial1.read();
+    next = true;
+  }
+    Serial.print(str);
+    Serial1.write(str.toCharArray);
+  if(next){
+    Serial.println();  
+    next = false;
+  }
 }
