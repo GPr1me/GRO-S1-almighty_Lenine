@@ -536,6 +536,9 @@ void setup(){
   correction = 0;
   oldL = 0;
   oldR = 0;
+  SERVO_Enable(0);
+  SERVO_Enable(1);
+  SERVO_SetAngle(1,90);
 }
 
 
@@ -551,6 +554,23 @@ void loop() {
   MOTOR_SetSpeed(RIGHT, 0);
 
   if(ROBUS_IsBumper(FRONT)){
- 
-    }
+    Serial.println(SONAR_GetRange(0));
+    delay(100);
   }
+
+  if(ROBUS_IsBumper(REAR)){
+    delay(3000);
+    SERVO_SetAngle(0, 80);
+    delay(3000);
+    SERVO_SetAngle(0, 72);
+  }
+
+  if(ROBUS_IsBumper(RIGHT)){
+    SERVO_SetAngle(1,130);
+    delay(4000);
+
+  }
+  SERVO_SetAngle(1,90);
+}
+
+//http://forum.arduino.cc/index.php?topic=143606.0
