@@ -63,10 +63,6 @@ int pin_5khz = 8;
 Vos propres fonctions sont creees ici
 **************************************************************************** */
 
-void maFonction(){
-  // code
-}
-
 //FONCTION POUR CALCULER LE RATIO DE VIRAGE
 float ratio_de_virage(float rayon)
 {
@@ -490,7 +486,7 @@ void spin(float v, double angle){
 
 }
 
-void ecouteSifflet(){
+/*void ecouteSifflet(){
   //check temps actuel
   unsigned long newMillis = millis();
   
@@ -501,17 +497,17 @@ void ecouteSifflet(){
   
     //check once 
     if(!check && analogRead(pin_5khz) > treshold){
-      //Serial.println("1 triggered at ");
-      //Serial.println(analogRead(pin_5khz));
-      //Serial.println("!");
-      //Serial.println();
+      Serial.println("1 triggered at ");
+      Serial.println(analogRead(pin_5khz));
+      Serial.println("!");
+      Serial.println();
       check = true;
     }
     //check again
     else if(check && analogRead(pin_5khz) > treshold){
-      //Serial.println("2 triggered at ");
-      //Serial.println(analogRead(pin_5khz));
-      //Serial.println("!");
+      Serial.println("2 triggered at ");
+      Serial.println(analogRead(pin_5khz));
+      Serial.println("!");
       sifflet = true;
       check=false;
     }
@@ -522,7 +518,7 @@ void ecouteSifflet(){
     }
 
   }
-}
+}*/
 
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
 //la plus basse soit sur MOTOR_MASTER ou MOTOR_SLAVE.
@@ -553,16 +549,8 @@ void loop() {
   delay(10);// Delais pour décharger le CPU
   MOTOR_SetSpeed(LEFT, 0);
   MOTOR_SetSpeed(RIGHT, 0);
-  }
-  
-  //tests du micro
-  if(!sifflet) 
-  {
-    ecouteSifflet();
-  }
-  if (sifflet){
-    delay(10000);
-    sifflet = false;
-  }
-}
 
+  if(ROBUS_IsBumper(FRONT)){
+ 
+    }
+  }
