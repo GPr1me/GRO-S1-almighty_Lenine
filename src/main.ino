@@ -47,7 +47,7 @@ const double circonference = (2. * 38 / 10 * PI);
 //LEFT 0, RIGHT 1, FRONT 2, REAR 3
 //constante clics/cm;
 
-//variables et constante pour ecoute sifflet
+/*//variables et constante pour ecoute sifflet
 boolean check = false;
 unsigned long timer = 0;
 boolean sifflet = false;
@@ -56,8 +56,30 @@ const float DELAY2 = 240; //peut surement etre plus petit
 //changer le treshold si des sons aléatoire sont entendus
 int treshold = 385;
 //pin output pour 5khz
-int pin_5khz = 8;
+int pin_5khz = 8;*/
 
+//variables for servos and scanning
+const int Horizontal_Angle = 72;
+const int VERTICAL = 0;
+const int HORIZONTAL = 1;
+const int SENSORHEIGHT = 20;
+const float Distance_from_sensor_to_pivot = 5.5;
+int smallestAngle;
+float Height;
+float Wall1;
+float Wall2;
+float Wall3;
+float Wall4;
+float Length;
+float Width;
+float FloorArea;
+float Wall1Area;
+float Wall2Area;
+float Wall3Area;
+float Wall4Area;
+float RoomVolume;
+
+float distances[360];
 
 /* ****************************************************************************
 Vos propres fonctions sont creees ici
@@ -520,6 +542,94 @@ void spin(float v, double angle){
   }
 }*/
 
+//Scanning function
+//scan version 0.1
+//valeur de angle entre 0 et 359
+//bond = nombre de degrees par mesure
+void DistanceScan(int startAngle, int endAngle, int step){
+    SERVO_SetAngle(VERTICAL, Horizontal_Angle);
+    int Scan_CurrentAngle = startAngle;
+    Serial.println("DÉBUT DU SCAN");
+    
+    if(startAngle >= 180){
+        spin(0.2, 180);
+    }
+
+    while (Scan_CurrentAngle <= endAngle){
+
+      if(Scan_CurrentAngle <= 179){
+        SERVO_SetAngle(HORIZONTAL, Scan_CurrentAngle);
+        distances[Scan_CurrentAngle] = SONAR_GetRange(1) + Distance_from_sensor_to_pivot;
+        Serial.println(distances[Scan_CurrentAngle]);
+        Scan_CurrentAngle += step;
+        delay(100);
+      }
+      else{
+        if(Scan_CurrentAngle <= 180 && Scan_CurrentAngle <= (180 + step) && !(startAngle >= 180)){
+          spin(0.2, 180);
+        }
+        SERVO_SetAngle(HORIZONTAL, Scan_CurrentAngle - 180);
+        distances[Scan_CurrentAngle] = SONAR_GetRange(1) + Distance_from_sensor_to_pivot;
+        Serial.println(distances[Scan_CurrentAngle]);
+        Scan_CurrentAngle += step;
+        delay(100);
+      }
+    }
+    HeightScan();
+    MinimalValue(startAngle,endAngle,step);
+    DistanceFromWalls(startAngle,endAngle,step);
+    RoomSize();
+}
+
+/*void print_ScannedDistances(int data[]){
+	for (int i=0; i<= 179; i++){
+    Serial.println(data[i]);
+	}
+}*/
+
+void MinimalValue(int startAngle, int endAngle, int step){
+  int smallestDistance;
+  for (int i = startAngle; i <= endAngle ; i+=step){
+    if(distances[i]==Distance_from_sensor_to_pivot){
+      Serial.println("Reading error at "+i);
+    }
+    else if(smallestDistance > distances[i]){
+      smallestDistance = distances[i];
+      smallestAngle = i;
+    }
+  }
+}
+
+void DistanceFromWalls(){ //distances are from the pivoting point of the servos
+  Wall1 = distances[smallestAngle];
+  Wall2 = distances[smallestAngle+90];
+  Wall3 = distances[smallestAngle+180];
+  Wall4 = distances[smallestAngle+270]; //code peut etre rafiner pour s'assurer d'être à 90 degrées
+  Serial.println(Wall1);
+  Serial.println(Wall2);
+  Serial.println(Wall3);
+  Serial.println(Wall4);
+}
+
+void HeightScan(){
+  SERVO_SetAngle(VERTICAL,Horizontal_Angle+90);
+  delay(400);
+  Height = SONAR_GetRange(1) + SENSORHEIGHT;
+  delay(200);
+  SERVO_SetAngle(VERTICAL, Horizontal_Angle);
+}
+
+void RoomSize(){
+  Length = Wall1 + Wall3;
+  Width = Wall2 + Wall4;
+  FloorArea = Length*Width;
+  Wall1Area = Width * Height;
+  Wall2Area = Length * Height;
+  Wall3Area = Wall1Area;
+  Wall4Area = Wall2Area;
+  RoomVolume = FloorArea * Height;
+}
+
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
 //la plus basse soit sur MOTOR_MASTER ou MOTOR_SLAVE.
 
@@ -538,7 +648,7 @@ void setup(){
   oldR = 0;
   SERVO_Enable(0);
   SERVO_Enable(1);
-  SERVO_SetAngle(1,90);
+  
 }
 
 
@@ -554,23 +664,15 @@ void loop() {
   MOTOR_SetSpeed(RIGHT, 0);
 
   if(ROBUS_IsBumper(FRONT)){
-    Serial.println(SONAR_GetRange(0));
-    delay(100);
+    Serial.println(SONAR_GetRange(1));
+    delay(100); //minimium delay according to documentation
   }
 
   if(ROBUS_IsBumper(REAR)){
-    delay(3000);
-    SERVO_SetAngle(0, 80);
-    delay(3000);
-    SERVO_SetAngle(0, 72);
+    DistanceScan(0, 359, 2);
   }
 
   if(ROBUS_IsBumper(RIGHT)){
-    SERVO_SetAngle(1,130);
-    delay(4000);
-
+    Serial.println(HeightScan());
   }
-  SERVO_SetAngle(1,90);
 }
-
-//http://forum.arduino.cc/index.php?topic=143606.0
