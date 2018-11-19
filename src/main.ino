@@ -41,7 +41,7 @@ const float KR = 0.2;
 //const int TEMPS_PAUSE
 const int MOTOR_MASTER = 0;
 const int MOTOR_SLAVE = 1;
-const int distanceMur = 15;
+const int distanceMur = 25;
 const float distance_entre_les_roues = 19.05;
 const int clics_par_tour = 3200;
 const double circonference = (2. * 38 / 10 * PI);
@@ -55,7 +55,7 @@ unsigned long timer = 0;
 //délai entre les deux checks du micro
 const float DELAY2 = 240; //peut surement etre plus petit
 //changer le treshold si des sons aléatoire sont entendus
-int treshold = 385;
+int treshold = 440 ;
 //pin output pour 5khz
 int pin_5khz = 8;
 unsigned long newMillis;
@@ -298,24 +298,28 @@ void slaveAdjust(float master, float ratio)
 float adjustInfrarouge()
 {
   float corr;
-  float diffinfrarouge= infraToCm(ROBUS_ReadIR(0), 0)-distanceMur;
-  Serial.println(diffinfrarouge);
+  float diffinfrarouge= infraToCm(ROBUS_ReadIR(1), 0)-distanceMur;
+  //Serial.println(diffinfrarouge);
   corr = KR * diffinfrarouge;
   return corr;
 }
 float spinInfra(float angleprecedent, int sens)
 {
-  Serial.println(angleprecedent);
+  //Serial.println(angleprecedent);
   spin(0.1, -angleprecedent);
   float anglepresent = adjustInfrarouge();
+  //Serial.println(adjustInfrarouge());
   if (sens == 1)
     {
+      anglepresent *= 1;
       spin(0.1 , anglepresent);
+      //Serial.println(anglepresent);
     }
   else if (sens == -1)
     {
       anglepresent *= -1;
       spin(0.1 , anglepresent);
+      //Serial.println(anglepresent);
     }
   MOTOR_SetSpeed(LEFT, 0);
   MOTOR_SetSpeed(RIGHT, 0);
@@ -410,7 +414,8 @@ void avancer(double distance, int iterations, float vI, float vF ,int fonction){
     lastMillis1 = millis();
     unsigned long newMillis;
     //si doit avancer de reculons une fois atteint sa vitesse
-    if(vF < 0){
+    if(vF < 0)
+    {
       if (ecouteSifflet())
       {
         MOTOR_SetSpeed(RIGHT, 0);
@@ -427,10 +432,10 @@ void avancer(double distance, int iterations, float vI, float vF ,int fonction){
         {
           slaveAdjust(vF, 0.);
           lastMillis1 = newMillis;
-          if ((infraToCm(ROBUS_ReadIR(1), 1)) < 80 && infraToCm(ROBUS_ReadIR(1), 1)>10)
+          if ((infraToCm(ROBUS_ReadIR(0), 1)) < 60 && infraToCm(ROBUS_ReadIR(0), 1)>10)
           {
             clicL = ENCODER_Read(LEFT);
-            Attacc(infraToCm(ROBUS_ReadIR(1), 1));
+            Attacc(infraToCm(ROBUS_ReadIR(0), 1));
           }
           if (ecouteSifflet())
           {
@@ -447,8 +452,9 @@ void avancer(double distance, int iterations, float vI, float vF ,int fonction){
         }
         
         //continue a faire la correction
-        // slaveAdjust(vF, 0.);  
+        //slaveAdjust(vF, 0.);  
       }
+      resetAdjust();
     }
 
     //si doit avancer de face a la fin une fois atteint sa vitesse
@@ -469,10 +475,10 @@ void avancer(double distance, int iterations, float vI, float vF ,int fonction){
           
           slaveAdjust(vF, 0.);
           lastMillis1 = newMillis;
-          if ((infraToCm(ROBUS_ReadIR(1), 1)) < 80 && infraToCm(ROBUS_ReadIR(1), 1)>10)
+          if ((infraToCm(ROBUS_ReadIR(0), 1)) < 60 && infraToCm(ROBUS_ReadIR(0), 1)>10)
           {
             clicL = ENCODER_Read(LEFT);
-            Attacc(infraToCm(ROBUS_ReadIR(1), 1));
+            Attacc(infraToCm(ROBUS_ReadIR(0), 1));
           }
           if (ecouteSifflet())
           {
@@ -505,7 +511,8 @@ void avancer(double distance, int iterations, float vI, float vF ,int fonction){
     lastMillis1 = millis();
     unsigned long newMillis;
     //si doit avancer de reculons une fois atteint sa vitesse
-    if(vF < 0){
+    if(vF < 0)
+    {
       if (ecouteSifflet())
       {
         MOTOR_SetSpeed(RIGHT, 0);
@@ -536,6 +543,7 @@ void avancer(double distance, int iterations, float vI, float vF ,int fonction){
         //continue a faire la correction
         // slaveAdjust(vF, 0.);  
       }
+
     }
 
     //si doit avancer de face a la fin une fois atteint sa vitesse
@@ -569,9 +577,9 @@ void avancer(double distance, int iterations, float vI, float vF ,int fonction){
         // slaveAdjust(vF, 0.);  
       }
     }
-    resetAdjust();
     //si vitesse finale est de 0. Ignore la distance. Donc, relentit pendant les iterations jusqu'a l'arret
   }
+  resetAdjust();
 }
 
 //v: vitesse a laquelle tourner 
@@ -664,7 +672,7 @@ void spin(float v, double angle){
     MOTOR_SetSpeed(LEFT, 0);
     delay(10000);
   }
-
+  Serial.println (angle);
   //angle + distance +, angle - distance -
   double distance = angle_to_cm(angle, (distance_entre_les_roues - (0.005 * 12) ) / -2.); 
   lastMillis1 = millis();
@@ -782,29 +790,36 @@ boolean ecouteSifflet(){
 
 void Attacc(double distance_cible)
 {
-  spin(0.4, 90);
-  avancer(0,10, 0, 0.7, 1);
-  avancer(distance_cible, 0, 0.7, 0.7, 1);
-  avancer(0,10, 0.7, 0, 1);
-  avancer(-distance_cible, 0, -0.7, -0.7, 1);
+  spin(0.6, -90);
+  avancer(0,10, 0, 0.95, 1);
+  avancer(distance_cible+10, 0, 0.95, 0.95, 1);
+  avancer(0,10, 0.95, 0, 1);
   avancer(0,10, 0, -0.7, 1);
+  avancer(-distance_cible-10, 0, -0.7, -0.7, 1);
   avancer(0,10, -0.7, 0, 1);
-  spin(0.4, -90);
+  delay(300);
+  spin(0.4, 90);
 }
 void Protecc(void)
 {
   float anglepresent=0;
-  Serial.println("where");
+  //Serial.println("where");
   while (!ROBUS_IsBumper(RIGHT))
   {
-    Serial.println(" are");
-    avancer(20, 0, .2, .2, 0);
-    // delay(200);
-    anglepresent= spinInfra(anglepresent, 1);
-    avancer(-20, 0, -.2, -.2, 0);
-    // delay(200);
-    anglepresent= spinInfra(anglepresent, -1);
-
+    //Serial.println(" are");
+    avancer(10.5, 0, .2, .2, 0);
+    // delay(20);
+    //anglepresent = spinInfra(anglepresent, -1);
+     avancer(10.5, 0, .2, .2, 0);
+    // delay(20);
+    //anglepresent= spinInfra(anglepresent, 1);
+    spin(0.1, -2);
+    avancer(-10.5, 0, -.2, -.2, 0);
+    // delay(20);
+    //anglepresent= spinInfra(anglepresent, 1);
+    avancer(-10.5, 0, -.2, -.2, 0);
+    // delay(20);
+    //anglepresent= spinInfra(anglepresent, -1);  
   }
 }
 
@@ -1007,9 +1022,8 @@ void loop() { //test pour l'avance
 
   if(ROBUS_IsBumper(REAR))
   { 
-    
-    Protecc();
-    
+    delay(5000);
+    Protecc();   
     
   }
 }
