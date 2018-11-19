@@ -675,6 +675,8 @@ void setup(){
   oldR = 0;
   SERVO_Enable(0);
   SERVO_Enable(1);
+  SERVO_SetAngle(VERTICAL, Horizontal_Angle);
+  SERVO_SetAngle(HORIZONTAL,0);
   
 }
 
@@ -713,5 +715,9 @@ void loop() {
     Serial.println(RoomVolume);
     Serial.print("Floor Area : ");
     Serial.println(FloorArea);
+  }
+  if(ROBUS_IsBumper(LEFT)){
+    SERVO_SetAngle(VERTICAL,Horizontal_Angle);
+    SERVO_SetAngle(HORIZONTAL,180);
   }
 }
