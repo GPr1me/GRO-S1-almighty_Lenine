@@ -64,6 +64,8 @@ const int VERTICAL = 0;
 const int HORIZONTAL = 1;
 const int SENSORHEIGHT = 20;
 const float Distance_from_sensor_to_pivot = 5.5;
+const float sonarCorretionMultiplier = 1;
+const float sonarCorrectionAdjust = 0;
 int smallestAngle;
 float Height;
 float Wall1;
@@ -542,6 +544,11 @@ void spin(float v, double angle){
   }
 }*/
 
+float sonarCorrection(){
+  return SONAR_GetRange(1)*sonarCorretionMultiplier + sonarCorrectionAdjust;
+}
+
+
 //Scanning function
 //scan version 0.1
 //valeur de angle entre 0 et 359
@@ -559,7 +566,7 @@ void DistanceScan(int startAngle, int endAngle, int step){
 
       if(Scan_CurrentAngle <= 179){
         SERVO_SetAngle(HORIZONTAL, Scan_CurrentAngle);
-        distances[Scan_CurrentAngle] = SONAR_GetRange(1) + Distance_from_sensor_to_pivot;
+        distances[Scan_CurrentAngle] = sonarCorrection() + Distance_from_sensor_to_pivot;
         Serial.println(distances[Scan_CurrentAngle]);
         Scan_CurrentAngle += step;
         delay(100);
@@ -569,7 +576,7 @@ void DistanceScan(int startAngle, int endAngle, int step){
           spin(0.2, 180);
         }
         SERVO_SetAngle(HORIZONTAL, Scan_CurrentAngle - 180);
-        distances[Scan_CurrentAngle] = SONAR_GetRange(1) + Distance_from_sensor_to_pivot;
+        distances[Scan_CurrentAngle] = sonarCorrection() + Distance_from_sensor_to_pivot;
         Serial.println(distances[Scan_CurrentAngle]);
         Scan_CurrentAngle += step;
         delay(100);
@@ -594,7 +601,7 @@ void MinimalValue(int startAngle, int endAngle, int step){
     if(distances[i]==Distance_from_sensor_to_pivot){
       Serial.println("Reading error at "+i);
     }
-    else if(smallestDistance > distances[i]){
+    else if(smallestDistance > distances[i] && distances[i] != 0 ){
       smallestDistance = distances[i];
       smallestAngle = i;
     }
@@ -634,7 +641,7 @@ void HeightScan(){
   delay(500);
   SERVO_SetAngle(VERTICAL,Horizontal_Angle+90);
   delay(400);
-  Height = SONAR_GetRange(1) + SENSORHEIGHT;
+  Height = sonarCorrection() + SENSORHEIGHT;
   delay(200);
   SERVO_SetAngle(VERTICAL, Horizontal_Angle);
 }
