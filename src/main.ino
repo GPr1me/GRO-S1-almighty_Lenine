@@ -1089,8 +1089,12 @@ void setup(){
   color.init();
   color.ledOn();
 
+  Serial.begin(9600);
   //from HardwareSerial (communication through rx1 and tx1)
   Serial1.begin(9600);
+
+  //timeout set because of android app to make more constant receive rate
+  Serial1.setTimeout(20);
 }
 
 
@@ -1099,27 +1103,129 @@ Fonctions de boucle infini (loop())
 **************************************************************************** */
 // -> Se fait appeler perpetuellement suite au "setup"
 
+
 unsigned long timer;
 unsigned long timer2;
 boolean checkInZone;
 
-//de ce que je vois. Serial1 est le module bluetooth
-//il peut recevoir ou envoyer (serial read/print (recieve/transmit)) 
-void loop() 
+const int bufferSize = 50;
+int nChars = 0;
+
+boolean recoisCell = false;
+boolean faitMesures = false;
+char buffer[bufferSize];
+
+void setup()
 {
-  delay(10);// Delais pour décharger le CPU
-  String c;
-  //the phone send -> robot receive
+  Serial.begin(9600);      // open serial port
+  
+  //timeout est deja une valeur qu'il donne de delai avant de lire
+  // Serial.setTimeout(50); 
+
+  Serial1.begin(9600);
+
+  //app seems to read every 20 ms, using this allows both to be synchronized
+  Serial1.setTimeout(1000);
+
+}
+
+void loop()
+{
+
+  // the phone send -> robot receive
   if (Serial1.available()) {
-    c = Serial1.read();
-    if(c == 0){
-      //do actions for Robus 
-
-
-      //when done 
-      //the robot send,phone receive
-      Serial1.print(c);
+    recoisCell = true;
+  }
+  //si reception de signal: fait gestion
+  if(recoisCell){
+    //copies message to buffer
+    nChars = Serial1.readBytes(buffer, bufferSize);
+    String message = "";
+    //only reads the character that have been added and not entire buffer
+    for(int i = 0; i < nChars; i++){
+      message += buffer[i];
     }
+
+    //shows received message
+    Serial.println(message);
+
+    //if message received is what was decided to start measurements 
+    //should do measurements 
+    if(message.equals("Vas-y petit robot!")){
+      //send signal reception to cell and computer
+      char okay [] = "Received start\n";
+      Serial.println(okay);
+      Serial1.write(okay);
+
+      //do actions for Robus 
+      faitMesures = true;
+    }
+
+    //come gestion faite attend un nouveau signal
+    recoisCell = false;
+  }
+  //example de mesures faites 
+  if(faitMesures){
+    //robot ferait les mesures et les valeurs pour x, y et z seraient sauvegardes
+    
+    //exemple de valeurs entendues mises dans un tableau
+    char x [] = "x400.98;";
+    char y [] = "y32.29;";
+    char z [] = "z8.05;";
+
+    //example d'envoie de mesures au cell
+    delay(40);
+    Serial1.write(x);
+    delay(40);
+    Serial1.write(y);
+    delay(40);
+    Serial1.write(z);
+    delay(40);
+
+    //gestion de mesures faites
+    faitMesures = false;
   }
 }
+
+
+// const int BUFF_LEN = 20;      // serial buffer length
+
+// char sBuff[BUFF_LEN];         // serial buffer
+
+// void setup()
+// {
+//   Serial.begin(9600);      // open serial port
+  
+//   Serial.setTimeout(20);  // timeout defaults to 1000 ms
+
+//   Serial1.begin(9600);
+
+//   Serial1.setTimeout(20);
+
+// }
+
+// void loop()
+// {
+
+//   // while bytes available ;
+//   if(Serial1.available() )
+//   {
+//     // read into buffer
+//     int bytesRead = Serial1.readBytes(sBuff, BUFF_LEN);
+    
+//     // echo read bytes to serial port
+//     for(int i=0; i < bytesRead; i++){
+//       //write to phone
+//       Serial1.write(sBuff[i]);
+
+//       //write value to computer (shows in serial)
+//       Serial.write(sBuff[i]);
+//     }
+    
+//   } 
+
+
+// }
+
+
 
