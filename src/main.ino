@@ -646,6 +646,38 @@ void HeightScan(){
   SERVO_SetAngle(VERTICAL, Horizontal_Angle);
 }
 
+void CenterRobot(angle_perpendiculaire, distance_left, distance_right, distance_back, distance_front)
+{
+  spin(0.1,angle_perpendiculaire);
+  float distance_y = ((distance_front - distance_back)/2);
+  float distance_x = ((distance_right - distance_left)/2);
+  if(distance_y >= 0)
+  {
+    avancer(distance_y, 0, 0.1, 0.1);
+    spin(0.1, 90);
+    if(distance_x >= 0)
+    {
+      avancer(distance_x, 0, 0.1, 0.1);
+    }
+    if(distance_x < 0)
+    {
+      avancer(distance_x, 0, -0.1, -0.1);
+    }
+  }
+  if(distance_y < 0)
+  {
+    avancer(distance_y, 0, -0.1, -0.1);
+    spin(0.1, 90);
+    if(distance_x >= 0)
+    {
+      avancer(distance_x, 0, 0.1, 0.1);
+    }
+    if(distance_x < 0)
+    {
+      avancer(distance_x, 0, -0.1, -0.1);
+    }
+  }
+}
 void RoomSize(){
   Length = Wall1 + Wall3;
   Width = Wall2 + Wall4;
