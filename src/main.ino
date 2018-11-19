@@ -64,8 +64,8 @@ const int VERTICAL = 0;
 const int HORIZONTAL = 1;
 const int SENSORHEIGHT = 20;
 const float Distance_from_sensor_to_pivot = 5.5;
-const float sonarCorretionMultiplier = 1;
-const float sonarCorrectionAdjust = 0;
+const float sonarCorretionMultiplier = 1.32;
+const float sonarCorrectionAdjust = -0.2799;
 int smallestAngle;
 float Height;
 float Wall1;
@@ -646,7 +646,7 @@ void HeightScan(){
   SERVO_SetAngle(VERTICAL, Horizontal_Angle);
 }
 
-void CenterRobot(angle_perpendiculaire, distance_left, distance_right, distance_back, distance_front)
+/*void CenterRobot(angle_perpendiculaire, distance_left, distance_right, distance_back, distance_front)
 {
   spin(0.1,angle_perpendiculaire);
   float distance_y = ((distance_front - distance_back)/2);
@@ -677,7 +677,7 @@ void CenterRobot(angle_perpendiculaire, distance_left, distance_right, distance_
       avancer(distance_x, 0, -0.1, -0.1);
     }
   }
-}
+}*/
 void RoomSize(){
   Length = Wall1 + Wall3;
   Width = Wall2 + Wall4;
@@ -725,7 +725,7 @@ void loop() {
   MOTOR_SetSpeed(RIGHT, 0);
 
   if(ROBUS_IsBumper(FRONT)){
-    Serial.println(SONAR_GetRange(1));
+    Serial.println(sonarCorrection());
     delay(100); //minimium delay according to documentation
   }
 
