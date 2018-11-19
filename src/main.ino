@@ -575,10 +575,11 @@ void DistanceScan(int startAngle, int endAngle, int step){
         delay(100);
       }
     }
-    HeightScan();
+    
     MinimalValue(startAngle,endAngle,step);
-    DistanceFromWalls(startAngle,endAngle,step);
-    RoomSize();
+    //DistanceFromWalls();
+    //RoomSize();
+    //HeightScan();
 }
 
 /*void print_ScannedDistances(int data[]){
@@ -602,9 +603,27 @@ void MinimalValue(int startAngle, int endAngle, int step){
 
 void DistanceFromWalls(){ //distances are from the pivoting point of the servos
   Wall1 = distances[smallestAngle];
+  if (smallestAngle + 90 < 359){
   Wall2 = distances[smallestAngle+90];
-  Wall3 = distances[smallestAngle+180];
-  Wall4 = distances[smallestAngle+270]; //code peut etre rafiner pour s'assurer d'être à 90 degrées
+  }
+  else {
+    Wall2 = distances[smallestAngle-270];
+  }
+
+  if (smallestAngle + 180 < 359){
+    Wall3 = distances[smallestAngle+180];
+  }
+  else {
+    Wall3 = distances[smallestAngle-180];
+  }
+  
+  if (smallestAngle + 270 < 359){
+    Wall4 = distances[smallestAngle+270];
+  }
+  else {
+    Wall4 = distances[smallestAngle-90];
+  }
+ //code peut etre rafiner pour s'assurer d'être à 90 degrées
   Serial.println(Wall1);
   Serial.println(Wall2);
   Serial.println(Wall3);
@@ -612,6 +631,7 @@ void DistanceFromWalls(){ //distances are from the pivoting point of the servos
 }
 
 void HeightScan(){
+  delay(500);
   SERVO_SetAngle(VERTICAL,Horizontal_Angle+90);
   delay(400);
   Height = SONAR_GetRange(1) + SENSORHEIGHT;
@@ -673,6 +693,18 @@ void loop() {
   }
 
   if(ROBUS_IsBumper(RIGHT)){
-    Serial.println(HeightScan());
+    HeightScan();
+    DistanceFromWalls();
+    RoomSize();
+    Serial.print("Height : ");
+    Serial.println(Height);
+    Serial.print("Width : ");
+    Serial.println(Width);
+    Serial.print("Length : ");
+    Serial.println(Length);
+    Serial.print("Room Volume : ");
+    Serial.println(RoomVolume);
+    Serial.print("Floor Area : ");
+    Serial.println(FloorArea);
   }
 }
