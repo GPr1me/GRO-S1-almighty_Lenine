@@ -552,13 +552,11 @@ float sonarCorrection(){
 void MinimalValue(int startAngle, int endAngle, int step){
   smallestDistance = 5000000000;
   for (int i = startAngle+step; i <= endAngle ; i+=step){
-    // if(distances[i]==(Distance_from_sensor_to_pivot+sonarCorrectionAdjust)){
-    //   Serial.print("Reading error at ");
-    //   Serial.println(i);
-    // }
-    // else
-    // dans la fonction if ci dessous : && distances[i] != 0
-    if(distances[i] < smallestDistance){
+    if(distances[i]==(Distance_from_sensor_to_pivot+sonarCorrectionAdjust)){
+      Serial.print("Reading error at ");
+      Serial.println(i);
+    }
+    else if(distances[i] < smallestDistance){// dans cette fonction if : && distances[i] != 0
       smallestDistance = distances[i];
       smallestAngle = i;
     }
