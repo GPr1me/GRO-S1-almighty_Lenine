@@ -1093,8 +1093,14 @@ void setup(){
   //from HardwareSerial (communication through rx1 and tx1)
   Serial1.begin(9600);
 
-  //timeout set because of android app to make more constant receive rate
-  Serial1.setTimeout(20);
+  //timeout defaults to 1000
+  //value reduced to ensure faster read time and reduce chances of duplicates when app is reading
+  //1 too fast, reads one char at a time
+  //2 too fast, reads 8 chars at a time
+  //3 works, try with spamming, ok (no duplicates)
+  //delay set to 5 for safety
+  //since set to 20 in example, this should ensure only one read from app
+  Serial1.setTimeout(5);
 }
 
 
@@ -1106,38 +1112,20 @@ Fonctions de boucle infini (loop())
 
 unsigned long timer;
 unsigned long timer2;
-boolean checkInZone;
 
 const int bufferSize = 50;
 int nChars = 0;
 
-boolean recoisCell = false;
 boolean faitMesures = false;
 char buffer[bufferSize];
 
-void setup()
-{
-  Serial.begin(9600);      // open serial port
-  
-  //timeout est deja une valeur qu'il donne de delai avant de lire
-  // Serial.setTimeout(50); 
-
-  Serial1.begin(9600);
-
-  //app seems to read every 20 ms, using this allows both to be synchronized
-  Serial1.setTimeout(1000);
-
-}
 
 void loop()
 {
 
   // the phone send -> robot receive
-  if (Serial1.available()) {
-    recoisCell = true;
-  }
-  //si reception de signal: fait gestion
-  if(recoisCell){
+  //si reception de signal voulu: fait gestion
+  if(Serial1.available()){
     //copies message to buffer
     nChars = Serial1.readBytes(buffer, bufferSize);
     String message = "";
@@ -1161,14 +1149,12 @@ void loop()
       faitMesures = true;
     }
 
-    //come gestion faite attend un nouveau signal
-    recoisCell = false;
   }
   //example de mesures faites 
   if(faitMesures){
-    //robot ferait les mesures et les valeurs pour x, y et z seraient sauvegardes
+    //robot ferait les mesures, les valeurs pour x, y et z seraient et envoyes
     
-    //exemple de valeurs entendues mises dans un tableau
+    //exemple de valeurs attendues mises dans un tableau
     char x [] = "x400.98;";
     char y [] = "y32.29;";
     char z [] = "z8.05;";
