@@ -650,38 +650,38 @@ void HeightScan(){
   SERVO_SetAngle(VERTICAL, Horizontal_Angle);
 }
 
-/*void CenterRobot(angle_perpendiculaire, distance_left, distance_right, distance_back, distance_front)
+void CenterRobot()
 {
-  spin(0.1,angle_perpendiculaire);
-  float distance_y = ((distance_front - distance_back)/2);
-  float distance_x = ((distance_right - distance_left)/2);
+  spin(0.1,smallestAngle);
+  float distance_y = ((Wall4 - Wall2)/2);
+  float distance_x = ((Wall1 - Wall3)/2);
   if(distance_y >= 0)
   {
-    avancer(distance_y, 0, 0.1, 0.1);
-    spin(0.1, 90);
+    avancer(distance_y, 0, 0.3, 0.3);
+    spin(0.3, 90);
     if(distance_x >= 0)
     {
-      avancer(distance_x, 0, 0.1, 0.1);
+      avancer(distance_x, 0, 0.3, 0.3);
     }
     if(distance_x < 0)
     {
-      avancer(distance_x, 0, -0.1, -0.1);
+      avancer(distance_x, 0, -0.3, -0.3);
     }
   }
   if(distance_y < 0)
   {
-    avancer(distance_y, 0, -0.1, -0.1);
-    spin(0.1, 90);
+    avancer(distance_y, 0, -0.3, -0.3);
+    spin(0.3, 90);
     if(distance_x >= 0)
     {
-      avancer(distance_x, 0, 0.1, 0.1);
+      avancer(distance_x, 0, 0.3, 0.3);
     }
     if(distance_x < 0)
     {
-      avancer(distance_x, 0, -0.1, -0.1);
+      avancer(distance_x, 0, -0.3, -0.3);
     }
   }
-}*/
+}
 void RoomSize(){
   Length = Wall1 + Wall3;
   Width = Wall2 + Wall4;
@@ -729,12 +729,37 @@ void loop() {
   MOTOR_SetSpeed(RIGHT, 0);
 
   if(ROBUS_IsBumper(FRONT)){
-    Serial.println(sonarCorrection());
+    /*Serial.println(sonarCorrection());
     delay(100); //minimium delay according to documentation
+    */
+   CenterRobot();
   }
 
   if(ROBUS_IsBumper(REAR)){
     DistanceScan(0, 359, 2);
+    HeightScan();
+    DistanceFromWalls();
+    RoomSize();
+    Serial.print("Height : ");
+    Serial.println(Height);
+    Serial.print("Width : ");
+    Serial.println(Width);
+    Serial.print("Length : ");
+    Serial.println(Length);
+    Serial.print("Room Volume : ");
+    Serial.println(RoomVolume);
+    Serial.print("Floor Area : ");
+    Serial.println(FloorArea);
+    Serial.print("Wall1 : ");
+    Serial.println(Wall1);
+    Serial.print("Wall2 : ");
+    Serial.println(Wall2);
+    Serial.print("Wall3 : ");
+    Serial.println(Wall3);
+    Serial.print("Wall4 : ");
+    Serial.println(Wall4);
+    Serial.print("smallestAngle : ");
+    Serial.println(smallestAngle);
   }
 
   if(ROBUS_IsBumper(RIGHT)){
@@ -759,6 +784,8 @@ void loop() {
     Serial.println(Wall3);
     Serial.print("Wall4 : ");
     Serial.println(Wall4);
+    Serial.print("smallestAngle : ");
+    Serial.println(smallestAngle);
   }
 
   if(ROBUS_IsBumper(LEFT)){
