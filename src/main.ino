@@ -817,6 +817,7 @@ void contractorBot(){
   //numbers should now be in this format -> "x400.98;" after conversion
 
   //strings should be handled okay but in case conversion to char array necessary
+  //added +1 to get 2 decimals
   char x[a1.length() + 1];
   a1.toCharArray(x, a1.length() + 1);
   char y[a2.length() + 1]; 
