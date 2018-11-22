@@ -818,11 +818,11 @@ void contractorBot(){
 
   //strings should be handled okay but in case conversion to char array necessary
   char x[a1.length() + 1];
-  a1.toCharArray(x, a1.length());
-  char y[a2.length() + 1];
-  a2.toCharArray(y, a2.length());
+  a1.toCharArray(x, a1.length() + 1);
+  char y[a2.length() + 1]; 
+  a2.toCharArray(y, a2.length() + 1);
   char z[a3.length() + 1];
-  a3.toCharArray(z, a3.length());
+  a3.toCharArray(z, a3.length() + 1);
 
   // char x [] = "x400.98;";
   // char y [] = "y32.29;";
