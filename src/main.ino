@@ -93,6 +93,16 @@ unsigned long newMillis;
 unsigned long matchTime = 0;
 boolean startMatch = false;
 
+//variables for bluetooth:
+//stores number of characters written from serial into buffer
+int nChars = 0;
+//choses buffer size to store read data
+const int bufferSize = 50;
+//space to store variables read from serial
+char buffer[bufferSize];
+//signal to make robot take the measurements
+boolean faitMesures = false;
+
 
 enum Couleurs
 {
@@ -1074,6 +1084,40 @@ Couleurs colorObserved(){
 }
 #pragma endregion 
 
+//code to read whatever has been written into the serial by the bluetooth module
+//according to received signal will tell robot how to act (currently: starts measurements)
+void readMessage(){
+
+  //if the phone send -> robot receive
+  if(Serial1.available()){
+    //copies message to buffer
+    nChars = Serial1.readBytes(buffer, bufferSize);
+    String message = "";
+    
+    //copies the message into a string to compare it's contents 
+    for(int i = 0; i < nChars; i++){
+      message += buffer[i];
+    }
+
+    //shows received message
+    Serial.print("Received: ");
+    Serial.println(message);
+
+    //if message received is what was decided to start measurements 
+    //should do measurements 
+    if(message.equals("Vas-y petit robot!")){
+      //send signal reception to cell and computer
+      char okay [] = "Taking dimensions\n";
+      Serial.println(okay);
+      Serial1.write(okay);
+
+      //do measurement code 
+      faitMesures = true;
+    }
+
+  }
+}
+
 // Pour savoir quel coter on veut tourner, il faut seulement mettre la vitesse
 //la plus basse soit sur MOTOR_MASTER ou MOTOR_SLAVE.
 
@@ -1090,16 +1134,16 @@ void setup(){
   color.ledOn();
 
   Serial.begin(9600);
-  //from HardwareSerial (communication through rx1 and tx1)
+  //de HardwareSerial (communication utilisant rx1 and tx1)
   Serial1.begin(9600);
 
-  //timeout defaults to 1000
-  //value reduced to ensure faster read time and reduce chances of duplicates when app is reading
-  //1 too fast, reads one char at a time
-  //2 too fast, reads 8 chars at a time
-  //3 works, try with spamming, ok (no duplicates)
-  //delay set to 5 for safety
-  //since set to 20 in example, this should ensure only one read from app
+  //timeout de 1000 default
+  //valeur reduite pour accelerer l'ecriture/lecture de donnees, reduit les chances des donnees ecrites en double
+  //1 trop vite, lit 1 char a la fois
+  //2 trop vite, lit environ 8 chars a la fois
+  //3 correct pour 20, test avec envoies repetifs, ok (pas de copies)
+  //valeur de 5 mis pour assurer stabilite
+  //come valeur de 20 dans exemple, assure une seule lecture de l'application
   Serial1.setTimeout(5);
 }
 
@@ -1113,44 +1157,12 @@ Fonctions de boucle infini (loop())
 unsigned long timer;
 unsigned long timer2;
 
-const int bufferSize = 50;
-int nChars = 0;
-
-boolean faitMesures = false;
-char buffer[bufferSize];
-
-
 void loop()
 {
+  //check what is received in serial
+  readMessage();
 
-  // the phone send -> robot receive
-  //si reception de signal voulu: fait gestion
-  if(Serial1.available()){
-    //copies message to buffer
-    nChars = Serial1.readBytes(buffer, bufferSize);
-    String message = "";
-    //only reads the character that have been added and not entire buffer
-    for(int i = 0; i < nChars; i++){
-      message += buffer[i];
-    }
-
-    //shows received message
-    Serial.println(message);
-
-    //if message received is what was decided to start measurements 
-    //should do measurements 
-    if(message.equals("Vas-y petit robot!")){
-      //send signal reception to cell and computer
-      char okay [] = "Received start\n";
-      Serial.println(okay);
-      Serial1.write(okay);
-
-      //do actions for Robus 
-      faitMesures = true;
-    }
-
-  }
-  //example de mesures faites 
+  //si doit faire les mesure devrait executer cette partie du code
   if(faitMesures){
     //robot ferait les mesures, les valeurs pour x, y et z seraient et envoyes
     
@@ -1168,7 +1180,7 @@ void loop()
     Serial1.write(z);
     delay(40);
 
-    //gestion de mesures faites
+    //completed measurement code, exit measurement execution
     faitMesures = false;
   }
 }
