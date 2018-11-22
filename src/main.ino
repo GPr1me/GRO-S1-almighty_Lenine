@@ -68,23 +68,24 @@ const float sonarCorretionMultiplier = 1.32;
 const float sonarCorrectionAdjust = -0.2799;
 int smallestAngle;
 //smallestDistance moved into function since only needed localy (less memory use)
-float Wall1;
-float Wall2;
-float Wall3;
-float Wall4;
-float Length;
-float Width;
-float Height;
-float FloorArea;
-float Wall1Area;
-float Wall2Area;
-float Wall3Area;
-float Wall4Area;
-float RoomVolume;
+//all dimensions are stored in array now
+// float Wall1;
+// float Wall2;
+// float Wall3;
+// float Wall4;
+// float Length;
+// float Width;
+// float Height;
+// float FloorArea;
+// float Wall1Area;
+// float Wall2Area;
+// float Wall3Area;
+// float Wall4Area;
+// float RoomVolume;
 
 float distances[360];
 
-// float dimensions[13];
+float dimensions[13];
 //variables for bluetooth:
 //stores number of characters written from serial into buffer
 int nChars = 0;
@@ -643,34 +644,34 @@ void DistanceScan(int startAngle, int endAngle, int step){
 //changement: <=359 comme on peut avoir besoin de 359 si on prends les mesures a chaque degrees ou a un autre step que 2
 //ajout des dimensions dans un array pour rendre code plus compact (a tester), variables encore presente pour faire test initiaux
 void DistanceFromWalls(){ //distances are from the pivoting point of the servos
-  Wall1 = distances[smallestAngle];
-  // dimensions[wall1] = distances[smallestAngle];
+  // Wall1 = distances[smallestAngle];
+  dimensions[wall1] = distances[smallestAngle];
 
   if (smallestAngle + 90 <= 359){
-    Wall2 = distances[smallestAngle + 90];
-    // dimensions[wall2] = distances[smallestAngle + 90];
+    // Wall2 = distances[smallestAngle + 90];
+    dimensions[wall2] = distances[smallestAngle + 90];
   }
   else {
-    Wall2 = distances[smallestAngle - 270];
-    // dimensions[wall2] = distances[smallestAngle - 270];
+    // Wall2 = distances[smallestAngle - 270];
+    dimensions[wall2] = distances[smallestAngle - 270];
   }
 
   if (smallestAngle + 180 <= 359){
-    Wall3 = distances[smallestAngle + 180];
-    // dimensions[wall3] = distances[smallestAngle + 180];
+    // Wall3 = distances[smallestAngle + 180];
+    dimensions[wall3] = distances[smallestAngle + 180];
   }
   else {
-    Wall3 = distances[smallestAngle - 180];
-    // dimensions[wall3] = distances[smallestAngle - 180];
+    // Wall3 = distances[smallestAngle - 180];
+    dimensions[wall3] = distances[smallestAngle - 180];
   }
   
   if (smallestAngle + 270 <= 359){
-    Wall4 = distances[smallestAngle + 270];
-    // dimensions[wall4] = distances[smallestAngle + 270];
+    // Wall4 = distances[smallestAngle + 270];
+    dimensions[wall4] = distances[smallestAngle + 270];
   }
   else {
-    Wall4 = distances[smallestAngle - 90];
-    // dimensions[wall4] = distances[smallestAngle - 90];
+    // Wall4 = distances[smallestAngle - 90];
+    dimensions[wall4] = distances[smallestAngle - 90];
   }
  //code peut etre rafiner pour s'assurer d'être à 90 degrées
   // Serial.println(Wall1);
@@ -683,8 +684,8 @@ void HeightScan(){
   delay(500);
   SERVO_SetAngle(VERTICAL,Horizontal_Angle + 90);
   delay(400);
-  Height = sonarCorrection() + SENSORHEIGHT;
-  // dimensions[height] = Height;
+  // Height = sonarCorrection() + SENSORHEIGHT;
+  dimensions[height] = sonarCorrection() + SENSORHEIGHT;
   delay(200);
   SERVO_SetAngle(VERTICAL, Horizontal_Angle);
 }
@@ -692,10 +693,10 @@ void HeightScan(){
 void CenterRobot()
 {
   spin(0.1,smallestAngle);
-  float distance_y = ((Wall4 - Wall2) / 2);
-  float distance_x = ((Wall1 - Wall3) / 2);
-  // float distance_y = ((dimensions[wall4] - dimensions[wall2]) / 2);
-  // float distance_x = ((dimensions[wall1] - dimensions[wall3]) / 2);
+  // float distance_y = ((Wall4 - Wall2) / 2);
+  // float distance_x = ((Wall1 - Wall3) / 2);
+  float distance_y = ((dimensions[wall4] - dimensions[wall2]) / 2);
+  float distance_x = ((dimensions[wall1] - dimensions[wall3]) / 2);
   if(distance_y >= 0)
   {
     avancer(distance_y, 0, 0.3, 0.3);
@@ -705,13 +706,13 @@ void CenterRobot()
       avancer(distance_x, 0, 0.3, 0.3);
     }
     //could be quicker to put else here
-    if(distance_x < 0)
+    else
     {
       avancer(distance_x, 0, -0.3, -0.3);
     }
   }
   //could be quicker to use else here
-  if(distance_y < 0)
+  else
   {
     avancer(distance_y, 0, -0.3, -0.3);
     spin(0.3, 90);
@@ -720,7 +721,7 @@ void CenterRobot()
       avancer(distance_x, 0, 0.3, 0.3);
     }
     //could be safer to use else here
-    if(distance_x < 0)
+    else
     {
       avancer(distance_x, 0, -0.3, -0.3);
     }
@@ -730,45 +731,45 @@ void CenterRobot()
 void ImpressionneRobot()
 {
   SERVO_SetAngle(VERTICAL,Horizontal_Angle+90);
-  avancer(((Length-30)/2), 0, 0.8, 0.8);
+  avancer(((dimensions[length] - 30) / 2), 0, 0.8, 0.8);
   spin(0.5, 90);
-  avancer(((Width-30)/2), 0, 0.8, 0.8);
+  avancer(((dimensions[width] - 30)/2), 0, 0.8, 0.8);
   spin(0.5, 90);
-  avancer((Length-15), 0, 0.8, 0.8);
+  avancer((dimensions[length] - 15), 0, 0.8, 0.8);
   spin(0.5, 90);
-  avancer((Width-15), 0, 0.8, 0.8);
+  avancer((dimensions[width] - 15), 0, 0.8, 0.8);
   spin(0.5, 90);
-  avancer((Length-15), 0, 0.8, 0.8);
+  avancer((dimensions[length] - 15), 0, 0.8, 0.8);
   spin(0.5, 90);
-  avancer(((Width-30)/2), 0, 0.8, 0.8);
+  avancer(((dimensions[width] - 30)/2), 0, 0.8, 0.8);
   spin(0.5, 90);
-  avancer(((Length-30)/2), 0, 0.8, 0.8);
+  avancer(((dimensions[length] - 30)/2), 0, 0.8, 0.8);
   SERVO_SetAngle(VERTICAL,Horizontal_Angle);
-  SERVO_SetAngle(VERTICAL,Horizontal_Angle+90);
+  SERVO_SetAngle(VERTICAL,Horizontal_Angle + 90);
   SERVO_SetAngle(VERTICAL,Horizontal_Angle);
-  SERVO_SetAngle(VERTICAL,Horizontal_Angle+90);
+  SERVO_SetAngle(VERTICAL,Horizontal_Angle + 90);
   SERVO_SetAngle(VERTICAL,Horizontal_Angle);
-  SERVO_SetAngle(VERTICAL,Horizontal_Angle+90);
+  SERVO_SetAngle(VERTICAL,Horizontal_Angle + 90);
   SERVO_SetAngle(VERTICAL,Horizontal_Angle);
 }
 void RoomSize(){
-  Length = Wall1 + Wall3;
-  Width = Wall2 + Wall4;
-  FloorArea = Length * Width;
-  Wall1Area = Width * Height;
-  Wall2Area = Length * Height;
-  Wall3Area = Wall1Area;
-  Wall4Area = Wall2Area;
-  RoomVolume = FloorArea * Height;
+  // Length = Wall1 + Wall3;
+  // Width = Wall2 + Wall4;
+  // FloorArea = Length * Width;
+  // Wall1Area = Width * Height;
+  // Wall2Area = Length * Height;
+  // Wall3Area = Wall1Area;
+  // Wall4Area = Wall2Area;
+  // RoomVolume = FloorArea * Height;
   
-  // dimensions[length] = dimensions[wall1] + dimensions[wall3];
-  // dimensions[width] = dimensions[wall2] + dimensions[wall4];
-  // dimensions[floorArea] = dimensions[length] * dimensions[width];
-  // dimensions[wall1Area] = dimensions[width] * dimensions[height];
-  // dimensions[wall2Area] = dimensions[length] * dimensions[height];
-  // dimensions[wall3Area] = dimensions[wall1Area];
-  // dimensions[wall4Area] = dimensions[wall2Area];
-  // dimensions[roomVolume] = dimensions[floorArea] * dimensions[height];
+  dimensions[length] = dimensions[wall1] + dimensions[wall3];
+  dimensions[width] = dimensions[wall2] + dimensions[wall4];
+  dimensions[floorArea] = dimensions[length] * dimensions[width];
+  dimensions[wall1Area] = dimensions[width] * dimensions[height];
+  dimensions[wall2Area] = dimensions[length] * dimensions[height];
+  dimensions[wall3Area] = dimensions[wall1Area];
+  dimensions[wall4Area] = dimensions[wall2Area];
+  dimensions[roomVolume] = dimensions[floorArea] * dimensions[height];
   
 }
 
@@ -822,9 +823,10 @@ void contractorBot(){
   String a1 = "x";
   String a2 = "y";
   String a3 = "z";
-  a1 += Wall1Area;
-  a2 += Wall2Area;
-  a3 += FloorArea;
+  a1 += dimensions[wall1Area];
+  a2 += dimensions[wall2Area];
+  a3 += dimensions[floorArea];
+
   Serial.println(a1);
   //other option
   // char w[8];
@@ -834,11 +836,6 @@ void contractorBot(){
   // dtostrf(Wall2Area, -7, 2, y);
   // dtostrf(FloorArea, -7, 2, z);
 
-  //to remove extra decimals if needed (only 2 decimals kept)
-  // a1 = a1.substring(0, a1.indexOf('.') + 4);
-  // a2 = a2.substring(0, a2.indexOf('.') + 4);
-  // a3 = a3.substring(0, a3.indexOf('.') + 4);
-  
   //numbers should now be in this format -> "x400.98;" after conversion
 
   //strings should be handled okay but in case conversion to char array necessary
@@ -928,23 +925,23 @@ void loop() {
     DistanceFromWalls();
     RoomSize();
     Serial.print("Height : ");
-    Serial.println(Height);
+    Serial.println(dimensions[height]);
     Serial.print("Width : ");
-    Serial.println(Width);
+    Serial.println(dimensions[width]);
     Serial.print("Length : ");
-    Serial.println(Length);
+    Serial.println(dimensions[length]);
     Serial.print("Room Volume : ");
-    Serial.println(RoomVolume);
+    Serial.println(dimensions[roomVolume]);
     Serial.print("Floor Area : ");
-    Serial.println(FloorArea);
+    Serial.println(dimensions[floorArea]);
     Serial.print("Wall1 : ");
-    Serial.println(Wall1);
+    Serial.println(dimensions[wall1]);
     Serial.print("Wall2 : ");
-    Serial.println(Wall2);
+    Serial.println(dimensions[wall2]);
     Serial.print("Wall3 : ");
-    Serial.println(Wall3);
+    Serial.println(dimensions[wall3]);
     Serial.print("Wall4 : ");
-    Serial.println(Wall4);
+    Serial.println(dimensions[wall4]);
     Serial.print("smallestAngle : ");
     Serial.println(smallestAngle);
   }
@@ -954,23 +951,23 @@ void loop() {
     DistanceFromWalls();
     RoomSize();
     Serial.print("Height : ");
-    Serial.println(Height);
+    Serial.println(dimensions[height]);
     Serial.print("Width : ");
-    Serial.println(Width);
+    Serial.println(dimensions[width]);
     Serial.print("Length : ");
-    Serial.println(Length);
+    Serial.println(dimensions[length]);
     Serial.print("Room Volume : ");
-    Serial.println(RoomVolume);
+    Serial.println(dimensions[roomVolume]);
     Serial.print("Floor Area : ");
-    Serial.println(FloorArea);
+    Serial.println(dimensions[floorArea]);
     Serial.print("Wall1 : ");
-    Serial.println(Wall1);
+    Serial.println(dimensions[wall1]);
     Serial.print("Wall2 : ");
-    Serial.println(Wall2);
+    Serial.println(dimensions[wall2]);
     Serial.print("Wall3 : ");
-    Serial.println(Wall3);
+    Serial.println(dimensions[wall3]);
     Serial.print("Wall4 : ");
-    Serial.println(Wall4);
+    Serial.println(dimensions[wall4]);
     Serial.print("smallestAngle : ");
     Serial.println(smallestAngle);
   }
