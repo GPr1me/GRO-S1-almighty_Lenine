@@ -84,7 +84,7 @@ float RoomVolume;
 
 float distances[360];
 
-float dimensions[12];
+// float dimensions[13];
 //variables for bluetooth:
 //stores number of characters written from serial into buffer
 int nChars = 0;
@@ -93,7 +93,7 @@ const int bufferSize = 50;
 //space to store variables read from serial
 char buffer[bufferSize];
 
-enum Dimensions{
+enum Dimension{
   wall1,
   wall2,
   wall3,
@@ -107,9 +107,8 @@ enum Dimensions{
   wall3Area,
   wall4Area,
   roomVolume
-}
+};
 
-void contractorBot();
 
 /* ****************************************************************************
 Vos propres fonctions sont creees ici
@@ -119,7 +118,6 @@ Vos propres fonctions sont creees ici
 float ratio_de_virage(float rayon)
 {
   float resultat = 0;
-  int x = Dimensions.wall1;
 
     if (rayon > 0)
     {
@@ -191,7 +189,7 @@ void ACC_MASTER(float vI, float vF, int nb_iterations, float ratio)
           //accelere avec adjustement
           slaveAdjust(i, ratio);
           lastMillis1 = newMillis;
-          i+=n;
+          i += n;
         }
         //accelere avec adjustement
         // slaveAdjust(i, ratio); //delay de 20 ms
@@ -577,10 +575,10 @@ void spin(float v, double angle){
 float sonarCorrection(){
   return SONAR_GetRange(1)*sonarCorretionMultiplier + sonarCorrectionAdjust;
 }
-
+//used to be i = startAngle + step
 void MinimalValue(int startAngle, int endAngle, int step){
   float smallestDistance = 5000000000;
-  for (int i = startAngle + step; i <= endAngle ; i += step){
+  for (int i = startAngle; i <= endAngle ; i += step){
     if(distances[i] == (Distance_from_sensor_to_pivot + sonarCorrectionAdjust) ){
       Serial.print("Reading error at ");
       Serial.println(i);
@@ -601,6 +599,8 @@ void DistanceScan(int startAngle, int endAngle, int step){
     SERVO_SetAngle(VERTICAL, Horizontal_Angle);
     int Scan_CurrentAngle = startAngle;
     Serial.println("DÉBUT DU SCAN");
+    sonarCorrection();
+    delay(100);
     
     if(startAngle >= 180){
         spin(0.2, 180);
@@ -644,33 +644,33 @@ void DistanceScan(int startAngle, int endAngle, int step){
 //ajout des dimensions dans un array pour rendre code plus compact (a tester), variables encore presente pour faire test initiaux
 void DistanceFromWalls(){ //distances are from the pivoting point of the servos
   Wall1 = distances[smallestAngle];
-  dimensions[wall1] = distances[smallestAngle];
+  // dimensions[wall1] = distances[smallestAngle];
 
   if (smallestAngle + 90 <= 359){
     Wall2 = distances[smallestAngle + 90];
-    dimensions[wall2] = distances[smallestAngle + 90];
+    // dimensions[wall2] = distances[smallestAngle + 90];
   }
   else {
     Wall2 = distances[smallestAngle - 270];
-    dimensions[wall2] = distances[smallestAngle - 270];
+    // dimensions[wall2] = distances[smallestAngle - 270];
   }
 
   if (smallestAngle + 180 <= 359){
     Wall3 = distances[smallestAngle + 180];
-    dimensions[wall3] = distances[smallestAngle + 180];
+    // dimensions[wall3] = distances[smallestAngle + 180];
   }
   else {
     Wall3 = distances[smallestAngle - 180];
-    dimensions[wall3] = distances[smallestAngle - 180];
+    // dimensions[wall3] = distances[smallestAngle - 180];
   }
   
   if (smallestAngle + 270 <= 359){
     Wall4 = distances[smallestAngle + 270];
-    dimensions[wall4] = distances[smallestAngle + 270];
+    // dimensions[wall4] = distances[smallestAngle + 270];
   }
   else {
     Wall4 = distances[smallestAngle - 90];
-    dimensions[wall4] = distances[smallestAngle - 90];
+    // dimensions[wall4] = distances[smallestAngle - 90];
   }
  //code peut etre rafiner pour s'assurer d'être à 90 degrées
   // Serial.println(Wall1);
@@ -684,7 +684,7 @@ void HeightScan(){
   SERVO_SetAngle(VERTICAL,Horizontal_Angle + 90);
   delay(400);
   Height = sonarCorrection() + SENSORHEIGHT;
-  dimensions[height] = Height;
+  // dimensions[height] = Height;
   delay(200);
   SERVO_SetAngle(VERTICAL, Horizontal_Angle);
 }
@@ -752,9 +752,9 @@ void RoomSize(){
 void readMessage(){
 
   //if the phone send -> robot receive
-  if(Serial1.available()){
+  if(Serial2.available()){
     //copies message to buffer
-    nChars = Serial1.readBytes(buffer, bufferSize);
+    nChars = Serial2.readBytes(buffer, bufferSize);
     String message = "";
     
     //copies the message into a string to compare it's contents 
@@ -772,7 +772,7 @@ void readMessage(){
       //send signal reception to cell and computer
       char okay [] = "Initializing measurements\n";
       Serial.println(okay);
-      Serial1.write(okay);
+      Serial2.write(okay);
 
       //do measurement code 
       contractorBot();
@@ -800,7 +800,7 @@ void contractorBot(){
   a1 += Wall1Area;
   a2 += Wall2Area;
   a3 += FloorArea;
-
+  Serial.println(a1);
   //other option
   // char w[8];
   // char y[8];
@@ -810,20 +810,19 @@ void contractorBot(){
   // dtostrf(FloorArea, -7, 2, z);
 
   //to remove extra decimals if needed (only 2 decimals kept)
-  a1.substring(0, a1.indexOf('.') + 2);
-  a2.substring(0, a2.indexOf('.') + 2);
-  a3.substring(0, a3.indexOf('.') + 2);
-
-  a1 += ";";
-  a2 += ";";
-  a3 += ";";
+  // a1 = a1.substring(0, a1.indexOf('.') + 4);
+  // a2 = a2.substring(0, a2.indexOf('.') + 4);
+  // a3 = a3.substring(0, a3.indexOf('.') + 4);
+  
   //numbers should now be in this format -> "x400.98;" after conversion
 
   //strings should be handled okay but in case conversion to char array necessary
-  // char x [] = a1;
-  // char y [] = a2;
-  // char z [] = a3;
-
+  char x[a1.length() + 1];
+  a1.toCharArray(x, a1.length());
+  char y[a2.length() + 1];
+  a2.toCharArray(y, a2.length());
+  char z[a3.length() + 1];
+  a3.toCharArray(z, a3.length());
 
   // char x [] = "x400.98;";
   // char y [] = "y32.29;";
@@ -831,11 +830,11 @@ void contractorBot(){
 
   //example d'envoie de mesures au cell
   delay(40);
-  Serial1.write(a1);
+  Serial2.write(x);
   delay(40);
-  Serial1.write(a2);
+  Serial2.write(y);
   delay(40);
-  Serial1.write(a3);
+  Serial2.write(z);
   delay(40);
 
 }
@@ -862,7 +861,7 @@ void setup(){
   SERVO_SetAngle(HORIZONTAL,0);
 
   //de HardwareSerial (communication utilisant rx1 and tx1)
-  Serial1.begin(9600);
+  Serial2.begin(9600);
 
   //timeout de 1000 default
   //valeur reduite pour accelerer l'ecriture/lecture de donnees, reduit les chances des donnees ecrites en double
@@ -871,7 +870,7 @@ void setup(){
   //3 correct pour 20, test avec envoies repetifs, ok (pas de copies)
   //valeur de 5 mis pour assurer stabilite
   //come valeur de 20 dans exemple, assure une seule lecture de l'application
-  Serial1.setTimeout(5);
+  Serial2.setTimeout(5);
   
 }
 
@@ -886,6 +885,8 @@ void loop() {
   delay(10);// Delais pour décharger le CPU
   MOTOR_SetSpeed(LEFT, 0);
   MOTOR_SetSpeed(RIGHT, 0);
+
+  readMessage();
 
   if(ROBUS_IsBumper(FRONT)){
     /*Serial.println(sonarCorrection());
