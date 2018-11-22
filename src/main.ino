@@ -726,6 +726,31 @@ void CenterRobot()
     }
   }
 }
+
+void ImpressionneRobot()
+{
+  SERVO_SetAngle(VERTICAL,Horizontal_Angle+90);
+  avancer(((Length-30)/2), 0, 0.8, 0.8);
+  spin(0.5, 90);
+  avancer(((Width-30)/2), 0, 0.8, 0.8);
+  spin(0.5, 90);
+  avancer((Length-15), 0, 0.8, 0.8);
+  spin(0.5, 90);
+  avancer((Width-15), 0, 0.8, 0.8);
+  spin(0.5, 90);
+  avancer((Length-15), 0, 0.8, 0.8);
+  spin(0.5, 90);
+  avancer(((Width-30)/2), 0, 0.8, 0.8);
+  spin(0.5, 90);
+  avancer(((Length-30)/2), 0, 0.8, 0.8);
+  SERVO_SetAngle(VERTICAL,Horizontal_Angle);
+  SERVO_SetAngle(VERTICAL,Horizontal_Angle+90);
+  SERVO_SetAngle(VERTICAL,Horizontal_Angle);
+  SERVO_SetAngle(VERTICAL,Horizontal_Angle+90);
+  SERVO_SetAngle(VERTICAL,Horizontal_Angle);
+  SERVO_SetAngle(VERTICAL,Horizontal_Angle+90);
+  SERVO_SetAngle(VERTICAL,Horizontal_Angle);
+}
 void RoomSize(){
   Length = Wall1 + Wall3;
   Width = Wall2 + Wall4;
@@ -894,6 +919,7 @@ void loop() {
     delay(100); //minimium delay according to documentation
     */
    CenterRobot();
+   ImpressionneRobot();
   }
 
   if(ROBUS_IsBumper(REAR)){
