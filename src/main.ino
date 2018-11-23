@@ -909,7 +909,7 @@ void loop() {
   MOTOR_SetSpeed(LEFT, 0);
   MOTOR_SetSpeed(RIGHT, 0);
 
-  //readMessage();
+  readMessage();
 
   if(ROBUS_IsBumper(FRONT)){
     /*Serial.println(sonarCorrection());
@@ -920,34 +920,7 @@ void loop() {
   }
 
   if(ROBUS_IsBumper(REAR)){
-    /*DistanceScan(0, 359, 2);
-    HeightScan();
-    DistanceFromWalls();
-    RoomSize();
-    Serial.print("Height : ");
-    Serial.println(dimensions[height]);
-    Serial.print("Width : ");
-    Serial.println(dimensions[width]);
-    Serial.print("Length : ");
-    Serial.println(dimensions[length]);
-    Serial.print("Room Volume : ");
-    Serial.println(dimensions[roomVolume]);
-    Serial.print("Floor Area : ");
-    Serial.println(dimensions[floorArea]);
-    Serial.print("Wall1 : ");
-    Serial.println(dimensions[wall1]);
-    Serial.print("Wall2 : ");
-    Serial.println(dimensions[wall2]);
-    Serial.print("Wall3 : ");
-    Serial.println(dimensions[wall3]);
-    Serial.print("Wall4 : ");
-    Serial.println(dimensions[wall4]);
-    Serial.print("smallestAngle : ");
-    Serial.println(smallestAngle);*/
-    avancer(400,0,0.5,0.5);
-  }
-
-  /*if(ROBUS_IsBumper(RIGHT)){
+    DistanceScan(0, 359, 2);
     HeightScan();
     DistanceFromWalls();
     RoomSize();
@@ -971,10 +944,36 @@ void loop() {
     Serial.println(dimensions[wall4]);
     Serial.print("smallestAngle : ");
     Serial.println(smallestAngle);
-  }*/
+  }
 
-  /*if(ROBUS_IsBumper(LEFT)){
+  if(ROBUS_IsBumper(RIGHT)){
+    HeightScan();
+    DistanceFromWalls();
+    RoomSize();
+    Serial.print("Height : ");
+    Serial.println(dimensions[height]);
+    Serial.print("Width : ");
+    Serial.println(dimensions[width]);
+    Serial.print("Length : ");
+    Serial.println(dimensions[length]);
+    Serial.print("Room Volume : ");
+    Serial.println(dimensions[roomVolume]);
+    Serial.print("Floor Area : ");
+    Serial.println(dimensions[floorArea]);
+    Serial.print("Wall1 : ");
+    Serial.println(dimensions[wall1]);
+    Serial.print("Wall2 : ");
+    Serial.println(dimensions[wall2]);
+    Serial.print("Wall3 : ");
+    Serial.println(dimensions[wall3]);
+    Serial.print("Wall4 : ");
+    Serial.println(dimensions[wall4]);
+    Serial.print("smallestAngle : ");
+    Serial.println(smallestAngle);
+  }
+
+  if(ROBUS_IsBumper(LEFT)){
     SERVO_SetAngle(VERTICAL,Horizontal_Angle);
     SERVO_SetAngle(HORIZONTAL,180);
-  }*/
+  }
 }
