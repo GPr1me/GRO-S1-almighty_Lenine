@@ -1089,9 +1089,9 @@ Couleurs colorObserved(){
 void readMessage(){
 
   //if the phone send -> robot receive
-  if(Serial1.available()){
+  if(Serial2.available()){
     //copies message to buffer
-    nChars = Serial1.readBytes(buffer, bufferSize);
+    nChars = Serial2.readBytes(buffer, bufferSize);
     String message = "";
     
     //copies the message into a string to compare it's contents 
@@ -1109,7 +1109,7 @@ void readMessage(){
       //send signal reception to cell and computer
       char okay [] = "Taking dimensions\n";
       Serial.println(okay);
-      Serial1.write(okay);
+      Serial2.write(okay);
 
       //do measurement code 
       faitMesures = true;
@@ -1135,7 +1135,7 @@ void setup(){
 
   Serial.begin(9600);
   //de HardwareSerial (communication utilisant rx1 and tx1)
-  Serial1.begin(9600);
+  Serial2.begin(9600);
 
   //timeout de 1000 default
   //valeur reduite pour accelerer l'ecriture/lecture de donnees, reduit les chances des donnees ecrites en double
@@ -1144,7 +1144,7 @@ void setup(){
   //3 correct pour 20, test avec envoies repetifs, ok (pas de copies)
   //valeur de 5 mis pour assurer stabilite
   //come valeur de 20 dans exemple, assure une seule lecture de l'application
-  Serial1.setTimeout(5);
+  Serial2.setTimeout(5);
 }
 
 
@@ -1159,6 +1159,9 @@ unsigned long timer2;
 
 void loop()
 {
+  //decharge cpu et laisse le temps de tout ecrire (cause fuck me)
+  delay(10);
+  
   //check what is received in serial
   readMessage();
 
@@ -1173,11 +1176,11 @@ void loop()
 
     //example d'envoie de mesures au cell
     delay(40);
-    Serial1.write(x);
+    Serial2.write(x);
     delay(40);
-    Serial1.write(y);
+    Serial2.write(y);
     delay(40);
-    Serial1.write(z);
+    Serial2.write(z);
     delay(40);
 
     //completed measurement code, exit measurement execution
