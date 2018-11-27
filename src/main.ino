@@ -576,6 +576,7 @@ void spin(float v, double angle){
 float sonarCorrection(){
   return SONAR_GetRange(1)*sonarCorretionMultiplier + sonarCorrectionAdjust;
 }
+
 //used to be i = startAngle + step
 void MinimalValue(int startAngle, int endAngle, int step){
   float smallestDistance = 5000000000;
@@ -629,7 +630,7 @@ void DistanceScan(int startAngle, int endAngle, int step){
       }
     }
     
-    MinimalValue(startAngle,endAngle,step);
+    MinimalValue(startAngle, endAngle, step);
     //DistanceFromWalls();
     //RoomSize();
     //HeightScan();
@@ -692,38 +693,59 @@ void HeightScan(){
 
 void CenterRobot()
 {
-  spin(0.1,smallestAngle);
+  //spin au plus petit angle pour avoir le mur 1 perpendiculaire a sa gauche (angle 0 aligne avec mur 1)
+  //ajout de 180 pour replacer le robot a l'angle initial
+  spin(0.1, smallestAngle + 180);
   // float distance_y = ((Wall4 - Wall2) / 2);
   // float distance_x = ((Wall1 - Wall3) / 2);
+  // détermine quel mur est plus loin
   float distance_y = ((dimensions[wall4] - dimensions[wall2]) / 2);
   float distance_x = ((dimensions[wall1] - dimensions[wall3]) / 2);
+  //si mur de face est plus loin, avance
   if(distance_y >= 0)
   {
+    //avance distance désirée et spin
     avancer(distance_y, 0, 0.3, 0.3);
+    // avancer(0, 0, 0.3, 0);
+    //tourne de 90 degres pour avancer dans axe des x
     spin(0.3, 90);
+    //si mur de face est plus loin, avance
     if(distance_x >= 0)
     {
+      //avance distance désirée et arrête
       avancer(distance_x, 0, 0.3, 0.3);
+      avancer(0, 0, 0.3, 0);
     }
     //could be quicker to put else here
+    //si mur de face plus proche, recule
     else
     {
+      //recule distance désirée et arrête 
       avancer(distance_x, 0, -0.3, -0.3);
+      avancer(0, 0, -0.3, 0);
     }
   }
   //could be quicker to use else here
+  //si non, mur de face plus proche, recule
   else
   {
+    //recule distance désirée et spin
     avancer(distance_y, 0, -0.3, -0.3);
+    // avancer(0, 0, -0.3, 0);
+    //tourne de 90 degres pour avancer dans axe des x
     spin(0.3, 90);
     if(distance_x >= 0)
     {
+      //avance distance désirée et arrête
       avancer(distance_x, 0, 0.3, 0.3);
+      avancer(0, 0, 0.3, 0);
     }
     //could be safer to use else here
     else
     {
+      //recule distance désirée et arrête
       avancer(distance_x, 0, -0.3, -0.3);
+      avancer(0, 0, -0.3, 0);
     }
   }
 }
@@ -813,10 +835,9 @@ void contractorBot(){
   DistanceScan(0, 359, 2);
   //sauvegarde la distance des 4 murs dans des variables
   DistanceFromWalls();
-  //centre le robot au milieu de la pièce
+  //centre le robot
   CenterRobot();
   //lit la valeur de la hauteur du plafond
-  delay(1000);
   HeightScan();
   //calcule les dimensions de la piece a partir des lectures
   RoomSize();
@@ -913,9 +934,9 @@ void loop() {
   MOTOR_SetSpeed(RIGHT, 0);
 
   readMessage();
-
- /* if(ROBUS_IsBumper(FRONT)){
-    Serial.println(sonarCorrection());
+  /*
+  if(ROBUS_IsBumper(FRONT)){
+    /*Serial.println(sonarCorrection());
     delay(100); //minimium delay according to documentation
     
    CenterRobot();
@@ -978,5 +999,6 @@ void loop() {
   if(ROBUS_IsBumper(LEFT)){
     SERVO_SetAngle(VERTICAL,Horizontal_Angle);
     SERVO_SetAngle(HORIZONTAL,180);
-  }*/
+  }
+  */
 }
