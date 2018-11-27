@@ -811,10 +811,13 @@ void contractorBot(){
   //robot ferait les mesures, les valeurs pour x, y et z seraient et envoyes
   //scan la piece pour avoir plage de donnes. Trouve valeur du premier mur
   DistanceScan(0, 359, 2);
-  //lit la valeur de la hauteur du plafond
-  HeightScan();
   //sauvegarde la distance des 4 murs dans des variables
   DistanceFromWalls();
+  //centre le robot au milieu de la pièce
+  CenterRobot();
+  //lit la valeur de la hauteur du plafond
+  delay(1000);
+  HeightScan();
   //calcule les dimensions de la piece a partir des lectures
   RoomSize();
 
@@ -911,10 +914,10 @@ void loop() {
 
   readMessage();
 
-  if(ROBUS_IsBumper(FRONT)){
-    /*Serial.println(sonarCorrection());
+ /* if(ROBUS_IsBumper(FRONT)){
+    Serial.println(sonarCorrection());
     delay(100); //minimium delay according to documentation
-    */
+    
    CenterRobot();
    ImpressionneRobot();
   }
@@ -975,5 +978,5 @@ void loop() {
   if(ROBUS_IsBumper(LEFT)){
     SERVO_SetAngle(VERTICAL,Horizontal_Angle);
     SERVO_SetAngle(HORIZONTAL,180);
-  }
+  }*/
 }
