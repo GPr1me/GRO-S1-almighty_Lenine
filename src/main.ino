@@ -62,7 +62,8 @@ int pin_5khz = 8;*/
 const int Horizontal_Angle = 72;
 const int VERTICAL = 0;
 const int HORIZONTAL = 1;
-const int SENSORHEIGHT = 20;
+//was 20 before taking measurements 
+const int SENSORHEIGHT = 29;
 const float Distance_from_sensor_to_pivot = 5.5;
 const float sonarCorretionMultiplier = 1.32;
 const float sonarCorrectionAdjust = -0.2799;
@@ -693,14 +694,15 @@ void HeightScan(){
 
 void CenterRobot()
 {
-  //spin au plus petit angle pour avoir le mur 1 perpendiculaire a sa gauche (angle 0 aligne avec mur 1)
-  //ajout de 180 pour replacer le robot a l'angle initial
-  spin(0.1, smallestAngle + 180);
+  //s'aligne avec son mur de reference
+  //spin pour etre avec mur 4 devant lui 
+  spin(0.1, smallestAngle);
   // float distance_y = ((Wall4 - Wall2) / 2);
   // float distance_x = ((Wall1 - Wall3) / 2);
   // détermine quel mur est plus loin
   float distance_y = ((dimensions[wall4] - dimensions[wall2]) / 2);
   float distance_x = ((dimensions[wall1] - dimensions[wall3]) / 2);
+  
   //si mur de face est plus loin, avance
   if(distance_y >= 0)
   {
@@ -818,7 +820,7 @@ void readMessage(){
     //should do measurements 
     if(message.equals("Vas-y petit robot!")){
       //send signal reception to cell and computer
-      char okay [] = "Initializing measurements\n";
+      char okay [] = "Prise de mesures\n";
       Serial.println(okay);
       Serial2.write(okay);
 
